@@ -19,7 +19,7 @@ export function SplitEditorPane() {
     monaco.editor.setTheme(ICODE_DARK_THEME);
     // 多光标 modifier 用 ctrlCmd(Cmd+点击加光标), Option 让给列选(同主编辑器)
     ed.updateOptions({
-      multiCursorModifier: "ctrlCmd",
+      multiCursorModifier: "alt",
       columnSelection: false,
       multiCursorPaste: "full",
     });
