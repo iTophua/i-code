@@ -1,14 +1,27 @@
-/* ============ 通用按钮(Dialog/其他复用) ============ */
+/* ============ 通用按钮(Dialog/其他复用) ============
+ * 对标 VS Code 按钮: 实心主按钮 + 描边次按钮 + 实心危险按钮,
+ * 统一高度/字号/圆角, 带 hover/active/focus 状态。
+ */
 .btn {
-  height: 28px;
-  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 var(--space-5);
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-family: var(--font-ui);
   font-size: var(--fs-base);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background 0.1s, border-color 0.1s;
+  outline: none;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease,
+    opacity 0.12s ease;
 }
+
+/* 主按钮: 蓝色实心 */
 .btn--primary {
   background: var(--bg-button);
   color: var(--fg-on-accent);
@@ -16,6 +29,12 @@
 .btn--primary:hover {
   background: var(--bg-button-hover);
 }
+.btn--primary:active {
+  background: var(--bg-button);
+  opacity: 0.88;
+}
+
+/* 次按钮: 透明描边 */
 .btn--secondary {
   background: transparent;
   color: var(--fg-primary);
@@ -23,11 +42,32 @@
 }
 .btn--secondary:hover {
   background: var(--bg-list-hover);
+  border-color: var(--border-focus);
 }
+.btn--secondary:active {
+  background: var(--bg-list-active);
+}
+
+/* 危险按钮: 红色实心(用合适背景色, 而非 --fg-error 文字色) */
 .btn--danger {
-  background: var(--fg-error);
+  --danger-bg: #c53030;
+  --danger-bg-hover: #e03131;
+  background: var(--danger-bg);
   color: #fff;
+  border-color: transparent;
+}
+[data-theme="light"] .btn--danger {
+  --danger-bg: #c92a2a;
+  --danger-bg-hover: #e03131;
 }
 .btn--danger:hover {
-  filter: brightness(1.1);
+  background: var(--danger-bg-hover);
+}
+.btn--danger:active {
+  opacity: 0.88;
+}
+
+/* 焦点环(键盘可达) */
+.btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--bg-app), 0 0 0 4px var(--border-focus);
 }
