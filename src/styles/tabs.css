@@ -2,10 +2,9 @@
 .tabs-wrap {
   display: flex;
   align-items: stretch;
-  background: var(--bg-sidebar);
-  border-bottom: 1px solid var(--border-base);
+  background: var(--bg-tab-inactive);
+  border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
-  box-shadow: inset 0 -1px 0 var(--border-subtle);
 }
 .tabs {
   display: flex;
@@ -15,23 +14,31 @@
   background: transparent;
   overflow-x: auto;
   overflow-y: hidden;
+  /* 用 padding 让首尾 tab 不贴边 */
+  padding-left: 2px;
 }
 .tabs::-webkit-scrollbar {
-  height: 3px;
+  height: 2px;
 }
-/* Tab 换行模式: 多了自动换行而非左右滑动 */
+.tabs::-webkit-scrollbar-thumb {
+  background: rgba(133, 133, 133, 0.3);
+  border-radius: 2px;
+}
+/* Tab 换行模式 */
 .tabs--wrap {
   flex-wrap: wrap;
   height: auto;
   max-height: 50vh;
   overflow-x: hidden;
   overflow-y: auto;
+  padding: 3px 4px;
+  gap: 2px;
 }
 .tabs--wrap::-webkit-scrollbar {
-  width: 3px;
+  width: 2px;
   height: 0;
 }
-/* md 预览切换按钮(Tab 栏右端) */
+/* md 预览切换按钮 */
 .tabs__md-toggle {
   display: flex;
   align-items: center;
@@ -46,7 +53,7 @@
   transition: var(--t-color);
 }
 .tabs__md-toggle:hover {
-  background: var(--bg-list-hover);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--fg-primary);
 }
 
@@ -60,49 +67,90 @@
   white-space: nowrap;
 }
 
+/* ===== 单个 Tab ===== */
 .tab {
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 120px;
-  max-width: 240px;
+  gap: 7px;
+  min-width: 100px;
+  max-width: 200px;
   height: 100%;
-  padding: 0 10px;
-  background: var(--bg-tab-inactive);
-  /* tab 间分隔: 右侧细线(换行模式下去掉右线, 用左线避免视觉错位) */
-  border-right: 1px solid var(--border-subtle);
+  padding: 0 4px 0 12px;
+  background: transparent;
   cursor: pointer;
   user-select: none;
   position: relative;
   flex-shrink: 0;
-  transition: background var(--dur-fast);
-}
-/* 换行模式: 用左边线分隔, 避免行末多余边框 */
-.tabs--wrap .tab {
-  border-right: none;
-  border-left: 1px solid var(--border-subtle);
-}
-.tabs--wrap .tab:first-child {
-  border-left: none;
-}
-.tab:hover {
-  background: var(--bg-tab-hover);
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
 }
 
+/* hover 态: 柔和提亮 */
+.tab:not(.tab--active):hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ===== 活跃态 ===== */
 .tab--active {
   background: var(--bg-editor);
 }
+/* 活跃态: 左侧高亮条(比顶部条更现代, 不和边界混淆) */
 .tab--active::before {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  height: 1px;
+  bottom: 0;
+  width: 2px;
   background: var(--fg-accent);
+  border-radius: 0 1px 1px 0;
+  transition: opacity var(--dur-normal) var(--ease-out);
 }
 
-/* 预览态: 斜体 */
+/* tab 间分隔线: 仅在两个非活跃 tab 之间, 用极淡的右线 */
+.tab:not(.tab--active):not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 30%;
+  bottom: 30%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+/* hover 时不显示分隔线(避免和 hover 背景冲突) */
+.tab:not(.tab--active):hover::after,
+.tab--active + .tab:not(.tab--active)::after {
+  opacity: 0;
+}
+/* 活跃 tab 右侧不画分隔线(它有自己的背景边界) */
+.tab--active::after {
+  display: none;
+}
+
+/* 换行模式: 卡片式 */
+.tabs--wrap .tab {
+  height: calc(var(--height-tab) - 6px);
+  border-radius: var(--radius-sm);
+  margin: 1px 0;
+  border: 1px solid transparent;
+}
+.tabs--wrap .tab:not(.tab--active):not(:last-child)::after {
+  display: none;
+}
+.tabs--wrap .tab:not(.tab--active):hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border-subtle);
+}
+.tabs--wrap .tab--active {
+  background: var(--bg-editor);
+  border-color: var(--border-base);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+.tabs--wrap .tab--active::before {
+  top: 0; left: 0; bottom: 0;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+/* 预览态 */
 .tab--preview .tab__name {
   font-style: italic;
 }
@@ -111,6 +159,14 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  opacity: 0.65;
+  transition: opacity var(--dur-fast) ease;
+}
+.tab:hover .tab__icon {
+  opacity: 0.85;
+}
+.tab--active .tab__icon {
+  opacity: 1;
 }
 .tab__name {
   flex: 1;
@@ -118,33 +174,39 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--fs-base);
+  color: var(--fg-disabled);
+  letter-spacing: 0.2px;
+  transition: color var(--dur-fast) ease;
+}
+.tab:hover .tab__name {
   color: var(--fg-secondary);
 }
 .tab--active .tab__name {
   color: var(--fg-primary);
+  font-weight: 500;
 }
 
-/* 未保存圆点(默认隐藏, dirty 时显示) */
+/* 未保存圆点 */
 .tab__dirty {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--fg-accent);
   opacity: 0;
   flex-shrink: 0;
-  transition: opacity 0.15s;
+  transition: opacity var(--dur-fast) ease;
 }
 .tab__dirty--show {
-  opacity: 1;
+  opacity: 0.8;
 }
 
-/* 关闭按钮(dirty 时隐藏圆点显示按钮, hover 才显示关闭) */
+/* 关闭按钮 */
 .tab__close {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
   border: none;
   background: transparent;
   color: var(--fg-muted);
@@ -152,29 +214,16 @@
   border-radius: var(--radius-sm);
   flex-shrink: 0;
   opacity: 0;
-  transition: opacity 0.1s;
+  transition: opacity var(--dur-fast) ease, background var(--dur-fast) ease, color var(--dur-fast) ease;
 }
 .tab:hover .tab__close {
-  opacity: 1;
+  opacity: 0.6;
 }
 .tab__close:hover {
-  background: var(--bg-list-hover);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--fg-primary);
+  opacity: 1;
 }
-/* dirty 且 hover: 隐藏圆点, 显示关闭 */
 .tab:hover .tab__dirty--show {
   opacity: 0;
-}
-/* ===== 过渡补丁(补 color + 蓝条 + close 背景) ===== */
-/* tab 名颜色过渡(active 切换文字色不再硬切) */
-.tab {
-  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
-}
-/* tab 顶部蓝条 opacity 过渡 */
-.tab--active::before {
-  transition: opacity var(--dur-normal) var(--ease-out);
-}
-/* close 按钮 hover 背景过渡 */
-.tab__close {
-  transition: var(--t-color), opacity var(--dur-fast) ease;
 }

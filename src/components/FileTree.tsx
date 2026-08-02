@@ -122,6 +122,12 @@ export function FileTree() {
       const store = useEditorStore.getState();
       setSelected(node.path);
       try {
+        // 图片: 用 asset protocol 预览, 不走文本读取
+        const lower = node.name.toLowerCase();
+        if (/\.(png|jpe?g|gif|svg|webp|bmp|ico)$/i.test(lower)) {
+          store.openImage({ filePath: node.path, fileName: node.name });
+          return;
+        }
         // 检查文件大小, >20MB 用大文件查看器
         const size = await invoke<number>("get_file_size", { filePath: node.path });
         if (size > 20 * 1024 * 1024) {

@@ -280,3 +280,69 @@
   width: auto;
   cursor: row-resize;
 }
+
+/* ============ 启动闪屏 ============ */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: var(--bg-app);
+  animation: splash-fade-in 0.3s ease;
+}
+.splash--leaving {
+  animation: splash-fade-out 0.4s cubic-bezier(0.4, 0, 1, 1) forwards;
+  pointer-events: none;
+}
+@keyframes splash-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes splash-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; transform: scale(1.02); }
+}
+.splash__logo {
+  animation: splash-logo-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes splash-logo-in {
+  from { opacity: 0; transform: scale(0.85) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.splash__svg {
+  filter: drop-shadow(0 4px 24px rgba(0, 122, 204, 0.25));
+}
+.splash__name {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--fg-primary);
+  animation: splash-name-in 0.5s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes splash-name-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* 加载 spinner */
+.splash__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-base);
+  border-top-color: var(--fg-accent);
+  border-radius: 50%;
+  animation: splash-spin 0.7s linear infinite;
+  margin-top: 4px;
+}
+@keyframes splash-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash, .splash__logo, .splash__name, .splash--leaving {
+    animation: none !important;
+  }
+  .splash__spinner { animation: splash-spin 0.7s linear infinite !important; }
+}

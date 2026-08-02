@@ -9,7 +9,7 @@ import type { SidebarView } from "../stores/layoutStore";
  *
  * 文件相关 tab(file/diff/history/blame/log/merge)归资源管理器/搜索/Git 域。
  */
-const SCOPE_FILE: TabKind[] = ["file", "diff", "history", "blame", "log", "merge"];
+const SCOPE_FILE: TabKind[] = ["file", "diff", "history", "blame", "log", "merge", "image"];
 
 /** 某侧栏视图下, 允许显示的 tab kind 列表 */
 export function allowedKinds(view: SidebarView): TabKind[] {

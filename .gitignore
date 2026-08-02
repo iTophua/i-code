@@ -9,6 +9,7 @@ src-tauri/gen/
 # 编辑器
 .vscode/
 .idea/
+.zcode/
 *.swp
 *.swo
 .DS_Store

@@ -58,7 +58,7 @@ export const SESSION_KEYS = {
  */
 export interface SavedTab {
   id: string;
-  kind: "file" | "note" | "diff" | "history" | "blame" | "log" | "merge" | "tool";
+  kind: "file" | "note" | "diff" | "history" | "blame" | "log" | "merge" | "tool" | "image";
   path: string;
   name: string;
   language: string;

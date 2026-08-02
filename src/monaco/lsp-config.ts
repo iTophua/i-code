@@ -17,6 +17,7 @@ export const tsDiagnosticsOptions = {
     2307, // Cannot find module 'xxx' (worker 无 node_modules 解析)
     1259, // Module can only be default-imported usingesModuleInterop
     2792, // Cannot find module. Did you mean to enable allowSyntheticDefaultImports
+    7026, // JSX element implicitly has type 'any' (无 @types/react, JSX.IntrinsicElements 未定义)
   ],
 };
 
@@ -29,7 +30,9 @@ export const tsCompilerOptions = {
   allowNonTsExtensions: true,
   esModuleInterop: true,
   allowJs: true,
-  strict: true,
+  // 编辑器场景放宽隐式 any 检查(回调参数无注解很常见, 实时提示太吵)
+  strict: false,
+  noImplicitAny: false,
   noEmit: true,
 };
 
@@ -47,6 +50,28 @@ export function initBuiltinLanguages(monacoInstance: typeof import("monaco-edito
   // JavaScript
   ts.javascriptDefaults.setDiagnosticsOptions(tsDiagnosticsOptions);
   ts.javascriptDefaults.setCompilerOptions(tsCompilerOptions);
+
+  // 注入 JSX 类型声明(无 @types/react 时, 让 JSX.IntrinsicElements 有定义)
+  const jsxTypes = `
+    interface ReactNode {}
+    interface DOMElement {}
+    declare global {
+      namespace JSX {
+        interface Element extends DOMElement {}
+        interface ElementClass {}
+        interface ElementAttributesProperty { props: {}; }
+        interface ElementChildrenAttribute { children: {}; }
+        type LibraryManagedAttributes<C, P> = P;
+        interface IntrinsicAttributes {}
+        interface IntrinsicClassAttributes<T> {}
+        interface IntrinsicElements {
+          [elemName: string]: any;
+        }
+      }
+    }
+  `;
+  ts.typescriptDefaults.addExtraLib(jsxTypes, "file:///jsx.d.ts");
+  ts.javascriptDefaults.addExtraLib(jsxTypes, "file:///jsx.d.ts");
 
   // 启用语义级诊断(实时)
   ts.typescriptDefaults.setEagerModelSync(true);

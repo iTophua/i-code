@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- iCode 应用图标 v4 (最终版)
+       设计: </> 代码符号 + 蓝色圆点(构成 i)
+       极简扁平, 三个元素: 圆点 + 左括号< + 斜杠/ + 右括号>
+       整体读作 </i>  → 既是 HTML 闭合标签, 又是 "i + code" -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#262626"/>
+      <stop offset="100%" stop-color="#151515"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2a9be8"/>
+      <stop offset="100%" stop-color="#007acc"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="1024" height="1024" rx="228" ry="228" fill="url(#bg)"/>
+
+  <!-- </> 符号组: 居中, 统一描边 -->
+  <g fill="none" stroke="url(#accent)" stroke-width="64"
+     stroke-linecap="round" stroke-linejoin="round">
+    <!-- 左括号 < -->
+    <path d="M 350 372 L 230 512 L 350 652"/>
+    <!-- 斜杠 / -->
+    <line x1="600" y1="372" x2="424" y2="652"/>
+    <!-- 右括号 > -->
+    <path d="M 674 372 L 794 512 L 674 652"/>
+  </g>
+
+  <!-- i 的点: 蓝色圆点在 </> 上方居中 -->
+  <circle cx="512" cy="248" r="54" fill="url(#accent)"/>
+
+  <!-- 极细外边框 -->
+  <rect x="2" y="2" width="1020" height="1020" rx="226" ry="226"
+        fill="none" stroke="#3a3a3a" stroke-width="4" opacity="0.35"/>
+</svg>

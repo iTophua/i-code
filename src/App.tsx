@@ -2,6 +2,7 @@ import { useEffect, useCallback } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { ActivityBar } from "./components/ActivityBar";
+import { SplashScreen } from "./components/SplashScreen";
 import { Sidebar } from "./components/Sidebar";
 import { EditorTabs } from "./components/EditorTabs";
 import { EditorPane } from "./components/EditorPane";
@@ -214,6 +215,12 @@ export default function App() {
                 scrollTop: t.scrollTop,
               });
             }
+            // 图片: 恢复(只记路径, 不存内容)
+            else if (t.kind === "image") {
+              const exists = await invoke<boolean>("path_exists", { path: t.path });
+              if (!exists) continue;
+              useEditorStore.getState().openImage({ filePath: t.path, fileName: t.name });
+            }
             // 其它类型(diff/history/blame/log/merge/tool)不持久化恢复, 跳过
           } catch {
             /* 单个 tab 恢复失败不影响其它 */
@@ -417,6 +424,7 @@ export default function App() {
 
   return (
     <div className={`app ${zenMode ? "app--zen" : ""}`}>
+      <SplashScreen done={restored} />
       {!zenMode && <TitleBar />}
       <div className="app__body">
         {!zenMode && <ActivityBar />}

@@ -65,9 +65,9 @@ const darkDef: ThemeDef = {
     "editorSuggestWidget.selectedBackground": "#094771",
     "editorHoverWidget.background": "#252526",
     "scrollbar.shadow": "#00000033",
-    "scrollbarSlider.background": "#85858559",
-    "scrollbarSlider.hoverBackground": "#85858599",
-    "scrollbarSlider.activeBackground": "#858585CC",
+    "scrollbarSlider.background": "#85858599",
+    "scrollbarSlider.hoverBackground": "#858585C0",
+    "scrollbarSlider.activeBackground": "#858585EE",
   },
 };
 
@@ -124,9 +124,9 @@ const lightDef: ThemeDef = {
     "editorSuggestWidget.selectedBackground": "#0060C0",
     "editorHoverWidget.background": "#F3F3F3",
     "scrollbar.shadow": "#00000033",
-    "scrollbarSlider.background": "#00000033",
-    "scrollbarSlider.hoverBackground": "#00000059",
-    "scrollbarSlider.activeBackground": "#00000080",
+    "scrollbarSlider.background": "#00000066",
+    "scrollbarSlider.hoverBackground": "#00000099",
+    "scrollbarSlider.activeBackground": "#000000CC",
   },
 };
 
@@ -198,11 +198,12 @@ export function getEditorOptions(
     },
     scrollBeyondLastLine: false,
     padding: { top: 12, bottom: 12 },
-    // 滚动条: 与全局 8px 统一, 默认 14px 偏粗
+    // 关闭粘性滚动(顶部钉住作用域行), 其容器有边框, 在透明轨道背景下显得多余
+    stickyScroll: { enabled: false },
+    // 滚动条: slider 宽度与全局原生滚动条(5px) 视觉一致
     scrollbar: {
-      verticalScrollbarSize: 8,
-      horizontalScrollbarSize: 8,
-      useShadows: true,
+      verticalScrollbarSize: 5,
+      horizontalScrollbarSize: 5,
     },
     // 点击行号不选中整行(避免触控板误触)
     selectOnLineNumbers: false,

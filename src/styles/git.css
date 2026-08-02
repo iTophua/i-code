@@ -218,6 +218,11 @@
   flex: 1;
   height: 100%;
 }
+/* 隐藏 diff 外层包裹容器的原生滚动条(只保留 Monaco 自绘 slider) */
+.diff-pane,
+.diff-pane > div {
+  overflow: hidden;
+}
 
 /* ============ 分支管理 ============ */
 .branch-mgr__header {
@@ -837,4 +842,94 @@
 .git-commit__input,
 .branch-new__input {
   transition: border-color var(--dur-fast) ease;
+}
+
+/* ============ 图片预览 ============ */
+.image-preview {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-editor);
+}
+.image-preview__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-sidebar);
+  flex-shrink: 0;
+  font-size: var(--fs-sm);
+}
+.image-preview__name {
+  color: var(--fg-primary);
+  font-weight: 500;
+}
+.image-preview__meta {
+  display: flex;
+  gap: var(--space-3);
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+.image-preview__zoom {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.image-preview__zoom-val {
+  min-width: 44px;
+  text-align: center;
+  color: var(--fg-secondary);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xs);
+}
+.image-preview__btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--fg-secondary);
+  cursor: pointer;
+  font-size: var(--fs-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--t-color);
+}
+.image-preview__btn:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+  border-color: var(--border-focus);
+}
+.image-preview__btn--reset {
+  width: auto;
+  padding: 0 10px;
+  font-size: var(--fs-xs);
+  margin-left: var(--space-2);
+}
+.image-preview__stage {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  /* 棋盘格背景(透明图片可见) */
+  background-image:
+    linear-gradient(45deg, rgba(128,128,128,0.08) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(128,128,128,0.08) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(128,128,128,0.08) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(128,128,128,0.08) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
+.image-preview__stage img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform var(--dur-normal) var(--ease-out);
+  /* 投影让图片浮起来 */
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.3));
 }

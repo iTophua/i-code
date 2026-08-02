@@ -10,6 +10,7 @@ import { getEditorOptions, defineIThemes, ICODE_DARK_THEME, ICODE_LIGHT_THEME } 
 import { saveAsFile } from "../utils/exportNote";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { FileHistoryView } from "./FileHistoryView";
+import { ImagePreview } from "./ImagePreview";
 import { BlameView } from "./BlameView";
 import { LogViewer } from "./LogViewer";
 import { WelcomePage } from "./WelcomePage";
@@ -279,6 +280,11 @@ export function EditorPane() {
     return <LogViewer filePath={activeTab.path} fileName={activeTab.name} />;
   }
 
+  // 图片预览 Tab
+  if (activeTab.kind === "image") {
+    return <ImagePreview filePath={activeTab.path} fileName={activeTab.name} />;
+  }
+
   // Blame Tab
   if (activeTab.kind === "blame") {
     return <BlameView filePath={activeTab.path} fileName={activeTab.name.replace(/^Blame:\s*/, "")} />;
@@ -303,13 +309,11 @@ export function EditorPane() {
             monacoInstance.editor.setTheme(theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME);
           }}
           options={{
-            readOnly: true,
+            ...getEditorOptions({ readOnly: true, fontSize: 14, minimap: { enabled: false } }),
             renderSideBySide: true,
             automaticLayout: true,
-            fontSize: 14,
-            fontFamily: "SF Mono, Menlo, Monaco, Consolas, monospace",
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
+            // 禁用右侧差异概览条(diffViewport, 30px 宽), 否则看起来像一条多余的宽滚动条
+            renderOverviewRuler: false,
           }}
         />
       </div>

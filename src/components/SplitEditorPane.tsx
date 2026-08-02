@@ -67,7 +67,12 @@ export function SplitEditorPane() {
           language={activeTab.language}
           theme={settings.theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME}
           onMount={(_e, m) => { defineIThemes(m); m.editor.setTheme(settings.theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME); }}
-          options={{ readOnly: true, renderSideBySide: true, automaticLayout: true, fontSize: 14, minimap: { enabled: false } }}
+          options={{
+            ...getEditorOptions({ readOnly: true, fontSize: 14, minimap: { enabled: false } }),
+            renderSideBySide: true,
+            automaticLayout: true,
+            renderOverviewRuler: false,
+          }}
         />
       </div>
     );
