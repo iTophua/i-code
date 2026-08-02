@@ -20,6 +20,7 @@ import { ToolSurface } from "./ToolSurface";
 import { NoteQuickTools } from "./NoteQuickTools";
 import { format as sqlFormat } from "sql-formatter";
 import { toast } from "../stores/toastStore";
+import { getExtByLanguage } from "../utils/language";
 
 const LANG_OPTIONS = [
   { value: "plaintext", label: "纯文本" },
@@ -436,6 +437,9 @@ function NoteEditorSurface({
       <div className="note-surface__body">
         <Editor
           height="100%"
+          // 合成 path(带语言扩展名), 让 Monaco 按扩展名挂载对应 worker,
+          // 从而获得完整的高亮 + 补全 + 校验; 切换语言时扩展名变化 → 模型重建 → worker 重连
+          path={`note://${tab.noteId}.${getExtByLanguage(tab.language)}`}
           language={tab.language}
           value={tab.content}
           onMount={onMount}

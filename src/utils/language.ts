@@ -81,6 +81,46 @@ export function getLanguage(filename: string): string {
   return EXT_LANG_MAP[ext] || "plaintext";
 }
 
+/**
+ * 语言 id → 文件扩展名映射(反向)
+ * 用于给便签等无真实文件的 Monaco 模型构造合成 path,
+ * 以便语言服务(worker)能按扩展名正确挂载(补全/校验/hover)
+ */
+const LANG_EXT_MAP: Record<string, string> = {
+  typescript: "ts",
+  javascript: "js",
+  json: "json",
+  html: "html",
+  css: "css",
+  scss: "scss",
+  less: "less",
+  markdown: "md",
+  sql: "sql",
+  python: "py",
+  go: "go",
+  rust: "rs",
+  shell: "sh",
+  yaml: "yaml",
+  xml: "xml",
+  ini: "ini",
+  java: "java",
+  kotlin: "kt",
+  ruby: "rb",
+  php: "php",
+  c: "c",
+  cpp: "cpp",
+  csharp: "cs",
+  swift: "swift",
+  graphql: "graphql",
+  proto: "proto",
+  dockerfile: "dockerfile",
+};
+
+/** 根据语言 id 取一个文件扩展名(无映射时回退到 txt) */
+export function getExtByLanguage(langId: string): string {
+  return LANG_EXT_MAP[langId] || "txt";
+}
+
 /** 简易文件类型(用于图标选择) */
 export type FileIconType =
   | "ts"
