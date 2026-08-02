@@ -4,6 +4,7 @@ import { SearchPanel } from "./SearchPanel";
 import { NotesPanel } from "./NotesPanel";
 import { GitPanel } from "./GitPanel";
 import { SettingsPanel } from "./SettingsPanel";
+import { ToolsPanel } from "./ToolsPanel";
 
 export function Sidebar() {
   const { sidebarView } = useLayoutStore();
@@ -22,19 +23,10 @@ function renderView(view: SidebarView) {
     case "notes":
       return <NotesPanel />;
     case "tools":
-      return <PlaceholderView title="工具" hint="M5 实现" />;
+      return <ToolsPanel />;
     case "settings":
       return <SettingsPanel />;
     default:
       return null;
   }
-}
-
-function PlaceholderView({ title, hint }: { title: string; hint: string }) {
-  return (
-    <div className="placeholder-view">
-      <div className="placeholder-view__title">{title}</div>
-      <div className="placeholder-view__hint">{hint}</div>
-    </div>
-  );
 }
