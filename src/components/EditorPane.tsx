@@ -16,6 +16,10 @@ import { MergeEditor } from "./MergeEditor";
 import "../monaco/setup"; // 启动即注册深色主题
 import { NotesIcon, SaveIcon } from "./Icons";
 import { AppSelect } from "./AppSelect";
+import { ToolSurface } from "./ToolSurface";
+import { NoteQuickTools } from "./NoteQuickTools";
+import { format as sqlFormat } from "sql-formatter";
+import { toast } from "../stores/toastStore";
 
 const LANG_OPTIONS = [
   { value: "plaintext", label: "纯文本" },
@@ -129,6 +133,11 @@ export function EditorPane() {
         />
       </div>
     );
+  }
+
+  // 工具 Tab
+  if (activeTab.kind === "tool") {
+    return <ToolSurface tool={activeTab.tool ?? ""} title={activeTab.name} />;
   }
 
   // 合并编辑器 Tab
@@ -360,6 +369,42 @@ function NoteEditorSurface({
     if (tab.noteId) updateNote(tab.noteId, { language });
   };
 
+  // 快捷工具: 替换当前便签内容(JSON 格式化/压缩/校验, SQL 格式化/压缩)
+  // action 由 NoteQuickTools 触发, 在这里执行实际转换
+  const handleQuickAction = (action: string) => {
+    const text = tab.content || "";
+    try {
+      if (action === "json-format") {
+        const out = JSON.stringify(JSON.parse(text), null, 2);
+        replaceContent(out);
+        toast.success("JSON 已格式化");
+      } else if (action === "json-minify") {
+        const out = JSON.stringify(JSON.parse(text));
+        replaceContent(out);
+        toast.success("JSON 已压缩");
+      } else if (action === "json-validate") {
+        JSON.parse(text);
+        toast.success("JSON 格式正确");
+      } else if (action === "sql-format") {
+        const out = sqlFormat(text, { language: "mysql" });
+        replaceContent(out);
+        toast.success("SQL 已格式化");
+      } else if (action === "sql-minify") {
+        const out = sqlFormat(text, { language: "mysql" }).replace(/\s+/g, " ").trim();
+        replaceContent(out);
+        toast.success("SQL 已压缩");
+      }
+    } catch (e) {
+      toast.error(`操作失败: ${(e as Error).message}`);
+    }
+  };
+
+  // 替换内容: 更新 store + 编辑器实例(若有挂载)
+  const replaceContent = (newContent: string) => {
+    useEditorStore.getState().updateContent(tab.id, newContent);
+    if (tab.noteId) updateNote(tab.noteId, { content: newContent });
+  };
+
   return (
     <div className="note-surface">
       <div className="note-surface__toolbar">
@@ -372,6 +417,7 @@ function NoteEditorSurface({
           onChange={(e) => onTitleChange(e.target.value)}
           placeholder="便签标题..."
         />
+        <NoteQuickTools language={tab.language} onAction={handleQuickAction} />
         <AppSelect
           value={tab.language}
           options={LANG_OPTIONS}

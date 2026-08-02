@@ -256,3 +256,63 @@
 .note-surface__body > div {
   height: 100%;
 }
+
+/* ============ 便签快捷工具(语言相关) ============ */
+.note-quick {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.note-quick__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--fg-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: border-color 0.1s, color 0.1s;
+}
+
+.note-quick__trigger:hover {
+  border-color: var(--border-focus);
+  color: var(--fg-primary);
+}
+
+.note-quick__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 120px;
+  padding: 4px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+  background: var(--bg-menu);
+  box-shadow: var(--shadow-menu);
+  z-index: 50;
+}
+
+.note-quick__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-primary);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: background 0.05s;
+}
+
+.note-quick__item:hover {
+  background: var(--bg-list-active);
+  color: var(--fg-on-accent);
+}

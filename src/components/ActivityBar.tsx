@@ -8,6 +8,8 @@ import {
 } from "./Icons";
 import { Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useNotesStore } from "../stores/notesStore";
+import { useEditorStore } from "../stores/editorStore";
 import "../styles/activitybar.css";
 
 interface ActivityItem {
@@ -26,6 +28,21 @@ const ITEMS: ActivityItem[] = [
 
 export function ActivityBar() {
   const { sidebarView, sidebarVisible, setSidebarView } = useLayoutStore();
+  const workspaceRoot = useLayoutStore((s) => s.workspaceRoot);
+
+  // 便签: 双击活动栏图标 → 新建便签并打开
+  const handleNotesDoubleClick = async () => {
+    await useNotesStore.getState().createNote(workspaceRoot);
+    const latest = useNotesStore.getState().notes[0];
+    if (latest) {
+      useEditorStore.getState().openNote({
+        id: latest.id,
+        title: latest.title,
+        content: latest.content,
+        language: latest.language,
+      });
+    }
+  };
 
   return (
     <div className="activity-bar">
@@ -38,6 +55,7 @@ export function ActivityBar() {
             className={`activity-item ${isActive ? "activity-item--active" : ""}`}
             title={item.label}
             onClick={() => setSidebarView(item.id)}
+            onDoubleClick={item.id === "notes" ? handleNotesDoubleClick : undefined}
           >
             <Icon size={20} />
           </button>

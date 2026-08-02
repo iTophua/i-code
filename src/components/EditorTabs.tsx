@@ -2,7 +2,7 @@ import { useEditorStore } from "../stores/editorStore";
 import { useLayoutStore } from "../stores/layoutStore";
 import { getFileIconType } from "../utils/language";
 import { FileIcon } from "./FileIcon";
-import { CloseIcon, NotesIcon, SplitViewIcon, PreviewOnlyIcon, CodeOnlyIcon } from "./Icons";
+import { CloseIcon, NotesIcon, SplitViewIcon, PreviewOnlyIcon, CodeOnlyIcon, ToolsIcon } from "./Icons";
 import { ArrowRightFromLine } from "lucide-react";
 import "../styles/tabs.css";
 
@@ -49,6 +49,8 @@ export function EditorTabs() {
               <span className="tab__icon">
                 {tab.kind === "note" ? (
                   <NotesIcon size={15} />
+                ) : tab.kind === "tool" ? (
+                  <ToolsIcon size={15} />
                 ) : (
                   <FileIcon type={iconType} size={16} />
                 )}

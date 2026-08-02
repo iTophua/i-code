@@ -7,7 +7,7 @@ import { useFileTreeStore } from "./fileTreeStore";
  * Tab 类型: 文件(file) 和 便签(note), 统一在主编辑区用 Tab 打开
  */
 
-export type TabKind = "file" | "note" | "diff" | "history" | "blame" | "log" | "merge";
+export type TabKind = "file" | "note" | "diff" | "history" | "blame" | "log" | "merge" | "tool";
 
 export interface EditorTab {
   /** 唯一 id(文件用路径, 便签用 note-id) */
@@ -38,6 +38,8 @@ export interface EditorTab {
   noteId?: string;
   /** diff 原始内容(仅 diff) */
   diffOriginal?: string;
+  /** 工具 id(仅 tool) */
+  tool?: string;
 }
 
 interface EditorStore {
@@ -75,6 +77,8 @@ interface EditorStore {
   openLog: (info: { filePath: string; fileName: string }) => void;
   /** 打开合并编辑器 */
   openMerge: (info: { filePath: string; fileName: string }) => void;
+  /** 打开工具(在主编辑区以 Tab 形式) */
+  openTool: (info: { tool: string; title: string }) => void;
   /** 关闭 Tab */
   closeTab: (id: string) => void;
   /** 切换激活 Tab */
@@ -315,6 +319,29 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       content: "",
       originalContent: "",
       language: getLanguage(fileName),
+    };
+    set({ tabs: [...tabs, newTab], activeTabId: tabId });
+  },
+
+  openTool: ({ tool, title }) => {
+    const { tabs } = get();
+    const tabId = `tool:${tool}`;
+    const existing = tabs.find((t) => t.id === tabId);
+    if (existing) {
+      set({ activeTabId: tabId });
+      return;
+    }
+    const newTab: EditorTab = {
+      id: tabId,
+      kind: "tool",
+      path: tabId,
+      name: title,
+      isPreview: false,
+      isDirty: false,
+      content: "",
+      originalContent: "",
+      language: "plaintext",
+      tool,
     };
     set({ tabs: [...tabs, newTab], activeTabId: tabId });
   },

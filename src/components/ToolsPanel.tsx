@@ -1,15 +1,23 @@
-import { useState } from "react";
 import { JsonTool } from "./tools/JsonTool";
 import { SqlTool } from "./tools/SqlTool";
 import { EncodeTool } from "./tools/EncodeTool";
 import { DevTool } from "./tools/DevTool";
 import { TextDiffTool } from "./tools/TextDiffTool";
-import { Braces, Database, Binary, Wrench, GitCompareArrows } from "lucide-react";
+import {
+  Braces,
+  Database,
+  Binary,
+  Wrench,
+  GitCompareArrows,
+  ArrowUpRight,
+} from "lucide-react";
+import { useEditorStore } from "../stores/editorStore";
+import type { LucideIcon } from "lucide-react";
 import "../styles/tools.css";
 
 type ToolId = "json" | "sql" | "encode" | "dev" | "diff";
 
-const TOOLS: { id: ToolId; label: string; icon: typeof Braces; desc: string }[] = [
+const TOOLS: { id: ToolId; label: string; icon: LucideIcon; desc: string }[] = [
   { id: "json", label: "JSON", icon: Braces, desc: "格式化 / 压缩 / 校验" },
   { id: "sql", label: "SQL", icon: Database, desc: "格式化 / 压缩" },
   { id: "encode", label: "编解码", icon: Binary, desc: "Base64 / URL" },
@@ -17,25 +25,16 @@ const TOOLS: { id: ToolId; label: string; icon: typeof Braces; desc: string }[] 
   { id: "diff", label: "文本对比", icon: GitCompareArrows, desc: "两段文本差异对比" },
 ];
 
+/**
+ * 侧栏工具入口列表
+ * 点击某项 → 在主编辑区以 Tab 形式打开该工具
+ */
 export function ToolsPanel() {
-  const [active, setActive] = useState<ToolId | null>(null);
+  const openTool = useEditorStore((s) => s.openTool);
 
-  if (active) {
-    return (
-      <div className="tools-panel">
-        <div className="tools-panel__back" onClick={() => setActive(null)}>
-          ‹ 返回工具列表
-        </div>
-        <div className="tools-panel__content">
-          {active === "json" && <JsonTool />}
-          {active === "sql" && <SqlTool />}
-          {active === "encode" && <EncodeTool />}
-          {active === "dev" && <DevTool />}
-          {active === "diff" && <TextDiffTool />}
-        </div>
-      </div>
-    );
-  }
+  const handleOpen = (tool: ToolId, label: string) => {
+    openTool({ tool, title: `工具: ${label}` });
+  };
 
   return (
     <div className="tools-panel">
@@ -49,7 +48,8 @@ export function ToolsPanel() {
             <div
               key={tool.id}
               className="tool-item"
-              onClick={() => setActive(tool.id)}
+              onClick={() => handleOpen(tool.id, tool.label)}
+              title={`在主区域打开「${tool.label}」工具`}
             >
               <span className="tool-item__icon">
                 <Icon size={18} strokeWidth={1.5} />
@@ -58,6 +58,7 @@ export function ToolsPanel() {
                 <span className="tool-item__name">{tool.label}</span>
                 <span className="tool-item__desc">{tool.desc}</span>
               </div>
+              <ArrowUpRight size={14} className="tool-item__open" />
             </div>
           );
         })}
@@ -65,3 +66,6 @@ export function ToolsPanel() {
     </div>
   );
 }
+
+// 保留导出供主区域 ToolSurface 直接引用
+export { JsonTool, SqlTool, EncodeTool, DevTool, TextDiffTool };

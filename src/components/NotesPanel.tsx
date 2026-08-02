@@ -63,7 +63,13 @@ export function NotesPanel() {
     <div className="notes">
       {/* 工具栏 */}
       <div className="notes__header">
-        <span className="notes__title">便签</span>
+        <span
+          className="notes__title"
+          title="双击新建便签"
+          onDoubleClick={() => handleCreate()}
+        >
+          便签
+        </span>
         <button
           className="icon-btn"
           title="新建便签"

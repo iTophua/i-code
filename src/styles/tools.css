@@ -67,6 +67,17 @@
   color: var(--fg-muted);
 }
 
+/* 打开到主区域的指示箭头 */
+.tool-item__open {
+  flex-shrink: 0;
+  color: var(--fg-muted);
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.tool-item:hover .tool-item__open {
+  opacity: 0.8;
+}
+
 /* 返回按钮 */
 .tools-panel__back {
   display: flex;
@@ -165,4 +176,107 @@
 }
 .tool-status--error {
   color: var(--fg-error);
+}
+
+/* ============ 工具在主编辑区(ToolSurface) ============ */
+.tool-surface {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-editor);
+}
+
+.tool-surface__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 35px;
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border-bottom: 1px solid var(--border-base);
+  background: var(--bg-sidebar);
+  flex-shrink: 0;
+}
+
+.tool-surface__tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 100%;
+  overflow-x: auto;
+}
+
+.tool-surface__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s, color 0.1s;
+}
+
+.tool-surface__tab:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+
+.tool-surface__tab--active {
+  background: var(--bg-list-active);
+  color: var(--fg-on-accent);
+}
+
+.tool-surface__tab--active:hover {
+  background: var(--bg-list-active);
+  color: var(--fg-on-accent);
+}
+
+.tool-surface__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: var(--fs-xl);
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tool-surface__close:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+
+.tool-surface__content {
+  flex: 1;
+  min-height: 0;
+}
+
+.tool-surface__scroll {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-5);
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* 主区域内工具的文本框/输出区放大一点, 更适合宽屏 */
+.tool-surface .tool-textarea {
+  min-height: 140px;
+  font-size: var(--fs-sm);
+}
+
+.tool-surface .tool-output {
+  min-height: 140px;
 }
