@@ -20,7 +20,11 @@ export function ToastContainer() {
       {toasts.map((t) => {
         const Icon = ICONS[t.type] || Info;
         return (
-          <div key={t.id} className={`toast toast--${t.type}`} onClick={() => remove(t.id)}>
+          <div
+            key={t.id}
+            className={`toast toast--${t.type} ${t.leaving ? "toast--leaving" : ""}`}
+            onClick={() => remove(t.id)}
+          >
             <span className="toast__icon">
               <Icon size={14} />
             </span>

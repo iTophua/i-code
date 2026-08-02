@@ -23,8 +23,12 @@
   white-space: nowrap;
   cursor: pointer;
   outline: none;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease,
-    opacity 0.12s ease, box-shadow 0.12s ease;
+  transition: background 0.13s ease, border-color 0.13s ease, color 0.13s ease,
+    opacity 0.13s ease, box-shadow 0.13s ease, transform 0.08s ease;
+}
+/* 点击按压反馈(所有变体共用) */
+.btn:active {
+  transform: translateY(1px);
 }
 
 /* 主按钮: 强调色实心 */
@@ -34,9 +38,6 @@
 }
 .btn--primary:hover {
   background: var(--bg-button-hover);
-}
-.btn--primary:active {
-  opacity: 0.88;
 }
 
 /* 次按钮: 透明描边 */
@@ -62,9 +63,6 @@
 .btn--danger:hover {
   background: var(--danger-bg-hover);
 }
-.btn--danger:active {
-  opacity: 0.88;
-}
 
 /* 键盘焦点环(可达性) */
 .btn:focus-visible {
@@ -88,10 +86,35 @@
   border-radius: var(--radius-md);
   box-shadow: 0 5px 16px rgba(0, 0, 0, 0.4);
   font-size: 13px;
-  animation: menu-fade 0.1s ease;
+  transform-origin: var(--radix-context-menu-content-transform-origin, top center);
 }
-@keyframes menu-fade {
+/* 进出动画 */
+.radix-menu-content[data-state="open"],
+[class*="DropdownMenuContent"][data-state="open"],
+[class*="ContextMenuContent"][data-state="open"] {
+  animation: menu-in 0.13s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.radix-menu-content[data-state="closed"],
+[class*="DropdownMenuContent"][data-state="closed"],
+[class*="ContextMenuContent"][data-state="closed"] {
+  animation: menu-out 0.1s ease forwards;
+}
+@keyframes menu-in {
   from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes menu-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
     opacity: 0;
     transform: scale(0.97);
   }
@@ -148,7 +171,7 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  /* 注意: animation 的 from/to 已含 translate(-50%,-50%) 居中 */
   z-index: 10001; /* 高于 Overlay(10000) */
   min-width: 360px;
   max-width: 480px;
@@ -157,7 +180,13 @@
   border: 1px solid var(--border-base);
   border-radius: var(--radius-lg);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-  animation: dialog-pop 0.14s ease;
+}
+/* 进出动画(Radia 在动画期间挂 data-state=open/closed) */
+.app-dialog-content[data-state="open"] {
+  animation: dialog-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.app-dialog-content[data-state="closed"] {
+  animation: dialog-out 0.12s ease forwards;
 }
 
 /* 右上角关闭按钮(替代底部"取消") */
@@ -191,21 +220,49 @@
   inset: 0;
   z-index: 10000;
   background: rgba(0, 0, 0, 0.45);
-  animation: overlay-fade 0.12s ease;
 }
-@keyframes overlay-fade {
+.app-dialog-overlay[data-state="open"] {
+  animation: overlay-in 0.16s ease;
+}
+.app-dialog-overlay[data-state="closed"] {
+  animation: overlay-out 0.12s ease forwards;
+}
+@keyframes overlay-in {
   from {
     opacity: 0;
   }
+  to {
+    opacity: 1;
+  }
 }
-@keyframes dialog-pop {
+@keyframes overlay-out {
   from {
-    /* 保留居中 translate, 再叠加缩放(否则动画期间 transform 会覆盖居中) */
-    transform: translate(-50%, -50%) scale(0.96);
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+/* 弹窗进: 缩放+轻微上浮; 保留 translate 居中 */
+@keyframes dialog-in {
+  from {
+    transform: translate(-50%, calc(-50% + 8px)) scale(0.96);
     opacity: 0;
   }
   to {
     transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+/* 弹窗出: 反向 */
+@keyframes dialog-out {
+  from {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, calc(-50% + 8px)) scale(0.97);
+    opacity: 0;
   }
 }
 .app-dialog-title {
@@ -261,6 +318,12 @@
   overflow: hidden;
   z-index: 9999;
 }
+[class*="SelectContent"][data-state="open"] {
+  animation: menu-in 0.13s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[class*="SelectContent"][data-state="closed"] {
+  animation: menu-out 0.1s ease forwards;
+}
 [class*="SelectItem"] {
   display: flex;
   align-items: center;
@@ -287,39 +350,26 @@
   font-size: 11px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   z-index: 9999;
-  animation: tooltip-fade 0.1s ease;
 }
-@keyframes tooltip-fade {
+[class*="TooltipContent"][data-state="delayed-open"],
+[class*="TooltipContent"][data-state="instant-open"] {
+  animation: tooltip-in 0.12s ease;
+}
+[class*="TooltipContent"][data-state="closed"] {
+  animation: tooltip-out 0.09s ease forwards;
+}
+@keyframes tooltip-in {
   from {
     opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
-
-/* ============ Toast ============ */
-[class*="ToastViewport"] {
-  position: fixed;
-  bottom: 32px;
-  right: 24px;
-  z-index: 10001;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-[class*="ToastRoot"] {
-  padding: 10px 14px;
-  background: var(--bg-sidebar);
-  border: 1px solid var(--border-base);
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  color: var(--fg-primary);
-  font-size: 13px;
-  min-width: 200px;
-  max-width: 360px;
-  animation: toast-slide 0.2s ease;
-}
-@keyframes toast-slide {
-  from {
-    transform: translateX(20px);
+@keyframes tooltip-out {
+  to {
     opacity: 0;
   }
 }
@@ -335,6 +385,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.13s ease, border-color 0.13s ease;
 }
 [class*="CheckboxRoot"][data-state="checked"] {
   background: var(--bg-button);
@@ -366,7 +417,7 @@
   border-radius: 50%;
   background: #fff;
   transform: translateX(2px);
-  transition: transform 0.15s;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 [class*="SwitchRoot"][data-state="checked"] [class*="SwitchThumb"] {
   transform: translateX(16px);
@@ -411,7 +462,12 @@
   box-shadow: 0 5px 16px rgba(0, 0, 0, 0.4);
   z-index: 9999;
   overflow: hidden;
-  animation: menu-fade 0.1s ease;
+}
+.app-select__content[data-state="open"] {
+  animation: menu-in 0.13s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.app-select__content[data-state="closed"] {
+  animation: menu-out 0.1s ease forwards;
 }
 .app-select__item {
   display: flex;
@@ -423,6 +479,7 @@
   font-size: 12px;
   cursor: pointer;
   outline: none;
+  transition: background 0.1s ease, color 0.1s ease;
 }
 .app-select__item[data-highlighted] {
   background: var(--bg-menu-hover);
@@ -431,3 +488,31 @@
 .app-select__item[data-state="checked"] {
   color: var(--git-modified);
 }
+
+/* ============ 动画降级: 尊重系统「减少动态效果」偏好 ============ */
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn:active,
+  .app-dialog-close,
+  [class*="CheckboxRoot"],
+  [class*="SwitchRoot"],
+  [class*="SwitchThumb"],
+  .app-select__item,
+  [class*="SelectItem"],
+  [class*="DropdownMenuItem"],
+  [class*="ContextMenuItem"] {
+    transition: none !important;
+    animation: none !important;
+  }
+  .app-dialog-content,
+  .app-dialog-overlay,
+  .radix-menu-content,
+  [class*="DropdownMenuContent"],
+  [class*="ContextMenuContent"],
+  [class*="SelectContent"],
+  .app-select__content,
+  [class*="TooltipContent"] {
+    animation: none !important;
+  }
+}
+

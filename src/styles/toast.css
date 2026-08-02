@@ -25,11 +25,24 @@
   font-size: var(--fs-base);
   cursor: pointer;
   pointer-events: auto;
-  animation: toast-slide 0.2s ease;
+  animation: toast-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
-@keyframes toast-slide {
+.toast--leaving {
+  animation: toast-out 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+@keyframes toast-in {
   from {
-    transform: translateX(20px);
+    transform: translateX(24px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes toast-out {
+  to {
+    transform: translateX(24px);
     opacity: 0;
   }
 }
@@ -51,4 +64,11 @@
 
 .toast--error {
   border-color: var(--fg-error);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast--leaving {
+    animation: none !important;
+  }
 }
