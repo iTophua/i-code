@@ -20,6 +20,7 @@ import { ConfirmDialog } from "./components/ConfirmDialog";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { TitleBar } from "./components/TitleBar";
 import { SettingsDialog } from "./components/SettingsDialog";
+import { HelpDialog } from "./components/HelpDialog";
 import { ProblemsPanel } from "./components/ProblemsPanel";
 import { ToastContainer } from "./components/Toast";
 import { CommandPalette } from "./components/CommandPalette";
@@ -487,6 +488,7 @@ export default function App() {
       </div>
       {!zenMode && <StatusBar />}
       <SettingsDialog />
+      <HelpDialog />
       <ConfirmDialog
         open={closeConfirm !== null}
         title="未保存的修改"
