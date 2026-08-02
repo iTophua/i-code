@@ -47,3 +47,27 @@ export const SESSION_KEYS = {
   sidebarVisible: "sidebarVisible",
   sidebarView: "sidebarView",
 } as const;
+
+/**
+ * 持久化的 Tab 信息(用于重启恢复"原样")
+ * - file/note: kind + path + name + preview + 草稿内容/光标
+ * - 草稿(content !== null)表示有未保存修改, 恢复后保持 isDirty
+ */
+export interface SavedTab {
+  id: string;
+  kind: "file" | "note" | "diff" | "history" | "blame" | "log" | "merge" | "tool";
+  path: string;
+  name: string;
+  language: string;
+  isPreview: boolean;
+  /** 草稿内容(有未保存修改时存; null = 无草稿, 从源头重读) */
+  draft?: string | null;
+  /** 便签标题(仅 note) */
+  noteTitle?: string;
+  /** 便签 id(仅 note) */
+  noteId?: string;
+  /** 光标位置 */
+  cursor?: { line: number; column: number };
+  /** 滚动位置 */
+  scrollTop?: number;
+}

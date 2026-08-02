@@ -30,6 +30,7 @@ import {
   setSession,
   getSession,
   SESSION_KEYS,
+  type SavedTab,
 } from "./utils/session";
 import { getLanguage } from "./utils/language";
 import { addRecentProject } from "./utils/recentProjects";
@@ -54,6 +55,7 @@ export default function App() {
     toggleZen,
   } = useLayoutStore();
   const setRootPath = useFileTreeStore((s) => s.setRootPath);
+  const splitEnabled = useEditorStore((s) => s.splitEnabled);
   const [closeConfirm, setCloseConfirm] = useState<{ id: string; name: string } | null>(null);
   const [savingTab, setSavingTab] = useState(false);
   const [restored, setRestored] = useState(false);
@@ -89,7 +91,12 @@ export default function App() {
         return;
       }
       if (tab.kind === "note" && tab.noteId) {
-        await useNotesStore.getState().updateNote(tab.noteId, { content: tab.content });
+        // 便签: 提交 标题/内容/语言 全量到 SQLite
+        await useNotesStore.getState().updateNote(tab.noteId, {
+          title: tab.noteTitle ?? "",
+          content: tab.content,
+          language: tab.language,
+        });
       } else if (tab.kind === "file") {
         await invoke("write_file", { filePath: tab.path, content: tab.content });
       }
@@ -126,28 +133,63 @@ export default function App() {
         }
       }
 
-      // 恢复打开的 Tab(从磁盘重新读内容, 不存未保存的草稿 - M1 阶段)
-      const savedTabs = await getSession<
-        { path: string; name: string }[]
-      >(SESSION_KEYS.openTabs);
+      // 恢复打开的 Tab(恢复原样: 文件从磁盘读, 便签从 DB 读, 草稿覆盖内容并标记 dirty)
+      const savedTabs = await getSession<SavedTab[]>(SESSION_KEYS.openTabs);
       if (savedTabs && savedTabs.length > 0) {
-        const { openFile } = useEditorStore.getState();
+        // 先确保便签已从 DB 加载(便签 tab 恢复依赖 notes 列表)
+        if (savedTabs.some((t) => t.kind === "note")) {
+          await useNotesStore.getState().loadNotes(
+            useLayoutStore.getState().workspaceRoot
+          );
+        }
+        const { restoreTab } = useEditorStore.getState();
         for (const t of savedTabs) {
           try {
-            const exists = await invoke<boolean>("path_exists", { path: t.path });
-            if (!exists) continue;
-            const [content] = await invoke<[string, string]>("read_file", {
-              filePath: t.path,
-            });
-            openFile({
-              path: t.path,
-              name: t.name,
-              content,
-              language: getLanguage(t.name),
-              preview: false,
-            });
+            if (t.kind === "note" && t.noteId) {
+              // 便签: 从 SQLite 取最新内容作为基准
+              const note = useNotesStore.getState().notes.find((n) => n.id === t.noteId);
+              const baseContent = note?.content ?? "";
+              const baseTitle = note?.title ?? "";
+              const baseLang = note?.language ?? "plaintext";
+              restoreTab({
+                id: t.id,
+                kind: "note",
+                path: t.id,
+                name: t.noteTitle || baseTitle || "无标题便签",
+                isPreview: false,
+                isDirty: t.draft != null,
+                content: t.draft ?? baseContent,
+                originalContent: baseContent,
+                language: t.language || baseLang,
+                noteId: t.noteId,
+                noteTitle: t.noteTitle ?? baseTitle,
+                cursor: t.cursor,
+                scrollTop: t.scrollTop,
+              });
+            } else if (t.kind === "file") {
+              // 文件: 磁盘不存在则跳过
+              const exists = await invoke<boolean>("path_exists", { path: t.path });
+              if (!exists) continue;
+              const [diskContent] = await invoke<[string, string]>("read_file", {
+                filePath: t.path,
+              });
+              restoreTab({
+                id: t.id,
+                kind: "file",
+                path: t.path,
+                name: t.name,
+                isPreview: false,
+                isDirty: t.draft != null,
+                content: t.draft ?? diskContent,
+                originalContent: diskContent,
+                language: t.language || getLanguage(t.name),
+                cursor: t.cursor,
+                scrollTop: t.scrollTop,
+              });
+            }
+            // 其它类型(diff/history/blame/log/merge/tool)不持久化恢复, 跳过
           } catch {
-            /* 文件可能已删除, 跳过 */
+            /* 单个 tab 恢复失败不影响其它 */
           }
         }
       }
@@ -155,7 +197,10 @@ export default function App() {
       // 恢复活跃 Tab
       const savedActive = await getSession<string>(SESSION_KEYS.activeTabId);
       if (savedActive) {
-        useEditorStore.getState().setActiveTab(savedActive);
+        const { tabs } = useEditorStore.getState();
+        if (tabs.some((t) => t.id === savedActive)) {
+          useEditorStore.getState().setActiveTab(savedActive);
+        }
       }
 
       setRestored(true);
@@ -231,15 +276,27 @@ export default function App() {
     return () => clearTimeout(t);
   }, [restored, sidebarWidth]);
 
-  // 持久化打开的 Tab(变化时防抖保存)
+  // 持久化打开的 Tab(变化时防抖保存) —— 含草稿/光标, 重启后恢复原样
   useEffect(() => {
     if (!restored) return;
     const t = setTimeout(() => {
       const { tabs } = useEditorStore.getState();
-      // 只存正式 Tab(非预览), 存路径+名字
-      const toSave = tabs
+      const toSave: SavedTab[] = tabs
         .filter((tab) => !tab.isPreview)
-        .map((t) => ({ path: t.path, name: t.name }));
+        .map((tab) => ({
+          id: tab.id,
+          kind: tab.kind,
+          path: tab.path,
+          name: tab.name,
+          language: tab.language,
+          isPreview: false,
+          // 有未保存修改 → 存草稿内容; 否则不存(恢复时从源头重读)
+          draft: tab.isDirty ? tab.content : null,
+          noteTitle: tab.noteTitle,
+          noteId: tab.noteId,
+          cursor: tab.cursor,
+          scrollTop: tab.scrollTop,
+        }));
       setSession(SESSION_KEYS.openTabs, toSave);
     }, 800);
     return () => clearTimeout(t);
@@ -339,7 +396,7 @@ export default function App() {
             <>
               <EditorTabs />
               <Breadcrumb />
-              <div className={`app__editor-area ${useEditorStore.getState().splitEnabled ? "app__editor-area--split" : ""}`}>
+              <div className={`app__editor-area ${splitEnabled ? "app__editor-area--split" : ""}`}>
                 {zenMode && (
                   <button
                     className="zen-exit"
@@ -352,7 +409,7 @@ export default function App() {
                 <EditorPane />
               </div>
               {/* 分栏第二组 */}
-              {useEditorStore.getState().splitEnabled && (
+              {splitEnabled && (
                 <>
                   <div className="app__split-divider" />
                   <div className="app__editor-area app__editor-area--split">

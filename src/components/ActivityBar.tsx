@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useLayoutStore, type SidebarView } from "../stores/layoutStore";
 import {
   FilesIcon,
@@ -29,9 +30,12 @@ const ITEMS: ActivityItem[] = [
 export function ActivityBar() {
   const { sidebarView, sidebarVisible, setSidebarView } = useLayoutStore();
   const workspaceRoot = useLayoutStore((s) => s.workspaceRoot);
+  // 单击/双击区分: 记录点击次数, 250ms 内两次点击 = 双击(不触发单击的切栏)
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef<number | null>(null);
 
   // 便签: 双击活动栏图标 → 新建便签并打开
-  const handleNotesDoubleClick = async () => {
+  const createAndOpenNote = async () => {
     await useNotesStore.getState().createNote(workspaceRoot);
     const latest = useNotesStore.getState().notes[0];
     if (latest) {
@@ -41,6 +45,23 @@ export function ActivityBar() {
         content: latest.content,
         language: latest.language,
       });
+    }
+  };
+
+  // 便签图标的点击处理(区分单击切栏 / 双击新建)
+  const handleNotesClick = () => {
+    clickCountRef.current += 1;
+    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+    if (clickCountRef.current === 1) {
+      clickTimerRef.current = window.setTimeout(() => {
+        // 单击: 切换侧栏
+        setSidebarView("notes");
+        clickCountRef.current = 0;
+      }, 250);
+    } else {
+      // 双击: 新建便签
+      clickCountRef.current = 0;
+      createAndOpenNote();
     }
   };
 
@@ -54,8 +75,7 @@ export function ActivityBar() {
             key={item.id}
             className={`activity-item ${isActive ? "activity-item--active" : ""}`}
             title={item.label}
-            onClick={() => setSidebarView(item.id)}
-            onDoubleClick={item.id === "notes" ? handleNotesDoubleClick : undefined}
+            onClick={item.id === "notes" ? handleNotesClick : () => setSidebarView(item.id)}
           >
             <Icon size={20} />
           </button>

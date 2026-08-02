@@ -77,9 +77,57 @@ export function EditorPane() {
     // 双保险: 每次挂载都确保主题已注册并应用(消除首次白色)
     defineIThemes(monacoInstance);
     monacoInstance.editor.setTheme(ICODE_DARK_THEME);
+    // 显式设置多光标/列选: 这些鼠标交互选项必须实例创建后 updateOptions 才稳定生效
+    // (Option/Alt + 左键拖拽 = 矩形列选, Option+点击 = 加光标)
+    editorInstance.updateOptions({
+      multiCursorModifier: "alt",
+      columnSelection: false,
+      multiCursorPaste: "full",
+    });
     // 注册为活动编辑器(聚焦时刷新), 供命令面板等外部入口触发多光标/列选等
     setActiveEditor(editorInstance);
     editorInstance.onDidFocusEditorText?.(() => setActiveEditor(editorInstance));
+
+    // 恢复光标/滚动位置(重启恢复 tab 原样)
+    if (activeTab?.cursor) {
+      editorInstance.setPosition({
+        lineNumber: activeTab.cursor.line,
+        column: activeTab.cursor.column,
+      });
+      editorInstance.revealPositionInCenterIfOutsideViewport({
+        lineNumber: activeTab.cursor.line,
+        column: activeTab.cursor.column,
+      });
+    }
+    if (activeTab?.scrollTop) {
+      editorInstance.setScrollTop(activeTab.scrollTop);
+    }
+
+    // 记录光标位置(节流, 供重启恢复)
+    let cursorTimer: number | null = null;
+    editorInstance.onDidChangeCursorPosition((e) => {
+      if (cursorTimer) clearTimeout(cursorTimer);
+      cursorTimer = window.setTimeout(() => {
+        if (activeTabId) {
+          useEditorStore.getState().recordViewport(activeTabId, {
+            cursor: { line: e.position.lineNumber, column: e.position.column },
+          });
+        }
+      }, 400);
+    });
+    // 记录滚动位置(节流)
+    let scrollTimer: number | null = null;
+    editorInstance.onDidScrollChange((e) => {
+      if (!e.scrollTopChanged) return;
+      if (scrollTimer) clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(() => {
+        if (activeTabId) {
+          useEditorStore.getState().recordViewport(activeTabId, {
+            scrollTop: editorInstance.getScrollTop(),
+          });
+        }
+      }, 400);
+    });
   };
 
   const handleChange = (value: string | undefined) => {
@@ -102,10 +150,12 @@ export function EditorPane() {
 
   const handleSave = async () => {
     if (!activeTab || !activeTabId) return;
-    // 便签: 存到 SQLite
+    // 便签: 标题/内容/语言 提交到 SQLite
     if (activeTab.kind === "note" && activeTab.noteId) {
       await useNotesStore.getState().updateNote(activeTab.noteId, {
+        title: activeTab.noteTitle ?? "",
         content: activeTab.content,
+        language: activeTab.language,
       });
       markSaved(activeTabId);
       return;
@@ -307,7 +357,11 @@ function MarkdownFileEditor({
   );
 }
 
-/** 便签编辑界面: 顶部标题栏 + Monaco 内容区 */
+/** 便签编辑界面: 顶部标题栏 + Monaco 内容区
+ * 编辑只更新内存 Tab(isDirty 跟随), 不立即写库;
+ * Cmd+S 时才提交到 SQLite(见 EditorPane.handleSave)。
+ * 重启后由会话草稿恢复未保存的内容。
+ */
 function NoteEditorSurface({
   tab,
   onMount,
@@ -317,9 +371,6 @@ function NoteEditorSurface({
   onMount: OnMount;
   onChange: (v: string | undefined) => void;
 }) {
-  const updateNote = useNotesStore((s) => s.updateNote);
-  const titleTimer = useRef<number | null>(null);
-  const contentTimer = useRef<number | null>(null);
   const [savedHint, setSavedHint] = useState<string | null>(null);
 
   // 另存为文件
@@ -341,37 +392,35 @@ function NoteEditorSurface({
     }
   };
 
-  // 标题防抖保存
+  // 标题修改: 只更新内存 Tab(标记 dirty), 不写库
   const onTitleChange = (title: string) => {
-    // 立即更新本地 Tab 显示
     useEditorStore.setState((s) => ({
       tabs: s.tabs.map((t) =>
-        t.id === tab.id ? { ...t, name: title || "无标题便签", noteTitle: title } : t
+        t.id === tab.id
+          ? {
+              ...t,
+              name: title || "无标题便签",
+              noteTitle: title,
+              isDirty: true,
+              originalContent: t.originalContent, // 保持原内容基准
+            }
+          : t
       ),
     }));
-    if (titleTimer.current) clearTimeout(titleTimer.current);
-    titleTimer.current = window.setTimeout(() => {
-      if (tab.noteId) updateNote(tab.noteId, { title });
-    }, 500);
   };
 
-  // 内容防抖保存
+  // 内容修改: 只走 updateContent(设 isDirty), 不写库
   const onContentChange = (v: string | undefined) => {
     onChange(v);
-    if (contentTimer.current) clearTimeout(contentTimer.current);
-    contentTimer.current = window.setTimeout(() => {
-      if (tab.noteId) updateNote(tab.noteId!, { content: v ?? "" });
-    }, 800);
   };
 
-  // 语言切换
+  // 语言切换: 只更新内存 Tab(标记 dirty), 不写库
   const onLangChange = (language: string) => {
     useEditorStore.setState((s) => ({
       tabs: s.tabs.map((t) =>
-        t.id === tab.id ? { ...t, language } : t
+        t.id === tab.id ? { ...t, language, isDirty: true } : t
       ),
     }));
-    if (tab.noteId) updateNote(tab.noteId, { language });
   };
 
   // 快捷工具: 替换当前便签内容(JSON 格式化/压缩/校验, SQL 格式化/压缩)
@@ -404,10 +453,9 @@ function NoteEditorSurface({
     }
   };
 
-  // 替换内容: 更新 store + 编辑器实例(若有挂载)
+  // 替换内容: 只更新内存 Tab(标记 dirty), 不写库(随 Cmd+S 或草稿暂存)
   const replaceContent = (newContent: string) => {
     useEditorStore.getState().updateContent(tab.id, newContent);
-    if (tab.noteId) updateNote(tab.noteId, { content: newContent });
   };
 
   return (

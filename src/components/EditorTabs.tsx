@@ -2,8 +2,9 @@ import { useEditorStore } from "../stores/editorStore";
 import { useLayoutStore } from "../stores/layoutStore";
 import { getFileIconType } from "../utils/language";
 import { FileIcon } from "./FileIcon";
-import { CloseIcon, NotesIcon, SplitViewIcon, PreviewOnlyIcon, CodeOnlyIcon, ToolsIcon } from "./Icons";
-import { ArrowRightFromLine } from "lucide-react";
+import { CloseIcon, NotesIcon, ToolsIcon, SplitViewIcon, PreviewOnlyIcon, CodeOnlyIcon } from "./Icons";
+import { AppContextMenu, type ContextMenuItem } from "./AppContextMenu";
+import { SplitSquareHorizontal } from "lucide-react";
 import "../styles/tabs.css";
 
 export function EditorTabs() {
@@ -25,6 +26,34 @@ export function EditorTabs() {
     }
   };
 
+  // 构造某个 Tab 的右键菜单
+  const buildMenu = (tabId: string): ContextMenuItem[] => {
+    const idx = tabs.findIndex((t) => t.id === tabId);
+    const items: ContextMenuItem[] = [
+      { id: "close", label: "关闭", onSelect: () => {
+        const t = tabs.find((x) => x.id === tabId);
+        if (t) handleClose(t.id, t.name, t.isDirty);
+      } },
+      { id: "close-others", label: "关闭其他", disabled: tabs.length <= 1, onSelect: () => useEditorStore.getState().closeOthers(tabId) },
+      { id: "close-left", label: "关闭左侧", disabled: idx <= 0, onSelect: () => useEditorStore.getState().closeTabsToLeft(tabId) },
+      { id: "close-right", label: "关闭右侧", disabled: idx >= tabs.length - 1, onSelect: () => useEditorStore.getState().closeTabsToRight(tabId) },
+      { id: "sep1", separator: true },
+      { id: "close-all", label: "关闭全部", danger: true, onSelect: () => useEditorStore.getState().closeAll() },
+      { id: "sep2", separator: true },
+      {
+        id: "split",
+        label: "分屏打开",
+        icon: <SplitSquareHorizontal size={14} strokeWidth={1.5} />,
+        onSelect: () => {
+          const { moveToSplit, splitEnabled } = useEditorStore.getState();
+          // 若未开启分屏, moveToSplit 会自动开启; 已开启则把该 tab 移到第二组
+          if (!splitEnabled) moveToSplit(tabId);
+        },
+      },
+    ];
+    return items;
+  };
+
   return (
     <div className="tabs-wrap">
       <div className="tabs">
@@ -32,43 +61,44 @@ export function EditorTabs() {
           const isActive = tab.id === activeTabId;
           const iconType = getFileIconType(tab.name, false);
           return (
-            <div
-              key={tab.id}
-              className={`tab ${isActive ? "tab--active" : ""} ${
-                tab.isPreview ? "tab--preview" : ""
-              }`}
-              onClick={() => setActiveTab(tab.id)}
-              onAuxClick={(e) => {
-                if (e.button === 1) {
-                  e.preventDefault();
-                  handleClose(tab.id, tab.name, tab.isDirty);
-                }
-              }}
-              title={tab.path}
-            >
-              <span className="tab__icon">
-                {tab.kind === "note" ? (
-                  <NotesIcon size={15} />
-                ) : tab.kind === "tool" ? (
-                  <ToolsIcon size={15} />
-                ) : (
-                  <FileIcon type={iconType} size={16} />
-                )}
-              </span>
-              <span className="tab__name">{tab.name}</span>
-              <span
-                className={`tab__dirty ${tab.isDirty ? "tab__dirty--show" : ""}`}
-              />
-              <button
-                className="tab__close"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleClose(tab.id, tab.name, tab.isDirty);
+            <AppContextMenu key={tab.id} items={buildMenu(tab.id)}>
+              <div
+                className={`tab ${isActive ? "tab--active" : ""} ${
+                  tab.isPreview ? "tab--preview" : ""
+                }`}
+                onClick={() => setActiveTab(tab.id)}
+                onAuxClick={(e) => {
+                  if (e.button === 1) {
+                    e.preventDefault();
+                    handleClose(tab.id, tab.name, tab.isDirty);
+                  }
                 }}
+                title={tab.path}
               >
-                <CloseIcon size={14} />
-              </button>
-            </div>
+                <span className="tab__icon">
+                  {tab.kind === "note" ? (
+                    <NotesIcon size={15} />
+                  ) : tab.kind === "tool" ? (
+                    <ToolsIcon size={15} />
+                  ) : (
+                    <FileIcon type={iconType} size={16} />
+                  )}
+                </span>
+                <span className="tab__name">{tab.name}</span>
+                <span
+                  className={`tab__dirty ${tab.isDirty ? "tab__dirty--show" : ""}`}
+                />
+                <button
+                  className="tab__close"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleClose(tab.id, tab.name, tab.isDirty);
+                  }}
+                >
+                  <CloseIcon size={14} />
+                </button>
+              </div>
+            </AppContextMenu>
           );
         })}
       </div>
@@ -87,21 +117,6 @@ export function EditorTabs() {
           )}
         </button>
       )}
-      {/* 分栏按钮 */}
-      <button
-        className="tabs__md-toggle"
-        onClick={() => {
-          const { splitEnabled, toggleSplit, activeTabId, moveToSplit } = useEditorStore.getState();
-          if (!splitEnabled && activeTabId) {
-            moveToSplit(activeTabId);
-          } else {
-            toggleSplit();
-          }
-        }}
-        title={useEditorStore.getState().splitEnabled ? "关闭分栏" : "分栏编辑 (Cmd+\\)"}
-      >
-        <ArrowRightFromLine size={14} />
-      </button>
     </div>
   );
 }

@@ -81,6 +81,14 @@ interface EditorStore {
   openTool: (info: { tool: string; title: string }) => void;
   /** 关闭 Tab */
   closeTab: (id: string) => void;
+  /** 关闭左侧全部 Tab */
+  closeTabsToLeft: (id: string) => void;
+  /** 关闭右侧全部 Tab */
+  closeTabsToRight: (id: string) => void;
+  /** 关闭其他 Tab */
+  closeOthers: (id: string) => void;
+  /** 关闭全部 Tab */
+  closeAll: () => void;
   /** 切换激活 Tab */
   setActiveTab: (id: string) => void;
   /** 更新 Tab 内容 */
@@ -89,6 +97,10 @@ interface EditorStore {
   markSaved: (id: string) => void;
   /** 预览转正式 */
   promotePreview: (id: string) => void;
+  /** 记录光标/滚动位置(供重启恢复, 节流由调用方负责) */
+  recordViewport: (id: string, vp: { cursor?: { line: number; column: number }; scrollTop?: number }) => void;
+  /** 恢复一个 Tab(会话恢复用, 直接构造完整状态) */
+  restoreTab: (tab: EditorTab) => void;
   /** 最近关闭的 Tab 栈(供 Cmd+Shift+T 恢复) */
   recentlyClosed: EditorTab[];
   /** 恢复最近关闭的 Tab */
@@ -363,6 +375,60 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set({ tabs: newTabs, activeTabId: newActive, recentlyClosed });
   },
 
+  closeTabsToLeft: (id) => {
+    const { tabs, activeTabId } = get();
+    const idx = tabs.findIndex((t) => t.id === id);
+    if (idx < 0) return;
+    // 关闭的推入最近关闭栈, 预览 tab 不入栈
+    const closing = tabs.slice(0, idx);
+    const remaining = tabs.slice(idx);
+    const recentlyClosed = [
+      ...closing.filter((t) => !t.isPreview).reverse(),
+      ...get().recentlyClosed,
+    ].slice(0, 20);
+    const newActive = remaining.some((t) => t.id === activeTabId)
+      ? activeTabId
+      : remaining[0]?.id ?? null;
+    set({ tabs: remaining, activeTabId: newActive, recentlyClosed });
+  },
+
+  closeTabsToRight: (id) => {
+    const { tabs, activeTabId } = get();
+    const idx = tabs.findIndex((t) => t.id === id);
+    if (idx < 0) return;
+    const closing = tabs.slice(idx + 1);
+    const remaining = tabs.slice(0, idx + 1);
+    const recentlyClosed = [
+      ...closing.filter((t) => !t.isPreview).reverse(),
+      ...get().recentlyClosed,
+    ].slice(0, 20);
+    const newActive = remaining.some((t) => t.id === activeTabId)
+      ? activeTabId
+      : remaining[remaining.length - 1]?.id ?? null;
+    set({ tabs: remaining, activeTabId: newActive, recentlyClosed });
+  },
+
+  closeOthers: (id) => {
+    const { tabs } = get();
+    const keep = tabs.find((t) => t.id === id);
+    if (!keep) return;
+    const closing = tabs.filter((t) => t.id !== id);
+    const recentlyClosed = [
+      ...closing.filter((t) => !t.isPreview).reverse(),
+      ...get().recentlyClosed,
+    ].slice(0, 20);
+    set({ tabs: [keep], activeTabId: id, recentlyClosed });
+  },
+
+  closeAll: () => {
+    const { tabs } = get();
+    const recentlyClosed = [
+      ...tabs.filter((t) => !t.isPreview).reverse(),
+      ...get().recentlyClosed,
+    ].slice(0, 20);
+    set({ tabs: [], activeTabId: null, recentlyClosed });
+  },
+
   setActiveTab: (id) => {
     set({ activeTabId: id });
     // 同步定位到文件树(自动滚动)
@@ -397,6 +463,25 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         t.id === id ? { ...t, isPreview: false } : t
       ),
     })),
+
+  recordViewport: (id, vp) =>
+    set((state) => ({
+      tabs: state.tabs.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              ...(vp.cursor !== undefined ? { cursor: vp.cursor } : {}),
+              ...(vp.scrollTop !== undefined ? { scrollTop: vp.scrollTop } : {}),
+            }
+          : t
+      ),
+    })),
+
+  restoreTab: (tab) => {
+    const { tabs } = get();
+    if (tabs.some((t) => t.id === tab.id)) return;
+    set({ tabs: [...tabs, tab] });
+  },
 
   reopenClosed: () => {
     const { recentlyClosed, tabs } = get();
