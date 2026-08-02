@@ -1,4 +1,7 @@
 import { useEditorStore } from "../stores/editorStore";
+import { useSettingsStore } from "../stores/settingsStore";
+import { useLayoutStore } from "../stores/layoutStore";
+import { tabInScope } from "../utils/tabScope";
 import { getFileIconType } from "../utils/language";
 import { FileIcon } from "./FileIcon";
 import { CloseIcon, NotesIcon } from "./Icons";
@@ -11,16 +14,20 @@ import "../styles/tabs.css";
 export function SplitEditorTabs() {
   const { splitTabs, splitActiveId, setSplitActive, closeSplitTab, moveFromSplit, toggleSplit } =
     useEditorStore();
+  const tabWrap = useSettingsStore((s) => s.tabWrap);
+  const sidebarView = useLayoutStore((s) => s.sidebarView);
+  // 同样按当前菜单域过滤
+  const scopedSplitTabs = splitTabs.filter((t) => tabInScope(t.kind, sidebarView));
 
   return (
     <div className="tabs-wrap">
-      <div className="tabs">
-        {splitTabs.length === 0 ? (
+      <div className={`tabs ${tabWrap ? "tabs--wrap" : ""}`}>
+        {scopedSplitTabs.length === 0 ? (
           <span className="tabs__placeholder">
             右键主区 Tab →「分屏打开」, 或拖入此处
           </span>
         ) : (
-          splitTabs.map((tab) => {
+          scopedSplitTabs.map((tab) => {
             const isActive = tab.id === splitActiveId;
             const iconType = getFileIconType(tab.name, false);
             return (

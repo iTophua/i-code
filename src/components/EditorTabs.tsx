@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useEditorStore } from "../stores/editorStore";
 import { useLayoutStore } from "../stores/layoutStore";
+import { useSettingsStore } from "../stores/settingsStore";
+import { tabInScope } from "../utils/tabScope";
 import { getFileIconType } from "../utils/language";
 import { FileIcon } from "./FileIcon";
 import { CloseIcon, NotesIcon, ToolsIcon, SplitViewIcon, PreviewOnlyIcon, CodeOnlyIcon } from "./Icons";
@@ -11,16 +13,20 @@ import "../styles/tabs.css";
 
 export function EditorTabs() {
   const { tabs, activeTabId, setActiveTab, closeTab } = useEditorStore();
-  const { mdView, cycleMdView } = useLayoutStore();
+  const { mdView, cycleMdView, sidebarView } = useLayoutStore();
+  const tabWrap = useSettingsStore((s) => s.tabWrap);
   // 批量关闭确认: 若涉及未保存修改, 先弹确认
   const [batchConfirm, setBatchConfirm] = useState<{
     count: number;
     action: () => void;
   } | null>(null);
 
-  if (tabs.length === 0) return null;
+  // 只显示当前侧栏菜单对应域的 tab(资源管理器=文件域, 便签=便签域, 工具=工具域)
+  const scopedTabs = tabs.filter((t) => tabInScope(t.kind, sidebarView));
 
-  const activeTab = tabs.find((t) => t.id === activeTabId);
+  if (scopedTabs.length === 0) return null;
+
+  const activeTab = scopedTabs.find((t) => t.id === activeTabId);
   const showMdToggle = activeTab?.language === "markdown";
 
   const handleClose = (id: string, name: string, isDirty: boolean) => {
@@ -43,29 +49,29 @@ export function EditorTabs() {
     }
   };
 
-  // 构造某个 Tab 的右键菜单
+  // 构造某个 Tab 的右键菜单(作用范围 = 当前域的 tab)
   const buildMenu = (tabId: string): ContextMenuItem[] => {
-    const idx = tabs.findIndex((t) => t.id === tabId);
+    const idx = scopedTabs.findIndex((t) => t.id === tabId);
     const items: ContextMenuItem[] = [
       { id: "close", label: "关闭", onSelect: () => {
-        const t = tabs.find((x) => x.id === tabId);
+        const t = scopedTabs.find((x) => x.id === tabId);
         if (t) handleClose(t.id, t.name, t.isDirty);
       } },
-      { id: "close-others", label: "关闭其他", disabled: tabs.length <= 1, onSelect: () => {
-        const others = tabs.filter((t) => t.id !== tabId);
+      { id: "close-others", label: "关闭其他", disabled: scopedTabs.length <= 1, onSelect: () => {
+        const others = scopedTabs.filter((t) => t.id !== tabId);
         guardBatchClose(others, () => useEditorStore.getState().closeOthers(tabId));
       } },
       { id: "close-left", label: "关闭左侧", disabled: idx <= 0, onSelect: () => {
-        const left = tabs.slice(0, idx);
+        const left = scopedTabs.slice(0, idx);
         guardBatchClose(left, () => useEditorStore.getState().closeTabsToLeft(tabId));
       } },
-      { id: "close-right", label: "关闭右侧", disabled: idx >= tabs.length - 1, onSelect: () => {
-        const right = tabs.slice(idx + 1);
+      { id: "close-right", label: "关闭右侧", disabled: idx >= scopedTabs.length - 1, onSelect: () => {
+        const right = scopedTabs.slice(idx + 1);
         guardBatchClose(right, () => useEditorStore.getState().closeTabsToRight(tabId));
       } },
       { id: "sep1", separator: true },
       { id: "close-all", label: "关闭全部", danger: true, onSelect: () => {
-        guardBatchClose(tabs, () => useEditorStore.getState().closeAll());
+        guardBatchClose(scopedTabs, () => useEditorStore.getState().closeAll());
       } },
       { id: "sep2", separator: true },
       {
@@ -95,8 +101,8 @@ export function EditorTabs() {
 
   return (
     <div className="tabs-wrap">
-      <div className="tabs">
-        {tabs.map((tab) => {
+      <div className={`tabs ${tabWrap ? "tabs--wrap" : ""}`}>
+        {scopedTabs.map((tab) => {
           const isActive = tab.id === activeTabId;
           const iconType = getFileIconType(tab.name, false);
           return (

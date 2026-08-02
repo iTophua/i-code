@@ -22,6 +22,8 @@ import { format as sqlFormat } from "sql-formatter";
 import { toast } from "../stores/toastStore";
 import { getExtByLanguage } from "../utils/language";
 import { setActiveEditor } from "../monaco/activeEditor";
+import { setupColumnDrag } from "../monaco/columnSelect";
+import { tabInScope } from "../utils/tabScope";
 
 const LANG_OPTIONS = [
   { value: "plaintext", label: "纯文本" },
@@ -42,7 +44,11 @@ export function EditorPane() {
   const { tabs, activeTabId, updateContent, markSaved } = useEditorStore();
   const settings = useSettingsStore();
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
-  const activeTab = tabs.find((t) => t.id === activeTabId);
+  // 按当前侧栏菜单域过滤: activeTab 不在域内时, 取域内第一个(或显示空白页)
+  const sidebarView = useLayoutStore((s) => s.sidebarView);
+  const scopedTabs = tabs.filter((t) => tabInScope(t.kind, sidebarView));
+  const activeTab = scopedTabs.find((t) => t.id === activeTabId)
+    ?? scopedTabs[0];
 
   // 从设置构建编辑器选项(响应设置变化)
   // 按语言覆盖: SQL 默认不换行, Markdown 默认换行
@@ -72,13 +78,26 @@ export function EditorPane() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTabId]);
 
+  // 菜单域切换: 若当前激活 tab 不在新域内, 自动激活该域第一个 tab(或清除)
+  useEffect(() => {
+    const store = useEditorStore.getState();
+    const inScope = store.tabs.some(
+      (t) => t.id === store.activeTabId && tabInScope(t.kind, sidebarView)
+    );
+    if (!inScope) {
+      const first = scopedTabs[0];
+      store.setActiveTab(first ? first.id : (store.activeTabId ?? ""));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sidebarView, scopedTabs.length]);
+
   const handleMount: OnMount = (editorInstance, monacoInstance) => {
     editorRef.current = editorInstance;
     // 双保险: 每次挂载都确保主题已注册并应用(消除首次白色)
     defineIThemes(monacoInstance);
     monacoInstance.editor.setTheme(ICODE_DARK_THEME);
-    // 显式设置多光标/列选: 这些鼠标交互选项必须实例创建后 updateOptions 才稳定生效
-    // (Option/Alt + 左键拖拽 = 矩形列选, Option+点击 = 加光标)
+    // 多光标: Alt/Option + 点击加光标; standalone Monaco 不支持拖拽框选,
+    // 由下方 setupColumnDrag 手动实现 Option+拖拽矩形多光标
     editorInstance.updateOptions({
       multiCursorModifier: "alt",
       columnSelection: false,
@@ -87,6 +106,9 @@ export function EditorPane() {
     // 注册为活动编辑器(聚焦时刷新), 供命令面板等外部入口触发多光标/列选等
     setActiveEditor(editorInstance);
     editorInstance.onDidFocusEditorText?.(() => setActiveEditor(editorInstance));
+
+    // Option(Alt)+左键拖拽 → 矩形列选(standalone Monaco 不内置, 手动实现)
+    setupColumnDrag(editorInstance);
 
     // 恢复光标/滚动位置(重启恢复 tab 原样)
     if (activeTab?.cursor) {

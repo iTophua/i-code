@@ -34,6 +34,10 @@ export interface Settings {
   // —— 侧栏 ——
   activityBarVisible: boolean;
   statusBarVisible: boolean;
+
+  // —— Tab 栏 ——
+  /** Tab 多了换行显示(默认 false = 左右滑动) */
+  tabWrap: boolean;
 }
 
 const DEFAULTS: Settings = {
@@ -59,6 +63,8 @@ const DEFAULTS: Settings = {
 
   activityBarVisible: true,
   statusBarVisible: true,
+
+  tabWrap: false,
 };
 
 const SESSION_KEY = "settings";

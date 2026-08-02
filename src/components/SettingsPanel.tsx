@@ -152,6 +152,11 @@ function EditorSettings({ s }: { s: S }) {
           />
         </Row>
       </Group>
+      <Group title="标签栏">
+        <Row label="标签换行" desc="开启后标签多了自动换行; 关闭则左右滑动(默认)">
+          <Toggle value={s.tabWrap} onChange={(v) => s.update("tabWrap", v)} />
+        </Row>
+      </Group>
     </>
   );
 }

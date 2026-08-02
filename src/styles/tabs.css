@@ -19,6 +19,18 @@
 .tabs::-webkit-scrollbar {
   height: 3px;
 }
+/* Tab 换行模式: 多了自动换行而非左右滑动 */
+.tabs--wrap {
+  flex-wrap: wrap;
+  height: auto;
+  max-height: 50vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.tabs--wrap::-webkit-scrollbar {
+  width: 3px;
+  height: 0;
+}
 /* md 预览切换按钮(Tab 栏右端) */
 .tabs__md-toggle {
   display: flex;
@@ -57,12 +69,21 @@
   height: 100%;
   padding: 0 10px;
   background: var(--bg-tab-inactive);
+  /* tab 间分隔: 右侧细线(换行模式下去掉右线, 用左线避免视觉错位) */
   border-right: 1px solid var(--border-subtle);
   cursor: pointer;
   user-select: none;
   position: relative;
   flex-shrink: 0;
   transition: background 0.1s;
+}
+/* 换行模式: 用左边线分隔, 避免行末多余边框 */
+.tabs--wrap .tab {
+  border-right: none;
+  border-left: 1px solid var(--border-subtle);
+}
+.tabs--wrap .tab:first-child {
+  border-left: none;
 }
 .tab:hover {
   background: var(--bg-tab-hover);

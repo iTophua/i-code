@@ -3,6 +3,7 @@ import { useEditorStore } from "../stores/editorStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getEditorOptions, defineIThemes, ICODE_DARK_THEME } from "../monaco/theme";
 import { setActiveEditor } from "../monaco/activeEditor";
+import { setupColumnDrag } from "../monaco/columnSelect";
 import "../monaco/setup";
 
 /**
@@ -25,6 +26,8 @@ export function SplitEditorPane() {
     // 注册为活动编辑器, 使命令面板的多光标/列选命令作用于分栏编辑器
     setActiveEditor(ed);
     ed.onDidFocusEditorText?.(() => setActiveEditor(ed));
+    // Option+拖拽矩形列选(同主编辑器)
+    setupColumnDrag(ed);
   };
 
   if (!activeTab) {
