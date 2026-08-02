@@ -135,6 +135,25 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   /* 通用 hover/active 颜色过渡(背景+前景一起, 避免只过渡背景导致文字硬切) */
   --t-color: background var(--dur-fast) ease, color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+
+  /* ===== 阴影 token ===== */
+  --shadow-menu: 0 5px 16px rgba(0, 0, 0, 0.4);
+  --shadow-dialog: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --shadow-tooltip: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-toast: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+  /* ===== z-index 层级 token ===== */
+  --z-resizer: 10;
+  --z-popover: 100;
+  --z-menu: 9999;
+  --z-overlay: 10000;
+  --z-dialog: 10001;
+  --z-toast: 10001;
+  --z-command: 10002;
+
+  /* ===== 输入框/列表 token ===== */
+  --height-input: 28px;
+  --list-row-height: 26px;
 }
 
 /* ============ Layer 3: Light 主题 ============ */
@@ -196,6 +215,12 @@
   --scrollbar-thumb-active: rgba(100, 100, 100, 0.4);
 
   --editor-line-highlight: #f0f0f0;
+
+  /* 阴影(浅色更轻) */
+  --shadow-menu: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-dialog: 0 12px 40px rgba(0, 0, 0, 0.2);
+  --shadow-tooltip: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --shadow-toast: 0 4px 16px rgba(0, 0, 0, 0.15);
   --editor-selection: #add6ff;
 }
 
