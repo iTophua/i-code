@@ -13,13 +13,14 @@ export function TerminalPanel() {
 
   // 面板首次显示且无终端时自动建一个
   // 用 ref 防止 StrictMode 双调用导致建两个终端
+  // 等 workspaceRoot 恢复后再建(避免在 home 目录创建)
   useEffect(() => {
-    if (!initRef.current && tabs.length === 0) {
+    if (!initRef.current && tabs.length === 0 && workspaceRoot) {
       initRef.current = true;
       createTerminal(workspaceRoot);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [workspaceRoot]);
 
   return (
     <div className="terminal-panel">
