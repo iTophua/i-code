@@ -42,3 +42,11 @@
   width: 2px;
   background: var(--fg-accent);
 }
+/* ===== 过渡补丁 ===== */
+.activity-item {
+  transition: var(--t-color);
+}
+/* 活动栏选中左侧蓝条: opacity 过渡(不再硬现) */
+.activity-item--active::before {
+  transition: opacity var(--dur-normal) var(--ease-out);
+}

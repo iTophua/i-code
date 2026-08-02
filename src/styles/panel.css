@@ -36,6 +36,7 @@
   white-space: nowrap;
   font-size: var(--fs-sm);
   user-select: none;
+  transition: var(--t-color);
 }
 .panel-tab:hover {
   background: var(--bg-list-hover);
@@ -62,6 +63,7 @@
   cursor: pointer;
   border-radius: var(--radius-sm);
   opacity: 0;
+  transition: var(--t-color), opacity var(--dur-fast) ease;
 }
 .panel-tab:hover .panel-tab__close {
   opacity: 1;
@@ -85,6 +87,7 @@
   font-size: var(--fs-xl);
   line-height: 1;
   flex-shrink: 0;
+  transition: var(--t-color);
 }
 .panel__new-btn:hover {
   background: var(--bg-list-hover);

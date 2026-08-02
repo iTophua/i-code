@@ -118,3 +118,8 @@
   font-size: var(--fs-xs);
   flex-shrink: 0;
 }
+
+/* ===== 过渡补丁 ===== */
+.problem-item {
+  transition: var(--t-color);
+}

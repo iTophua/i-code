@@ -316,3 +316,15 @@
   background: var(--bg-list-active);
   color: var(--fg-on-accent);
 }
+
+/* ===== 过渡补丁 ===== */
+.note-row {
+  transition: var(--t-color);
+}
+.note-row__pin,
+.note-row__delete {
+  transition: var(--t-color), opacity var(--dur-fast) ease;
+}
+.notes__search input {
+  transition: border-color var(--dur-fast) ease;
+}

@@ -7,7 +7,6 @@ import { getFileIconType, getLanguage } from "../utils/language";
 import { FileIcon } from "./FileIcon";
 import {
   ChevronRight,
-  ChevronDown,
   NewFileIcon,
   NewFolderIcon,
   RefreshIcon,
@@ -495,14 +494,8 @@ function TreeRow({
       onContextMenu={onContextMenu}
       title={node.path}
     >
-      <span className="tree-row__chevron">
-        {node.isDir ? (
-          node.expanded ? (
-            <ChevronDown />
-          ) : (
-            <ChevronRight />
-          )
-        ) : null}
+      <span className={`tree-row__chevron ${node.expanded ? "tree-row__chevron--open" : ""}`}>
+        {node.isDir ? <ChevronRight size={14} /> : null}
       </span>
       <span className="tree-row__icon">
         <FileIcon type={iconType} isFolderOpen={node.expanded} size={16} />

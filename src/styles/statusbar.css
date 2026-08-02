@@ -108,3 +108,9 @@
   flex-shrink: 0 !important;
   margin-left: auto !important;
 }
+
+/* ===== 过渡补丁 ===== */
+.status-item--btn,
+.status-bar__encoding-trigger {
+  transition: var(--t-color);
+}

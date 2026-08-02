@@ -66,3 +66,8 @@
   margin: 4px 0;
   background: var(--border-subtle);
 }
+
+/* ===== 过渡补丁 ===== */
+.context-menu__item {
+  transition: var(--t-color);
+}

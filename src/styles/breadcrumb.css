@@ -35,3 +35,8 @@
   color: var(--fg-secondary);
   font-weight: 500;
 }
+
+/* ===== 过渡补丁 ===== */
+.breadcrumb__path {
+  transition: color var(--dur-fast) ease;
+}

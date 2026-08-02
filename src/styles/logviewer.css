@@ -125,3 +125,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ===== 过渡补丁 ===== */
+.log-viewer__nav-btn,
+.log-line {
+  transition: var(--t-color);
+}

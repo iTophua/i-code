@@ -567,3 +567,23 @@
   font-style: italic;
   opacity: 0.6;
 }
+
+/* ===== 过渡补丁 ===== */
+.git-panel__refresh,
+.git-section__action,
+.change-row,
+.branch-mgr__header,
+.branch-row,
+.history-mgr__header,
+.commit-row,
+.stash-row {
+  transition: var(--t-color);
+}
+.change-row__action,
+.branch-row__action {
+  transition: var(--t-color), opacity var(--dur-fast) ease;
+}
+.git-commit__input,
+.branch-new__input {
+  transition: border-color var(--dur-fast) ease;
+}

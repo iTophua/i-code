@@ -208,3 +208,8 @@
 .tool-surface .tool-output {
   min-height: 140px;
 }
+/* ===== 过渡补丁 ===== */
+.tool-textarea,
+.tool-btn {
+  transition: var(--t-color);
+}

@@ -100,7 +100,7 @@
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
-  transition: background 0.05s;
+  transition: var(--t-color);
 }
 .tree-row:hover {
   background: var(--bg-list-hover);
@@ -120,6 +120,11 @@
   width: 16px;
   flex-shrink: 0;
   color: var(--fg-muted);
+  /* 展开折叠旋转过渡 */
+  transition: transform var(--dur-fast) ease;
+}
+.tree-row__chevron--open {
+  transform: rotate(90deg);
 }
 
 .tree-row__icon {

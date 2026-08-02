@@ -9,7 +9,13 @@ import { ToolsPanel } from "./ToolsPanel";
 export function Sidebar() {
   const { sidebarView } = useLayoutStore();
 
-  return <div className="sidebar">{renderView(sidebarView)}</div>;
+  return (
+    <div className="sidebar">
+      <div key={sidebarView} className="sidebar__panel">
+        {renderView(sidebarView)}
+      </div>
+    </div>
+  );
 }
 
 function renderView(view: SidebarView) {

@@ -165,3 +165,16 @@
 .tab:hover .tab__dirty--show {
   opacity: 0;
 }
+/* ===== 过渡补丁(补 color + 蓝条 + close 背景) ===== */
+/* tab 名颜色过渡(active 切换文字色不再硬切) */
+.tab {
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+/* tab 顶部蓝条 opacity 过渡 */
+.tab--active::before {
+  transition: opacity var(--dur-normal) var(--ease-out);
+}
+/* close 按钮 hover 背景过渡 */
+.tab__close {
+  transition: var(--t-color), opacity var(--dur-fast) ease;
+}

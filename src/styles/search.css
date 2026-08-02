@@ -158,3 +158,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ===== 过渡补丁(交互平滑) ===== */
+.search-toggle,
+.search-group__header,
+.search-hit {
+  transition: var(--t-color);
+}
+.search-panel__input-wrap,
+.search-panel__input {
+  transition: border-color var(--dur-fast) ease;
+}
