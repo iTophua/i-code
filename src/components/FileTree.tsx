@@ -115,13 +115,19 @@ export function FileTree() {
   // 读取并打开文件
   const openFileInternal = useCallback(
     async (node: VisibleNode, preview: boolean) => {
-      const { openFile } = useEditorStore.getState();
+      const store = useEditorStore.getState();
       setSelected(node.path);
       try {
+        // 检查文件大小, >20MB 用大文件查看器
+        const size = await invoke<number>("get_file_size", { filePath: node.path });
+        if (size > 20 * 1024 * 1024) {
+          store.openLog({ filePath: node.path, fileName: node.name });
+          return;
+        }
         const [content] = await invoke<[string, string]>("read_file", {
           filePath: node.path,
         });
-        openFile({
+        store.openFile({
           path: node.path,
           name: node.name,
           content,

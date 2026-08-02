@@ -10,6 +10,7 @@ import { saveAsFile } from "../utils/exportNote";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { FileHistoryView } from "./FileHistoryView";
 import { BlameView } from "./BlameView";
+import { LogViewer } from "./LogViewer";
 import "../monaco/setup"; // 启动即注册深色主题
 import { NotesIcon, SaveIcon } from "./Icons";
 import { AppSelect } from "./AppSelect";
@@ -117,6 +118,11 @@ export function EditorPane() {
         />
       </div>
     );
+  }
+
+  // 大文件/日志 Tab
+  if (activeTab.kind === "log") {
+    return <LogViewer filePath={activeTab.path} fileName={activeTab.name} />;
   }
 
   // Blame Tab

@@ -1,0 +1,127 @@
+/* ============ 大文件/日志查看器 ============ */
+.log-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-editor);
+}
+
+.log-viewer__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: var(--space-3);
+  color: var(--fg-muted);
+}
+
+.log-viewer__error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--fg-error);
+}
+
+.log-viewer__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-sidebar);
+  flex-shrink: 0;
+}
+.log-viewer__title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg-primary);
+}
+.log-viewer__count {
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+}
+
+/* 搜索栏 */
+.log-viewer__search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+.log-viewer__search-icon {
+  color: var(--fg-muted);
+  flex-shrink: 0;
+}
+.log-viewer__search input {
+  flex: 1;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--fg-primary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  outline: none;
+}
+.log-viewer__search-count {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+.log-viewer__nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.log-viewer__nav-btn:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+
+/* 虚拟滚动列表 */
+.log-viewer__body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+
+/* 行 */
+.log-line {
+  display: flex;
+  align-items: baseline;
+  height: 20px;
+  white-space: nowrap;
+  padding-right: var(--space-3);
+}
+.log-line:hover {
+  background: var(--bg-list-hover);
+}
+.log-line--match {
+  background: rgba(226, 192, 141, 0.15);
+}
+.log-line__num {
+  color: var(--fg-muted);
+  font-size: var(--fs-xs);
+  min-width: 60px;
+  text-align: right;
+  padding-right: var(--space-3);
+  user-select: none;
+  flex-shrink: 0;
+}
+.log-line__content {
+  color: var(--fg-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
