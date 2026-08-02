@@ -46,21 +46,21 @@ export function setupColumnDrag(ed: editor.IStandaloneCodeEditor): () => void {
   });
 
   /**
-   * macOS 触控板兜底: WKWebView 下触控板点击可能丢失 mouseup 事件,
-   * 导致 Monaco 停留「鼠标按下」状态, 后续移动产生意外选区。
-   * 在编辑器 DOM 上监听 mouseup(冒泡阶段), 确保按下状态被清除。
-   * 另外在 mouseleave 时也清除, 避免鼠标移出编辑器后仍处于按下态。
+   * macOS 触控板修复: 触控板「点击 A → 移动鼠标 → 点击 B 误选区」。
+   * 根因: 触控板点击产生 mousedown 后, Monaco 启动 GlobalEditorMoveMonitor
+   * 监听 pointermove 来做拖拽选择。触控板移动光标(无按键)时仍产生 pointermove,
+   * 如果此时 MouseDownOperation 未结束 → 选区被扩展。
+   *
+   * 修复: 在编辑器 DOM 的捕获阶段拦截 pointermove, 当 buttons=0(无按键按下)时
+   * 阻止事件传播, Monaco 的拖拽选择监听器收不到 → 不扩展选区。
    */
-  const onMouseUpDom = () => {
-    dragging = false;
-    start = null;
+  const onPointerMoveCapture = (e: PointerEvent) => {
+    // 无物理按键按下时, 阻止 pointermove 传给 Monaco 的拖拽选择逻辑
+    if (e.buttons === 0) {
+      e.stopPropagation();
+    }
   };
-  const onMouseLeave = () => {
-    dragging = false;
-    start = null;
-  };
-  domNode.addEventListener("mouseup", onMouseUpDom);
-  domNode.addEventListener("mouseleave", onMouseLeave);
+  domNode.addEventListener("pointermove", onPointerMoveCapture, true);
 
   /** 矩形范围每行设选区(多光标 = 列编辑) */
   const applyRect = (curLine: number, curCol: number) => {
@@ -94,8 +94,7 @@ export function setupColumnDrag(ed: editor.IStandaloneCodeEditor): () => void {
     downSub.dispose();
     moveSub.dispose();
     upSub.dispose();
-    domNode.removeEventListener("mouseup", onMouseUpDom);
-    domNode.removeEventListener("mouseleave", onMouseLeave);
+    domNode.removeEventListener("pointermove", onPointerMoveCapture, true);
   };
 }
 

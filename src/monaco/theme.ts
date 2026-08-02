@@ -147,6 +147,8 @@ export function getEditorOptions(
     padding: { top: 12, bottom: 12 },
     // 点击行号不选中整行(避免触控板误触)
     selectOnLineNumbers: false,
+    // 禁用拖放(避免触控板点击后移动误触发选区拖拽)
+    dragAndDrop: false,
     // ===== 多光标 / 列选择编辑 =====
     // multiCursorModifier: 'alt' → Option+点击加光标(列选由 setupColumnDrag 捕获阶段接管,
     // 不冲突); 不用 ctrlCmd(macOS 上触控板手势可能误带 Cmd → 整行选择)
