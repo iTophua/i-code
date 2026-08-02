@@ -39,21 +39,20 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import "./styles/app.css";
 
 export default function App() {
-  const {
-    sidebarVisible,
-    sidebarWidth,
-    sidebarView,
-    panelVisible,
-    panelView,
-    zenMode,
-    setSidebarView,
-    setPanelView,
-    setWorkspaceRoot,
-    setSidebarWidth,
-    toggleSidebar,
-    togglePanel,
-    toggleZen,
-  } = useLayoutStore();
+  // 精确订阅: 避免任意 layout 变化(mdView/panelHeight 等)都触发 App 全量重渲染
+  const sidebarVisible = useLayoutStore((s) => s.sidebarVisible);
+  const sidebarWidth = useLayoutStore((s) => s.sidebarWidth);
+  const sidebarView = useLayoutStore((s) => s.sidebarView);
+  const panelVisible = useLayoutStore((s) => s.panelVisible);
+  const panelView = useLayoutStore((s) => s.panelView);
+  const zenMode = useLayoutStore((s) => s.zenMode);
+  const setSidebarView = useLayoutStore((s) => s.setSidebarView);
+  const setPanelView = useLayoutStore((s) => s.setPanelView);
+  const setWorkspaceRoot = useLayoutStore((s) => s.setWorkspaceRoot);
+  const setSidebarWidth = useLayoutStore((s) => s.setSidebarWidth);
+  const toggleSidebar = useLayoutStore((s) => s.toggleSidebar);
+  const togglePanel = useLayoutStore((s) => s.togglePanel);
+  const toggleZen = useLayoutStore((s) => s.toggleZen);
   const setRootPath = useFileTreeStore((s) => s.setRootPath);
   const splitEnabled = useEditorStore((s) => s.splitEnabled);
   const splitOrientation = useEditorStore((s) => s.splitOrientation);

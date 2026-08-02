@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import Editor, { DiffEditor, type OnMount } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { useEditorStore } from "../stores/editorStore";
@@ -42,15 +42,22 @@ const LANG_OPTIONS = [
 
 export function EditorPane() {
   const { tabs, activeTabId, updateContent, markSaved } = useEditorStore();
-  const settings = useSettingsStore();
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  // 精确订阅设置项(避免无关 state 变化触发重渲染)
+  const fontFamily = useSettingsStore((s) => s.fontFamily);
+  const fontSize = useSettingsStore((s) => s.fontSize);
+  const lineHeight = useSettingsStore((s) => s.lineHeight);
+  const tabSize = useSettingsStore((s) => s.tabSize);
+  const wordWrap = useSettingsStore((s) => s.wordWrap);
+  const minimap = useSettingsStore((s) => s.minimap);
+  const fontLigatures = useSettingsStore((s) => s.fontLigatures);
+  const showWhitespace = useSettingsStore((s) => s.showWhitespace);
   // 按当前侧栏菜单域过滤: activeTab 不在域内时, 取域内第一个(或显示空白页)
   const sidebarView = useLayoutStore((s) => s.sidebarView);
   const scopedTabs = tabs.filter((t) => tabInScope(t.kind, sidebarView));
   const activeTab = scopedTabs.find((t) => t.id === activeTabId)
     ?? scopedTabs[0];
 
-  // 从设置构建编辑器选项(响应设置变化)
   // 按语言覆盖: SQL 默认不换行, Markdown 默认换行
   const langOverrides: Record<string, { wordWrap?: "on" | "off" }> = {
     sql: { wordWrap: "off" },
@@ -59,16 +66,22 @@ export function EditorPane() {
   };
   const currentLang = activeTab?.language || "";
   const langOverride = langOverrides[currentLang] || {};
-  const editorOpts = getEditorOptions({
-    fontFamily: settings.fontFamily,
-    fontSize: settings.fontSize,
-    lineHeight: Math.round(settings.fontSize * settings.lineHeight),
-    tabSize: settings.tabSize,
-    wordWrap: langOverride.wordWrap || settings.wordWrap,
-    minimap: { enabled: settings.minimap },
-    fontLigatures: settings.fontLigatures,
-    renderWhitespace: settings.showWhitespace ? "all" : "selection",
-  });
+  // 缓存编辑器选项(只在依赖项变化时重建, 避免每次渲染新建对象触发 Monaco 更新)
+  const editorOpts = useMemo(
+    () =>
+      getEditorOptions({
+        fontFamily,
+        fontSize,
+        lineHeight: Math.round(fontSize * lineHeight),
+        tabSize,
+        wordWrap: langOverride.wordWrap || wordWrap,
+        minimap: { enabled: minimap },
+        fontLigatures,
+        renderWhitespace: showWhitespace ? "all" : "selection",
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fontFamily, fontSize, lineHeight, tabSize, wordWrap, minimap, fontLigatures, showWhitespace, currentLang]
+  );
 
   // 切换到 md 文件时, 默认重置为仅预览模式
   useEffect(() => {
