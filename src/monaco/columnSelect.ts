@@ -6,7 +6,7 @@ import type { editor } from "monaco-editor";
  * 背景: standalone Monaco 不内置 column/box selection(VS Code 专有,
  * 见 microsoft/monaco-editor#2035)。
  *
- * 前提: 编辑器 multiCursorModifier 已设为 'ctrlCmd'(Cmd+点击加光标),
+ * 前提: 编辑器 multiCursorModifier 设为 'alt'(Option+点击加光标),
  * Option 不再被 Monaco 抢占, 可放心用于列选。
  *
  * 实现: DOM 捕获阶段拦截 mousedown, 仅 Alt+左键时接管(阻止 Monaco 默认),
