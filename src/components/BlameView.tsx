@@ -100,27 +100,32 @@ function parseBlame(output: string): Map<number, BlameInfo> {
   let currentHash = "";
   let currentAuthor = "";
   let currentTime = "";
+  let hasData = false;
 
   for (const line of lines) {
-    // 行信息: <hash> <orig-line> <final-line> [<num-lines>]
     if (/^[0-9a-f]{40}/.test(line)) {
-      const parts = line.split("\t");
+      // 保存上一条
+      if (hasData && currentLine > 0) {
+        map.set(currentLine, { hash: currentHash, author: currentAuthor, time: currentTime, line: currentLine });
+      }
+      const parts = line.split(/\s+/);
       currentHash = parts[0].slice(0, 8);
       currentLine = parseInt(parts[2]) || 0;
+      currentAuthor = "";
+      currentTime = "";
+      hasData = false;
     } else if (line.startsWith("author ")) {
       currentAuthor = line.slice(7).trim();
+      hasData = true;
     } else if (line.startsWith("author-time ")) {
       const ts = parseInt(line.slice(12));
       const d = new Date(ts * 1000);
       currentTime = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
-    } else if (line.startsWith("filename ") && currentLine > 0) {
-      map.set(currentLine, {
-        hash: currentHash,
-        author: currentAuthor,
-        time: currentTime,
-        line: currentLine,
-      });
     }
+  }
+  // 最后一条
+  if (hasData && currentLine > 0) {
+    map.set(currentLine, { hash: currentHash, author: currentAuthor, time: currentTime, line: currentLine });
   }
   return map;
 }

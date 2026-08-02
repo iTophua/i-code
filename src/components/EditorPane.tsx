@@ -325,7 +325,9 @@ export function EditorPane() {
       return;
     }
     try {
-      const rel = tab.path.replace(repoRoot + "/", "");
+      const rel = tab.path.startsWith(repoRoot)
+        ? tab.path.slice(repoRoot.length + 1)
+        : tab.path;
       const out = await useGitStore.getState().blameFile(rel);
       const blameMap = parseBlameInline(out);
       if (blameMap.size === 0) {
@@ -749,19 +751,32 @@ function parseBlameInline(output: string): Map<number, { author: string; time: s
   let currentLine = 0;
   let currentAuthor = "";
   let currentTime = "";
+  let hasData = false;
+
   for (const line of lines) {
+    // hash 行(空格分隔): <40hash> <orig> <final> [<num>]
     if (/^[0-9a-f]{40}/.test(line)) {
-      const parts = line.split("\t");
+      // 保存上一条记录
+      if (hasData && currentLine > 0) {
+        map.set(currentLine, { author: currentAuthor, time: currentTime });
+      }
+      const parts = line.split(/\s+/);
       currentLine = parseInt(parts[2]) || 0;
+      currentAuthor = "";
+      currentTime = "";
+      hasData = false;
     } else if (line.startsWith("author ")) {
       currentAuthor = line.slice(7).trim();
+      hasData = true;
     } else if (line.startsWith("author-time ")) {
       const ts = parseInt(line.slice(12));
       const d = new Date(ts * 1000);
       currentTime = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
-    } else if (line.startsWith("filename ") && currentLine > 0) {
-      map.set(currentLine, { author: currentAuthor, time: currentTime });
     }
+  }
+  // 最后一条记录
+  if (hasData && currentLine > 0) {
+    map.set(currentLine, { author: currentAuthor, time: currentTime });
   }
   return map;
 }
