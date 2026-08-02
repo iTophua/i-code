@@ -11,6 +11,7 @@ import { MarkdownPreview } from "./MarkdownPreview";
 import { FileHistoryView } from "./FileHistoryView";
 import { BlameView } from "./BlameView";
 import { LogViewer } from "./LogViewer";
+import { WelcomePage } from "./WelcomePage";
 import "../monaco/setup"; // 启动即注册深色主题
 import { NotesIcon, SaveIcon } from "./Icons";
 import { AppSelect } from "./AppSelect";
@@ -104,7 +105,7 @@ export function EditorPane() {
   };
 
   if (!activeTab) {
-    return <EmptyState />;
+    return <WelcomePage />;
   }
 
   // 便签 Tab
@@ -390,19 +391,6 @@ function NoteEditorSurface({
             padding: { top: 12, bottom: 12 },
           })}
         />
-      </div>
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="editor-empty">
-      <div className="editor-empty__hint">
-        <p>i-code</p>
-        <p className="editor-empty__sub">
-          按 Cmd/Ctrl+O 打开文件夹，或在便签面板新建便签
-        </p>
       </div>
     </div>
   );

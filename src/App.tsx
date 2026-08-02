@@ -26,6 +26,7 @@ import {
   SESSION_KEYS,
 } from "./utils/session";
 import { getLanguage } from "./utils/language";
+import { addRecentProject } from "./utils/recentProjects";
 import "./styles/app.css";
 
 export default function App() {
@@ -60,6 +61,7 @@ export default function App() {
         await setRootPath(selected);
         setWorkspaceRoot(selected);
         await setSession(SESSION_KEYS.workspaceRoot, selected);
+        await addRecentProject(selected);
       }
     } catch (e) {
       console.error("打开文件夹失败:", e);
