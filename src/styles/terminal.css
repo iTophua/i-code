@@ -3,7 +3,7 @@
   display: none;
   height: 100%;
   width: 100%;
-  background: #1e1e1e;
+  background: var(--bg-panel);
 }
 .terminal-view--active {
   display: block;
@@ -17,7 +17,7 @@
 .terminal-view .xterm-viewport,
 .terminal-view .xterm-screen,
 .terminal-view .xterm .xterm--helper-textarea {
-  background-color: #1e1e1e !important;
+  background-color: var(--bg-panel) !important;
 }
 .terminal-view .xterm-viewport {
   overflow-y: auto !important;

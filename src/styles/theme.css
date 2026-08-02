@@ -143,7 +143,7 @@
   --bg-app: #ffffff;
   --bg-editor: #ffffff;
   --bg-titlebar: #dddddd;
-  --bg-activity-bar: #2c2c2c;
+  --bg-activity-bar: #e8e8e8;
   --bg-sidebar: #f3f3f3;
   --bg-tab-active: #ffffff;
   --bg-tab-inactive: #ececec;
@@ -216,22 +216,22 @@ body,
   overflow: hidden;
 }
 
-/* Monaco 编辑器: 默认深色背景, 避免主题注册前的白色闪烁 */
+/* Monaco 编辑器背景: 跟随主题变量(避免主题注册前白色闪烁) */
 .monaco-editor,
 .monaco-editor .margin,
 .monaco-editor-background {
-  background-color: #1e1e1e !important;
+  background-color: var(--bg-editor) !important;
 }
 .monaco-editor .inputarea.ime-input {
   background-color: transparent;
 }
-/* 行号栏: 稍深背景 + 右侧细分隔线, 与编辑区明确区分 */
+/* 行号栏: 跟随主题 */
 .monaco-editor .margin {
-  background-color: #191919 !important;
-  border-right: 1px solid #2a2a2a;
+  background-color: var(--bg-editor) !important;
+  border-right: 1px solid var(--border-subtle);
 }
 .monaco-editor .margin-view-overlays .cgutter {
-  background-color: #191919 !important;
+  background-color: var(--bg-editor) !important;
 }
 
 body {

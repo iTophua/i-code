@@ -102,37 +102,57 @@ interface Props {
 }
 
 export function FileIcon({ type, isFolderOpen, size = 16 }: Props) {
-  // 文件夹: VS Code 风格活页夹
+  // 文件夹: 精致的 VS Code 风格(柔和渐变 + 清晰轮廓)
   if (type === "folder") {
     if (isFolderOpen) {
       return (
         <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
-          {/* 后片(深色, 明显的暗部) */}
+          <defs>
+            <linearGradient id="folder-open-top" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#DFB376" />
+              <stop offset="100%" stopColor="#C19250" />
+            </linearGradient>
+            <linearGradient id="folder-open-body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#D4A05A" />
+              <stop offset="100%" stopColor="#B07A3E" />
+            </linearGradient>
+          </defs>
+          {/* 后片(深色底) */}
+          <path d="M1.5 4a1 1 0 011-1H6l1.5 1.5h6a1 1 0 011 1v1H4.5L2 8.5V4z" fill="url(#folder-open-top)" />
+          {/* 前片(展开的文件夹主体) */}
           <path
-            d="M1.5 4.5a1 1 0 011-1H6l1.5 1.5h6a1 1 0 011 1v.5H4L1.5 8.5V4.5z"
-            fill="#7A5A2E"
+            d="M2 8.5L4.5 6h10.5a.6.6 0 01.6.8l-1.6 5.5a1 1 0 01-1 .7H2.8a1 1 0 01-1-1.2L2 8.5z"
+            fill="url(#folder-open-body)"
           />
-          {/* 前片(亮色主色) */}
-          <path
-            d="M1.5 8.5L4 5.5h10.5l-2 7a.7.7 0 01-.7.5H2.2a.7.7 0 01-.7-.9V8.5z"
-            fill={ICON_COLORS.folder}
-          />
-          {/* 前片高光 */}
-          <path d="M1.5 8.5L4 5.5h10.5l-.3 1H4.2L2.2 9H1.5v-.5z" fill="#D4A663" fillOpacity="0.5" />
+          {/* 内部高光 */}
+          <path d="M4.5 6h10.5l-.15.5H4.7L2.8 8.5H2.2L4.5 6z" fill="#E8C280" fillOpacity="0.4" />
         </svg>
       );
     }
     return (
       <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+        <defs>
+          <linearGradient id="folder-closed-top" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#DFB376" />
+            <stop offset="100%" stopColor="#C19250" />
+          </linearGradient>
+          <linearGradient id="folder-closed-body" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#D4A05A" />
+            <stop offset="100%" stopColor="#B07A3E" />
+          </linearGradient>
+        </defs>
         {/* 主体 */}
         <path
-          d="M1.5 4a1 1 0 011-1H6l1.5 1.5h6a1 1 0 011 1V12a1 1 0 01-1 1H2.5a1 1 0 01-1-1V4z"
-          fill={ICON_COLORS.folder}
+          d="M1.5 4.5a1 1 0 011-1H6l1.5 1.3h6a1 1 0 011 1V12a1 1 0 01-1 1H2.5a1 1 0 01-1-1V4.5z"
+          fill="url(#folder-closed-body)"
         />
-        {/* 顶部标签(深色) */}
-        <path d="M1.5 4a1 1 0 011-1H6l1.5 1.5h6a1 1 0 011 1v.3H1.5V4z" fill="#7A5A2E" />
+        {/* 顶部标签 */}
+        <path
+          d="M1.5 4.5a1 1 0 011-1H6l1.5 1.3h6a1 1 0 011 1v.4H1.5v-1.7z"
+          fill="url(#folder-closed-top)"
+        />
         {/* 高光 */}
-        <path d="M2.5 3.5H6L7 4.5H2.5v-1z" fill="#D4A663" fillOpacity="0.5" />
+        <path d="M2.5 4H5.8l.8.7H2.5V4z" fill="#E8C280" fillOpacity="0.45" />
       </svg>
     );
   }
