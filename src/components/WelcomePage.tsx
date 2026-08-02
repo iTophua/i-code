@@ -45,7 +45,7 @@ export function WelcomePage() {
 
   return (
     <div className="welcome">
-      <div className="welcome__logo">i-code</div>
+      <div className="welcome__logo">iCode</div>
 
       <div className="welcome__section">
         <div className="welcome__section-title">开始</div>
