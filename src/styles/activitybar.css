@@ -13,6 +13,15 @@
   flex: 1;
 }
 
+/* 功能区分隔线: 文件操作类 与 便签/工具 分组 */
+.activity-bar__divider {
+  width: 60%;
+  height: 1px;
+  margin: var(--space-2) 0;
+  background: var(--border-subtle);
+  flex-shrink: 0;
+}
+
 .activity-item {
   display: flex;
   align-items: center;

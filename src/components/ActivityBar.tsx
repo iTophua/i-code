@@ -19,10 +19,14 @@ interface ActivityItem {
   icon: LucideIcon;
 }
 
-const ITEMS: ActivityItem[] = [
+// 文件操作类(资源管理器/搜索/Git)
+const FILE_ITEMS: ActivityItem[] = [
   { id: "explorer", label: "资源管理器", icon: FilesIcon },
   { id: "search", label: "搜索", icon: SearchIcon },
   { id: "git", label: "源代码管理 (Git)", icon: GitIcon },
+];
+// 辅助功能类(便签/工具) — 与文件操作区分组显示
+const AUX_ITEMS: ActivityItem[] = [
   { id: "notes", label: "便签", icon: NotesIcon },
   { id: "tools", label: "工具", icon: ToolsIcon },
 ];
@@ -65,22 +69,28 @@ export function ActivityBar() {
     }
   };
 
+  // 渲染单个活动栏按钮
+  const renderItem = (item: ActivityItem) => {
+    const Icon = item.icon;
+    const isActive = sidebarView === item.id && sidebarVisible;
+    return (
+      <button
+        key={item.id}
+        className={`activity-item ${isActive ? "activity-item--active" : ""}`}
+        title={item.label}
+        onClick={item.id === "notes" ? handleNotesClick : () => setSidebarView(item.id)}
+      >
+        <Icon size={20} />
+      </button>
+    );
+  };
+
   return (
     <div className="activity-bar">
-      {ITEMS.map((item) => {
-        const Icon = item.icon;
-        const isActive = sidebarView === item.id && sidebarVisible;
-        return (
-          <button
-            key={item.id}
-            className={`activity-item ${isActive ? "activity-item--active" : ""}`}
-            title={item.label}
-            onClick={item.id === "notes" ? handleNotesClick : () => setSidebarView(item.id)}
-          >
-            <Icon size={20} />
-          </button>
-        );
-      })}
+      {FILE_ITEMS.map(renderItem)}
+      {/* 分组分隔: 文件操作类 与 便签/工具 等辅助功能分开 */}
+      <div className="activity-bar__divider" />
+      {AUX_ITEMS.map(renderItem)}
 
       <div className="activity-bar__spacer" />
       <button
