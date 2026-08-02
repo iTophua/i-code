@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useGitStore, type GitLogEntry } from "../stores/gitStore";
 import { ChevronDown, ChevronRight } from "./Icons";
+import { ConfirmDialog } from "./ConfirmDialog";
+import { toast } from "../stores/toastStore";
 import "../styles/git.css";
 
 /**
@@ -44,11 +46,35 @@ export function CommitHistory() {
 }
 
 function CommitRow({ entry }: { entry: GitLogEntry }) {
+  const cherryPick = useGitStore((s) => s.cherryPick);
+  const [confirmCP, setConfirmCP] = useState(false);
+
+  const handleCherryPick = async () => {
+    try {
+      await cherryPick(entry.hash);
+      setConfirmCP(false);
+      toast.success(`已摘取 ${entry.shortHash}`);
+    } catch (e) {
+      toast.error(`摘取失败: ${e}`);
+    }
+  };
+
   return (
     <div className="commit-row" title={entry.hash}>
       <div className="commit-row__main">
         <span className="commit-row__hash">{entry.shortHash}</span>
         <span className="commit-row__subject">{entry.subject}</span>
+        {/* cherry-pick 操作 */}
+        <button
+          className="commit-row__action"
+          onClick={(e) => {
+            e.stopPropagation();
+            setConfirmCP(true);
+          }}
+          title="摘取此提交 (cherry-pick)"
+        >
+          🍒
+        </button>
       </div>
       <div className="commit-row__meta">
         <span className="commit-row__author">{entry.author}</span>
@@ -64,6 +90,15 @@ function CommitRow({ entry }: { entry: GitLogEntry }) {
             ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmCP}
+        title="摘取提交 (Cherry-pick)"
+        message={`确定要将提交 "${entry.shortHash} ${entry.subject}" 摘取到当前分支吗？`}
+        confirmLabel="摘取"
+        onConfirm={handleCherryPick}
+        onCancel={() => setConfirmCP(false)}
+      />
     </div>
   );
 }

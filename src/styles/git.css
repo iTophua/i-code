@@ -504,3 +504,29 @@
   background: var(--bg-list-hover);
   color: var(--fg-primary);
 }
+
+/* commit 行 cherry-pick 按钮 */
+.commit-row__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.1s, background 0.1s;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.commit-row:hover .commit-row__action {
+  opacity: 0.7;
+}
+.commit-row__action:hover {
+  background: var(--bg-list-hover);
+  opacity: 1;
+}
