@@ -563,13 +563,22 @@ function buildMenuItems(
         }
       },
     });
-    // Git: 查看文件历史(仅文件 + 仅 git 仓库内)
+    // Git: 查看文件历史 + blame(仅文件 + 仅 git 仓库内)
     if (!node.isDir && useGitStore.getState().repoRoot) {
       items.push({
         id: "file-history",
         label: "查看文件历史",
         onClick: () =>
           useEditorStore.getState().openHistory({
+            filePath: node.path,
+            fileName: node.name,
+          }),
+      });
+      items.push({
+        id: "file-blame",
+        label: "查看 Blame",
+        onClick: () =>
+          useEditorStore.getState().openBlame({
             filePath: node.path,
             fileName: node.name,
           }),

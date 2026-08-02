@@ -9,6 +9,7 @@ import { getEditorOptions, defineIThemes, ICODE_DARK_THEME } from "../monaco/the
 import { saveAsFile } from "../utils/exportNote";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { FileHistoryView } from "./FileHistoryView";
+import { BlameView } from "./BlameView";
 import "../monaco/setup"; // 启动即注册深色主题
 import { NotesIcon, SaveIcon } from "./Icons";
 import { AppSelect } from "./AppSelect";
@@ -116,6 +117,11 @@ export function EditorPane() {
         />
       </div>
     );
+  }
+
+  // Blame Tab
+  if (activeTab.kind === "blame") {
+    return <BlameView filePath={activeTab.path} fileName={activeTab.name.replace(/^Blame:\s*/, "")} />;
   }
 
   // 文件历史 Tab

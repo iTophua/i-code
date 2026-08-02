@@ -530,3 +530,40 @@
   background: var(--bg-list-hover);
   opacity: 1;
 }
+
+/* ============ Blame 视图 ============ */
+.blame-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-editor);
+}
+.blame-view__header {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-sidebar);
+  flex-shrink: 0;
+}
+.blame-view__title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--fg-primary);
+}
+.blame-view__body {
+  flex: 1;
+  min-height: 0;
+}
+.blame-view__body .monaco-editor,
+.blame-view__body > div {
+  height: 100%;
+}
+
+/* blame 行尾装饰 */
+.blame-decoration {
+  color: var(--fg-muted) !important;
+  font-size: var(--fs-xs) !important;
+  font-style: italic;
+  opacity: 0.6;
+}
