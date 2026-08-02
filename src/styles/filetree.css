@@ -63,10 +63,11 @@
   white-space: nowrap;
 }
 
-/* ============ 分支切换器(项目名右侧) ============ */
+/* ============ 分支切换器(项目名右侧, 顶到最右) ============ */
 .branch-switcher {
   position: relative;
   flex-shrink: 0;
+  margin-left: auto;
 }
 .branch-switcher__trigger {
   display: inline-flex;
