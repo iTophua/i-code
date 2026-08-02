@@ -96,14 +96,23 @@ export function ActivityBar() {
       <button
         className={`activity-item ${useLayoutStore.getState().panelVisible && useLayoutStore.getState().panelView === "problems" ? "activity-item--active" : ""}`}
         title="问题"
-        onClick={() => useLayoutStore.getState().setPanelView("problems")}
+        onClick={() => {
+          const st = useLayoutStore.getState();
+          // 已显示且当前是 problems → 隐藏; 否则切到 problems 并显示
+          if (st.panelVisible && st.panelView === "problems") st.togglePanel();
+          else st.setPanelView("problems");
+        }}
       >
         <AlertCircle size={20} strokeWidth={1.5} />
       </button>
       <button
         className={`activity-item ${useLayoutStore.getState().panelVisible && useLayoutStore.getState().panelView === "terminal" ? "activity-item--active" : ""}`}
         title="终端 (Ctrl+`)"
-        onClick={() => useLayoutStore.getState().setPanelView("terminal")}
+        onClick={() => {
+          const st = useLayoutStore.getState();
+          if (st.panelVisible && st.panelView === "terminal") st.togglePanel();
+          else st.setPanelView("terminal");
+        }}
       >
         <TerminalSquare size={20} strokeWidth={1.5} />
       </button>
