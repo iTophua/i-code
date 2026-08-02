@@ -224,13 +224,13 @@ body,
 .monaco-editor .inputarea.ime-input {
   background-color: transparent;
 }
-/* 行号栏: 跟随主题 */
+/* 行号栏: 跟随主题(!important 覆盖 Monaco 内联样式; 不影响行高亮层) */
 .monaco-editor .margin {
-  background-color: var(--bg-editor);
+  background-color: var(--bg-editor) !important;
   border-right: 1px solid var(--border-subtle);
 }
 .monaco-editor .margin-view-overlays .cgutter {
-  background-color: var(--bg-editor);
+  background-color: var(--bg-editor) !important;
 }
 /* 当前行高亮: 确保 theme 的 lineHighlightBackground 可见(不被背景层覆盖) */
 .monaco-editor .view-overlays .current-line {
