@@ -85,6 +85,7 @@ export function EditorContextMenu({
 
   return (
     <div
+      style={{ display: "flex", flex: 1, minHeight: 0, flexDirection: "column" }}
       onContextMenu={(e) => {
         e.preventDefault();
         setPos({ x: e.clientX, y: e.clientY });
