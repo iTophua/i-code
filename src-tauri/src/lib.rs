@@ -1,4 +1,5 @@
 mod fs_ops;
+mod file_watcher;
 mod git_ops;
 mod log_viewer;
 mod lsp;
@@ -36,6 +37,7 @@ pub fn run() {
         .manage(terminal::PtyManager::default())
         .manage(log_viewer::LogIndexCache::default())
         .manage(lsp::LspManager::default())
+        .manage(file_watcher::FileWatcher::default())
         .setup(|app| {
             // macOS: 设置标题栏为 overlay 模式(红绿灯保留, 标题栏区域可被 webview 覆盖)
             #[cfg(target_os = "macos")]
@@ -76,6 +78,9 @@ pub fn run() {
             lsp::lsp_write,
             lsp::lsp_stop,
             lsp::lsp_stop_all,
+            // 文件监听
+            file_watcher::start_file_watch,
+            file_watcher::stop_file_watch,
             // Git
             git_ops::git_repo_root,
             git_ops::git_current_branch,

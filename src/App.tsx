@@ -27,6 +27,8 @@ import {
 } from "./utils/session";
 import { getLanguage } from "./utils/language";
 import { addRecentProject } from "./utils/recentProjects";
+import { toast } from "./stores/toastStore";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import "./styles/app.css";
 
 export default function App() {
@@ -126,6 +128,43 @@ export default function App() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ===== 文件外部修改监听 =====
+  const workspaceRoot = useLayoutStore((s) => s.workspaceRoot);
+  useEffect(() => {
+    if (!restored || !workspaceRoot) return;
+    let unlisten: UnlistenFn | null = null;
+
+    // 启动 watcher
+    invoke("start_file_watch", { root: workspaceRoot }).catch(console.error);
+
+    // 监听变化事件
+    listen<{ path: string; kind: string }>("file-changed", (e) => {
+      const { path, kind } = e.payload;
+      const { tabs, activeTabId } = useEditorStore.getState();
+      // 只提示当前打开的文件
+      const affected = tabs.find(
+        (t) => t.kind === "file" && t.path === path && t.id === activeTabId
+      );
+      if (affected && kind === "modified") {
+        toast.info(`${affected.name} 被外部修改，重新载入？点击通知`);
+        // 简化: 自动重载非 dirty 的文件
+        if (!affected.isDirty) {
+          invoke<[string, string]>("read_file", { filePath: path }).then(([content]) => {
+            useEditorStore.getState().updateContent(affected.id, content);
+            useEditorStore.getState().markSaved(affected.id);
+          });
+        }
+      }
+    }).then((fn) => {
+      unlisten = fn;
+    });
+
+    return () => {
+      unlisten?.();
+      invoke("stop_file_watch").catch(console.error);
+    };
+  }, [restored, workspaceRoot]);
 
   // ===== 状态变化时持久化 =====
   // 主题联动: settings.theme → <html data-theme> + Monaco setTheme
