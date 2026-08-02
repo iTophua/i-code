@@ -19,7 +19,7 @@ import { disposeAllLsp } from "./monaco/lsp-bridge";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { TitleBar } from "./components/TitleBar";
-import { SettingsContent } from "./components/SettingsPanel";
+import { SettingsDialog } from "./components/SettingsDialog";
 import { ProblemsPanel } from "./components/ProblemsPanel";
 import { ToastContainer } from "./components/Toast";
 import { CommandPalette } from "./components/CommandPalette";
@@ -136,6 +136,14 @@ export default function App() {
       const savedVisible = await getSession<boolean>(SESSION_KEYS.sidebarVisible);
       if (savedVisible !== null) {
         useLayoutStore.setState({ sidebarVisible: savedVisible });
+      }
+      // 恢复设置分类(记忆上次选的分类)
+      const savedCat = await getSession<string>(SESSION_KEYS.settingsCategory);
+      if (savedCat) {
+        const validCats = ["theme", "editor", "terminal", "window", "lsp"];
+        if (validCats.includes(savedCat)) {
+          useLayoutStore.setState({ settingsCategory: savedCat as any });
+        }
       }
 
       // 恢复项目根
@@ -385,6 +393,12 @@ export default function App() {
         toggleZen();
         return;
       }
+      // Cmd+, → 打开/关闭设置
+      if (mod && e.key === ",") {
+        e.preventDefault();
+        useLayoutStore.getState().toggleSettings();
+        return;
+      }
     };
     window.addEventListener("keydown", onKey);
 
@@ -414,12 +428,9 @@ export default function App() {
           </>
         )}
         <main className="app__main">
-          {sidebarView === "settings" ? (
-            <SettingsContent />
-          ) : (
-            <>
-              <EditorTabs />
-              <Breadcrumb />
+          <>
+            <EditorTabs />
+            <Breadcrumb />
               <div
                 className={`app__split-wrap ${splitEnabled ? "app__split-wrap--on" : ""} ${
                   splitEnabled ? `app__split-wrap--${splitOrientation}` : ""
@@ -467,11 +478,11 @@ export default function App() {
                   {panelView === "terminal" ? <TerminalPanel /> : <ProblemsPanel />}
                 </div>
               )}
-            </>
-          )}
+          </>
         </main>
       </div>
       {!zenMode && <StatusBar />}
+      <SettingsDialog />
       <ConfirmDialog
         open={closeConfirm !== null}
         title="未保存的修改"

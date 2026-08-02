@@ -48,6 +48,7 @@ export const SESSION_KEYS = {
   sidebarView: "sidebarView",
   treeExpanded: "treeExpanded",
   treeSelected: "treeSelected",
+  settingsCategory: "settingsCategory",
 } as const;
 
 /**

@@ -1,4 +1,124 @@
-/* ============ 设置面板(侧栏分类列表) ============ */
+/* ============ 设置弹窗(SettingsDialog) ============ */
+.settings-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10001;
+  width: 720px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.settings-dialog[data-state="open"] {
+  animation: dialog-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.settings-dialog[data-state="closed"] {
+  animation: dialog-out 0.12s ease forwards;
+}
+.settings-dialog__title {
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--fg-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.settings-dialog__body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 左侧分类列表 */
+.settings-dialog__sidebar {
+  width: 180px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
+  border-right: 1px solid var(--border-subtle);
+}
+.settings-dialog__cat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--t-color);
+}
+.settings-dialog__cat:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+.settings-dialog__cat--active {
+  background: var(--bg-list-active);
+  color: var(--fg-on-accent);
+}
+.settings-dialog__cat-icon {
+  font-size: var(--fs-md);
+  width: 18px;
+  text-align: center;
+}
+.settings-dialog__sidebar-spacer {
+  flex: 1;
+}
+.settings-dialog__reset {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--t-color);
+}
+.settings-dialog__reset:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-error);
+}
+
+/* 右侧表单 */
+.settings-dialog__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.settings-dialog__content-header {
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+.settings-dialog__content-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-5);
+}
+
+/* ============ 设置面板(旧侧栏分类列表, 已弃用) ============ */
 .settings {
   display: flex;
   flex-direction: column;

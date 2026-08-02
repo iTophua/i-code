@@ -59,7 +59,7 @@ export function CommandPalette() {
       { id: "view-git", label: "视图: 源代码管理", action: () => layout.setSidebarView("git") },
       { id: "view-notes", label: "视图: 便签", action: () => layout.setSidebarView("notes") },
       { id: "view-tools", label: "视图: 工具", action: () => layout.setSidebarView("tools") },
-      { id: "view-settings", label: "视图: 设置", action: () => layout.setSidebarView("settings") },
+      { id: "open-settings", label: "打开设置", shortcut: "Cmd+,", action: () => layout.setSettingsOpen(true) },
       { id: "view-problems", label: "视图: 问题", action: () => layout.setPanelView("problems") },
       { id: "close-tab", label: "关闭当前标签", shortcut: "Cmd+W", action: () => { if (editor.activeTabId) editor.closeTab(editor.activeTabId); } },
       { id: "reopen-closed", label: "恢复关闭的标签", shortcut: "Cmd+Shift+T", action: editor.reopenClosed },
@@ -106,7 +106,7 @@ export function CommandPalette() {
         shortcut: "Cmd+U",
         action: () => triggerEditorAction("cursorUndo"),
       },
-      { id: "open-settings", label: "打开设置", action: () => layout.setSidebarView("settings") },
+      { id: "open-settings-cmd", label: "打开设置", shortcut: "Cmd+,", action: () => layout.setSettingsOpen(true) },
     ];
   }, [open]);
 

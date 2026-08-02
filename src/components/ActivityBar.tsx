@@ -94,9 +94,9 @@ export function ActivityBar() {
 
       <div className="activity-bar__spacer" />
       <button
-        className={`activity-item ${sidebarView === "settings" && sidebarVisible ? "activity-item--active" : ""}`}
-        title="设置"
-        onClick={() => setSidebarView("settings")}
+        className={`activity-item ${useLayoutStore.getState().settingsOpen ? "activity-item--active" : ""}`}
+        title="设置 (Cmd+,)"
+        onClick={() => useLayoutStore.getState().setSettingsOpen(true)}
       >
         <Settings size={20} strokeWidth={1.5} />
       </button>

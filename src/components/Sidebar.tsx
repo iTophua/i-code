@@ -3,7 +3,6 @@ import { FileTree } from "./FileTree";
 import { SearchPanel } from "./SearchPanel";
 import { NotesPanel } from "./NotesPanel";
 import { GitPanel } from "./GitPanel";
-import { SettingsPanel } from "./SettingsPanel";
 import { ToolsPanel } from "./ToolsPanel";
 
 export function Sidebar() {
@@ -30,8 +29,6 @@ function renderView(view: SidebarView) {
       return <NotesPanel />;
     case "tools":
       return <ToolsPanel />;
-    case "settings":
-      return <SettingsPanel />;
     default:
       return null;
   }
