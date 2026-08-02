@@ -38,8 +38,10 @@ loader.config({ monaco });
 // ★ 在 loader 初始化完成后注册主题(确保 monaco 实例就绪)
 // loader.init() 返回 Promise, resolved 时 monaco 实例完全可用
 import { defineIThemes, ICODE_DARK_THEME } from "./theme";
+import { initBuiltinLanguages } from "./lsp-config";
 loader.init().then((m) => {
   defineIThemes(m);
+  initBuiltinLanguages(m);
 });
 
 export { monaco, ICODE_DARK_THEME };

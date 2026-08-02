@@ -1,6 +1,7 @@
 mod fs_ops;
 mod git_ops;
 mod log_viewer;
+mod lsp;
 mod search;
 mod terminal;
 
@@ -34,6 +35,7 @@ pub fn run() {
         )
         .manage(terminal::PtyManager::default())
         .manage(log_viewer::LogIndexCache::default())
+        .manage(lsp::LspManager::default())
         .setup(|app| {
             // macOS: 设置标题栏为 overlay 模式(红绿灯保留, 标题栏区域可被 webview 覆盖)
             #[cfg(target_os = "macos")]
@@ -68,6 +70,12 @@ pub fn run() {
             log_viewer::build_line_index,
             log_viewer::read_lines,
             log_viewer::search_large_file,
+            // LSP
+            lsp::detect_lsp_servers,
+            lsp::lsp_start,
+            lsp::lsp_write,
+            lsp::lsp_stop,
+            lsp::lsp_stop_all,
             // Git
             git_ops::git_repo_root,
             git_ops::git_current_branch,

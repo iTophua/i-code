@@ -7,7 +7,7 @@ import { create } from "zustand";
 export type SidebarView = "explorer" | "search" | "git" | "notes" | "tools" | "settings";
 
 /** 设置分类 */
-export type SettingsCategory = "theme" | "editor" | "terminal" | "window";
+export type SettingsCategory = "theme" | "editor" | "terminal" | "window" | "lsp";
 
 /** Markdown 视图模式 */
 export type MdViewMode = "split" | "preview" | "source";

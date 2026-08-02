@@ -1,17 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLayoutStore } from "../stores/layoutStore";
+import type { SettingsCategory } from "../stores/layoutStore";
 import { useSettingsStore } from "../stores/settingsStore";
+import { useLspStore } from "../stores/lspStore";
 import { AppSelect } from "./AppSelect";
 import { ConfirmDialog } from "./ConfirmDialog";
 import "../styles/settings.css";
-
-export type SettingsCategory = "theme" | "editor" | "terminal" | "window";
 
 const CATEGORIES: { id: SettingsCategory; label: string; icon: string }[] = [
   { id: "theme", label: "主题", icon: "🎨" },
   { id: "editor", label: "编辑器", icon: "✏️" },
   { id: "terminal", label: "终端", icon: "🖥" },
   { id: "window", label: "窗口与文件", icon: "🗂" },
+  { id: "lsp", label: "代码智能", icon: "🧠" },
 ];
 
 export function SettingsPanel() {
@@ -76,6 +77,7 @@ export function SettingsContent() {
         {settingsCategory === "editor" && <EditorSettings s={s} />}
         {settingsCategory === "terminal" && <TerminalSettings s={s} />}
         {settingsCategory === "window" && <WindowSettings s={s} />}
+        {settingsCategory === "lsp" && <LspSettings />}
       </div>
     </div>
   );
@@ -208,5 +210,45 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
     <button className={`settings__toggle ${value ? "settings__toggle--on" : ""}`} onClick={() => onChange(!value)} role="switch" aria-checked={value}>
       <span className="settings__toggle-thumb" />
     </button>
+  );
+}
+
+/** 代码智能(LSP)设置 */
+function LspSettings() {
+  const { servers, detected, detect } = useLspStore();
+
+  useEffect(() => {
+    if (!detected) detect();
+  }, [detected, detect]);
+
+  return (
+    <>
+      <Group title="内置语言能力">
+        <Row label="TypeScript / JavaScript" desc="补全、诊断、hover、跳转(Monaco 内置)">
+          <span style={{ color: "var(--fg-success)", fontSize: "var(--fs-sm)" }}>✓ 已启用</span>
+        </Row>
+        <Row label="JSON / CSS / HTML / SQL" desc="基础补全和校验(Monaco 内置)">
+          <span style={{ color: "var(--fg-success)", fontSize: "var(--fs-sm)" }}>✓ 已启用</span>
+        </Row>
+      </Group>
+      <Group title="外部 Language Server">
+        <div style={{ fontSize: "var(--fs-xs)", color: "var(--fg-muted)", marginBottom: "var(--space-2)" }}>
+          探测系统中已安装的 LSP server, 有则启用对应语言的代码智能。
+        </div>
+        {servers.map((srv) => (
+          <Row
+            key={srv.language}
+            label={`${srv.language.toUpperCase()} (${srv.command})`}
+            desc={srv.version || (srv.installed ? "已安装" : "未安装")}
+          >
+            {srv.installed ? (
+              <span style={{ color: "var(--fg-success)", fontSize: "var(--fs-sm)" }}>✓ 可用</span>
+            ) : (
+              <span style={{ color: "var(--fg-muted)", fontSize: "var(--fs-sm)" }}>未安装</span>
+            )}
+          </Row>
+        ))}
+      </Group>
+    </>
   );
 }
