@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useLayoutStore } from "../stores/layoutStore";
 import { useEditorStore } from "../stores/editorStore";
+import { triggerEditorAction } from "../monaco/activeEditor";
 import { Search } from "lucide-react";
 import "../styles/command-palette.css";
 
@@ -61,6 +62,43 @@ export function CommandPalette() {
       { id: "view-problems", label: "视图: 问题", action: () => layout.setPanelView("problems") },
       { id: "close-tab", label: "关闭当前标签", shortcut: "Cmd+W", action: () => { if (editor.activeTabId) editor.closeTab(editor.activeTabId); } },
       { id: "reopen-closed", label: "恢复关闭的标签", shortcut: "Cmd+Shift+T", action: editor.reopenClosed },
+      // ===== 多光标 / 列选择编辑 =====
+      {
+        id: "mc-add-cursor-below",
+        label: "在下方添加光标",
+        shortcut: "Cmd+Option+↓",
+        action: () => triggerEditorAction("editor.action.insertCursorBelow"),
+      },
+      {
+        id: "mc-add-cursor-above",
+        label: "在上方添加光标",
+        shortcut: "Cmd+Option+↑",
+        action: () => triggerEditorAction("editor.action.insertCursorAbove"),
+      },
+      {
+        id: "mc-add-next",
+        label: "将下一个匹配项添加到选择",
+        shortcut: "Cmd+D",
+        action: () => triggerEditorAction("editor.action.addSelectionToNextFindMatch"),
+      },
+      {
+        id: "mc-select-all-matches",
+        label: "选择所有匹配项",
+        shortcut: "Cmd+Shift+L",
+        action: () => triggerEditorAction("editor.action.selectHighlights"),
+      },
+      {
+        id: "mc-column-box-select",
+        label: "选区每行加光标(列编辑)",
+        shortcut: "Shift+Option+I",
+        action: () => triggerEditorAction("editor.action.insertCursorAtEndOfEachLineSelected"),
+      },
+      {
+        id: "mc-undo-cursor",
+        label: "撤销上次光标操作",
+        shortcut: "Cmd+U",
+        action: () => triggerEditorAction("cursorUndo"),
+      },
       { id: "open-settings", label: "打开设置", action: () => layout.setSidebarView("settings") },
     ];
   }, [open]);

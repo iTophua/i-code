@@ -21,6 +21,7 @@ import { NoteQuickTools } from "./NoteQuickTools";
 import { format as sqlFormat } from "sql-formatter";
 import { toast } from "../stores/toastStore";
 import { getExtByLanguage } from "../utils/language";
+import { setActiveEditor } from "../monaco/activeEditor";
 
 const LANG_OPTIONS = [
   { value: "plaintext", label: "纯文本" },
@@ -76,6 +77,9 @@ export function EditorPane() {
     // 双保险: 每次挂载都确保主题已注册并应用(消除首次白色)
     defineIThemes(monacoInstance);
     monacoInstance.editor.setTheme(ICODE_DARK_THEME);
+    // 注册为活动编辑器(聚焦时刷新), 供命令面板等外部入口触发多光标/列选等
+    setActiveEditor(editorInstance);
+    editorInstance.onDidFocusEditorText?.(() => setActiveEditor(editorInstance));
   };
 
   const handleChange = (value: string | undefined) => {

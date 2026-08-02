@@ -2,6 +2,7 @@ import Editor, { DiffEditor, type OnMount } from "@monaco-editor/react";
 import { useEditorStore } from "../stores/editorStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getEditorOptions, defineIThemes, ICODE_DARK_THEME } from "../monaco/theme";
+import { setActiveEditor } from "../monaco/activeEditor";
 import "../monaco/setup";
 
 /**
@@ -12,9 +13,12 @@ export function SplitEditorPane() {
   const settings = useSettingsStore();
   const activeTab = splitTabs.find((t) => t.id === splitActiveId);
 
-  const handleMount: OnMount = (_ed, monaco) => {
+  const handleMount: OnMount = (ed, monaco) => {
     defineIThemes(monaco);
     monaco.editor.setTheme(ICODE_DARK_THEME);
+    // 注册为活动编辑器, 使命令面板的多光标/列选命令作用于分栏编辑器
+    setActiveEditor(ed);
+    ed.onDidFocusEditorText?.(() => setActiveEditor(ed));
   };
 
   if (!activeTab) {

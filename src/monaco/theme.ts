@@ -145,6 +145,13 @@ export function getEditorOptions(
     },
     scrollBeyondLastLine: false,
     padding: { top: 8, bottom: 8 },
+    // ===== 多光标 / 列选择编辑 =====
+    // columnSelection: 开启列(块)选择模式, 用方向键移动光标即可形成矩形选区
+    // multiCursorModifier: 'alt' → Alt+点击加光标, Alt+拖拽框选列(与 VS Code 默认一致)
+    // multiCursorPaste: 多光标下粘贴按各自光标分行粘贴
+    columnSelection: true,
+    multiCursorModifier: "alt",
+    multiCursorPaste: "full",
     ...overrides,
   };
 }
