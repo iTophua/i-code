@@ -12,6 +12,7 @@ import { FileHistoryView } from "./FileHistoryView";
 import { BlameView } from "./BlameView";
 import { LogViewer } from "./LogViewer";
 import { WelcomePage } from "./WelcomePage";
+import { MergeEditor } from "./MergeEditor";
 import "../monaco/setup"; // 启动即注册深色主题
 import { NotesIcon, SaveIcon } from "./Icons";
 import { AppSelect } from "./AppSelect";
@@ -128,6 +129,11 @@ export function EditorPane() {
         />
       </div>
     );
+  }
+
+  // 合并编辑器 Tab
+  if (activeTab.kind === "merge") {
+    return <MergeEditor filePath={activeTab.path} fileName={activeTab.name.replace(/^合并:\s*/, "")} />;
   }
 
   // 大文件/日志 Tab

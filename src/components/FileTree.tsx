@@ -610,6 +610,21 @@ function buildMenuItems(
             fileName: node.name,
           }),
       });
+      // 解决冲突(当 Git 状态为 conflict 时)
+      const gitChange = useGitStore.getState().changes.find(
+        (c) => c.path === (rootPath ? node.path.slice(rootPath.length + 1) : node.path)
+      );
+      if (gitChange?.status === "conflict") {
+        items.push({
+          id: "resolve-conflict",
+          label: "⚡ 解决冲突",
+          onClick: () =>
+            useEditorStore.getState().openMerge({
+              filePath: node.path,
+              fileName: node.name,
+            }),
+        });
+      }
     }
     items.push({ id: "sep1", label: "", separator: true });
     items.push({

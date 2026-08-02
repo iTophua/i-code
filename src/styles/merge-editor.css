@@ -1,0 +1,130 @@
+/* ============ 三向合并编辑器 ============ */
+.merge-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-editor);
+}
+
+.merge-editor__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-sidebar);
+  flex-shrink: 0;
+}
+.merge-editor__title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg-primary);
+}
+.merge-editor__count {
+  font-size: var(--fs-xs);
+  color: var(--git-conflict);
+  background: rgba(228, 103, 108, 0.15);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+.merge-editor__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+.merge-editor__actions .tool-btn {
+  height: 24px;
+  font-size: var(--fs-xs);
+}
+.merge-editor__actions .tool-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 冲突块 */
+.merge-editor__conflicts {
+  max-height: 40%;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.conflict-block {
+  border-bottom: 1px solid var(--border-subtle);
+}
+.conflict-block__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--git-conflict);
+  background: rgba(228, 103, 108, 0.05);
+}
+.conflict-block__actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.conflict-block__actions .tool-btn {
+  height: 22px;
+  padding: 0 8px;
+  font-size: var(--fs-xs);
+}
+.conflict-block__diff {
+  display: flex;
+  gap: 1px;
+  background: var(--border-subtle);
+}
+.conflict-block__side {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-editor);
+}
+.conflict-block__side--ours {
+  border-left: 3px solid var(--git-modified);
+}
+.conflict-block__side--theirs {
+  border-left: 3px solid var(--git-added);
+}
+.conflict-block__label {
+  padding: 4px var(--space-3);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg-muted);
+  background: var(--bg-list-hover);
+}
+.conflict-block__side pre {
+  padding: var(--space-2) var(--space-3);
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--fg-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* 结果区 */
+.merge-editor__result {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.merge-editor__result-label {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--fg-muted);
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+.merge-editor__result-editor {
+  flex: 1;
+  min-height: 0;
+}
+.merge-editor__result-editor .monaco-editor,
+.merge-editor__result-editor > div {
+  height: 100%;
+}
