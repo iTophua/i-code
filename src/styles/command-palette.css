@@ -88,3 +88,57 @@
   color: var(--fg-on-accent);
   opacity: 0.7;
 }
+
+/* ============ 分支比较弹窗 ============ */
+.compare-branch-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: var(--z-dialog);
+  width: 360px;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dialog);
+  animation: dialog-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.compare-branch-dialog__title {
+  padding: var(--space-4) var(--space-4);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg-primary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.compare-branch-dialog__list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+.compare-branch-dialog__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 30px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-primary);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--t-color);
+}
+.compare-branch-dialog__item:hover {
+  background: var(--bg-list-hover);
+}
+.compare-branch-dialog__item--active {
+  background: var(--bg-list-active);
+  color: var(--fg-on-accent);
+}

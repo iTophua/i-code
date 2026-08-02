@@ -107,6 +107,8 @@ interface GitStore {
   blameFile: (file: string) => Promise<string>;
   fileHistory: (file: string) => Promise<string>;
   showFileVersion: (refName: string, file: string) => Promise<string>;
+  /** 比较当前文件与指定分支版本, 打开 diff 视图 */
+  compareFileWithBranch: (filePath: string, branch: string) => Promise<void>;
 }
 
 /** 解析 porcelain v2 status */
@@ -456,5 +458,28 @@ export const useGitStore = create<GitStore>((set, get) => ({
     const { repoRoot } = get();
     if (!repoRoot) throw new Error("无仓库");
     return invoke<string>("git_show_file", { path: repoRoot, refName, file });
+  },
+
+  compareFileWithBranch: async (filePath, branch) => {
+    const { repoRoot } = get();
+    if (!repoRoot) throw new Error("无仓库");
+    const rel = filePath.replace(repoRoot + "/", "");
+    // 取分支版本(旧) + 工作区当前内容(新)
+    const original = await invoke<string>("git_show_file", {
+      path: repoRoot, refName: branch, file: rel,
+    }).catch(() => ""); // 分支可能没有该文件
+    // 读工作区文件内容
+    const { invoke: inv } = await import("@tauri-apps/api/core");
+    const [modified] = await inv<[string, string]>("read_file", { filePath });
+    const name = filePath.split("/").pop() || filePath;
+    // 用动态 import 避免循环依赖
+    const { useEditorStore } = await import("./editorStore");
+    useEditorStore.getState().openDiff({
+      id: `compare-${branch}-${rel}`,
+      title: `${name} vs ${branch}`,
+      original,
+      modified,
+      language: undefined,
+    });
   },
 }));

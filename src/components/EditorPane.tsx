@@ -25,6 +25,7 @@ import { getExtByLanguage } from "../utils/language";
 import { setActiveEditor, triggerEditorAction } from "../monaco/activeEditor";
 import { setupColumnDrag } from "../monaco/columnSelect";
 import { tabInScope } from "../utils/tabScope";
+import { EditorContextMenu } from "./EditorContextMenu";
 
 const LANG_OPTIONS = [
   { value: "plaintext", label: "纯文本" },
@@ -44,6 +45,8 @@ const LANG_OPTIONS = [
 export function EditorPane() {
   const { tabs, activeTabId, updateContent, markSaved } = useEditorStore();
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  // 与分支比较: 选择目标分支
+  const [compareTarget, setCompareTarget] = useState<{ filePath: string; fileName: string } | null>(null);
   // 精确订阅设置项(避免无关 state 变化触发重渲染)
   const fontFamily = useSettingsStore((s) => s.fontFamily);
   const fontSize = useSettingsStore((s) => s.fontSize);
@@ -139,150 +142,7 @@ export function EditorPane() {
       editorInstance.setScrollTop(activeTab.scrollTop);
     }
 
-    // ===== 右键菜单自定义项 =====
-    // 剪切/复制/粘贴/全选(Monaco 自带但确保在右键菜单可见)
-    editorInstance.addAction({
-      id: "ctx-cut",
-      label: "剪切",
-      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyX],
-      contextMenuGroupId: "9_cutcopypaste",
-      contextMenuOrder: 1,
-      run: (ed) => {
-        const sel = ed.getSelection();
-        if (sel && !sel.isEmpty()) {
-          navigator.clipboard.writeText(ed.getModel()!.getValueInRange(sel));
-          ed.executeEdits("ctx-cut", [{ range: sel, text: "" }]);
-        }
-      },
-    });
-    editorInstance.addAction({
-      id: "ctx-copy",
-      label: "复制",
-      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyC],
-      contextMenuGroupId: "9_cutcopypaste",
-      contextMenuOrder: 2,
-      run: (ed) => {
-        const sel = ed.getSelection();
-        if (sel && !sel.isEmpty()) {
-          navigator.clipboard.writeText(ed.getModel()!.getValueInRange(sel));
-        }
-      },
-    });
-    editorInstance.addAction({
-      id: "ctx-paste",
-      label: "粘贴",
-      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyV],
-      contextMenuGroupId: "9_cutcopypaste",
-      contextMenuOrder: 3,
-      run: async (ed) => {
-        const text = await navigator.clipboard.readText();
-        const sel = ed.getSelection();
-        if (sel && text) {
-          ed.executeEdits("ctx-paste", [{ range: sel, text }]);
-        }
-      },
-    });
-    editorInstance.addAction({
-      id: "ctx-select-all",
-      label: "全选",
-      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyA],
-      contextMenuGroupId: "9_cutcopypaste",
-      contextMenuOrder: 4,
-      run: (ed) => {
-        const model = ed.getModel();
-        if (model) {
-          ed.setSelection(model.getFullModelRange());
-        }
-      },
-    });
-
-    // 查找替换
-    editorInstance.addAction({
-      id: "ctx-find",
-      label: "查找",
-      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyF],
-      contextMenuGroupId: "99_search",
-      contextMenuOrder: 1,
-      run: () => { triggerEditorAction("actions.find"); },
-    });
-    editorInstance.addAction({
-      id: "ctx-replace",
-      label: "替换",
-      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF],
-      contextMenuGroupId: "99_search",
-      contextMenuOrder: 2,
-      run: () => { triggerEditorAction("editor.action.startFindReplaceAction"); },
-    });
-
-    // 命令面板
-    editorInstance.addAction({
-      id: "ctx-command-palette",
-      label: "命令面板",
-      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.KeyP],
-      contextMenuGroupId: "zz_command",
-      contextMenuOrder: 1,
-      run: () => { window.dispatchEvent(new KeyboardEvent("keydown", { metaKey: true, shiftKey: true, key: "p" })); },
-    });
-
-    // 格式化
-    editorInstance.addAction({
-      id: "ctx-format",
-      label: "格式化代码",
-      keybindings: [monacoInstance.KeyMod.Shift | monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF],
-      contextMenuGroupId: "zz_command",
-      contextMenuOrder: 2,
-      run: () => { triggerEditorAction("editor.action.formatDocument"); },
-    });
-
-    // ===== Git 菜单(仅文件 tab) =====
-    const currentPath = activeTab?.path;
-    const currentName = activeTab?.name;
-    if (currentPath && activeTab?.kind === "file") {
-      editorInstance.addAction({
-        id: "ctx-git-blame",
-        label: "Git: 查看 Blame",
-        contextMenuGroupId: "git",
-        contextMenuOrder: 1,
-        run: () => {
-          useEditorStore.getState().openBlame({ filePath: currentPath, fileName: currentName });
-        },
-      });
-      editorInstance.addAction({
-        id: "ctx-git-history",
-        label: "Git: 查看文件历史",
-        contextMenuGroupId: "git",
-        contextMenuOrder: 2,
-        run: () => {
-          useEditorStore.getState().openHistory({ filePath: currentPath, fileName: currentName });
-        },
-      });
-      editorInstance.addAction({
-        id: "ctx-git-stage",
-        label: "Git: 暂存此文件",
-        contextMenuGroupId: "git",
-        contextMenuOrder: 3,
-        run: async () => {
-          const { repoRoot } = useGitStore.getState();
-          if (repoRoot) {
-            const rel = currentPath.replace(repoRoot + "/", "");
-            await useGitStore.getState().stage([rel]);
-          }
-        },
-      });
-      editorInstance.addAction({
-        id: "ctx-git-unstage",
-        label: "Git: 取消暂存",
-        contextMenuGroupId: "git",
-        contextMenuOrder: 4,
-        run: async () => {
-          const { repoRoot } = useGitStore.getState();
-          if (repoRoot) {
-            const rel = currentPath.replace(repoRoot + "/", "");
-            await useGitStore.getState().unstage([rel]);
-          }
-        },
-      });
-    }
+    // (右键菜单已禁用 Monaco 默认英文菜单, 改用 EditorContextMenu 自定义中文菜单)
 
     // 记录光标位置(节流, 供重启恢复)
     let cursorTimer: number | null = null;
@@ -439,17 +299,147 @@ export function EditorPane() {
   }
 
   // 普通文件
+  const ed = editorRef.current;
+  const gitItems = activeTab.kind === "file" && useGitStore.getState().repoRoot
+    ? [
+        { id: "sep-git", label: "", separator: true },
+        { id: "git-blame", label: "查看 Blame", onClick: () => {
+          useEditorStore.getState().openBlame({ filePath: activeTab.path, fileName: activeTab.name });
+        } },
+        { id: "git-history", label: "查看文件历史", onClick: () => {
+          useEditorStore.getState().openHistory({ filePath: activeTab.path, fileName: activeTab.name });
+        } },
+        { id: "git-stage", label: "暂存此文件", onClick: async () => {
+          const { repoRoot } = useGitStore.getState();
+          if (repoRoot) {
+            const rel = activeTab.path.replace(repoRoot + "/", "");
+            await useGitStore.getState().stage([rel]);
+            toast.success("已暂存");
+          }
+        } },
+        { id: "git-compare", label: "与分支比较...", onClick: () => {
+          setCompareTarget({ filePath: activeTab.path, fileName: activeTab.name });
+        } },
+      ]
+    : [];
+
   return (
-    <div className="editor-pane" onKeyDown={handleKeyDown}>
-      <Editor
-        path={activeTab.path}
-        language={activeTab.language}
-        value={activeTab.content}
-        onMount={handleMount}
-        onChange={handleChange}
-        loading={<div className="editor-loading">加载中...</div>}
-        options={editorOpts}
-      />
+    <>
+    <EditorContextMenu
+      items={[
+        { id: "cut", label: "剪切", shortcut: "Cmd+X", onClick: () => {
+          if (!ed) return;
+          const sel = ed.getSelection();
+          if (sel && !sel.isEmpty()) {
+            navigator.clipboard.writeText(ed.getModel()!.getValueInRange(sel));
+            ed.executeEdits("cut", [{ range: sel, text: "" }]);
+          }
+        } },
+        { id: "copy", label: "复制", shortcut: "Cmd+C", onClick: () => {
+          if (!ed) return;
+          const sel = ed.getSelection();
+          if (sel && !sel.isEmpty()) {
+            navigator.clipboard.writeText(ed.getModel()!.getValueInRange(sel));
+          }
+        } },
+        { id: "paste", label: "粘贴", shortcut: "Cmd+V", onClick: async () => {
+          if (!ed) return;
+          const text = await navigator.clipboard.readText();
+          const sel = ed.getSelection();
+          if (sel && text) ed.executeEdits("paste", [{ range: sel, text }]);
+        } },
+        { id: "sep1", label: "", separator: true },
+        { id: "find", label: "查找", shortcut: "Cmd+F", onClick: () => triggerEditorAction("actions.find") },
+        { id: "replace", label: "替换", shortcut: "Cmd+Alt+F", onClick: () => triggerEditorAction("editor.action.startFindReplaceAction") },
+        { id: "sep2", label: "", separator: true },
+        { id: "format", label: "格式化代码", shortcut: "Shift+Alt+F", onClick: () => triggerEditorAction("editor.action.formatDocument") },
+        { id: "command", label: "命令面板", shortcut: "Cmd+Shift+P", onClick: () => window.dispatchEvent(new KeyboardEvent("keydown", { metaKey: true, shiftKey: true, key: "p" })) },
+        ...gitItems,
+      ]}
+    >
+      <div className="editor-pane" onKeyDown={handleKeyDown}>
+        <Editor
+          path={activeTab.path}
+          language={activeTab.language}
+          value={activeTab.content}
+          onMount={handleMount}
+          onChange={handleChange}
+          loading={<div className="editor-loading">加载中...</div>}
+          options={editorOpts}
+        />
+      </div>
+    </EditorContextMenu>
+    <CompareBranchDialog
+      open={compareTarget !== null}
+      fileName={compareTarget?.fileName ?? ""}
+      onClose={() => setCompareTarget(null)}
+      onCompare={async (branch) => {
+        if (compareTarget) {
+          await useGitStore.getState().compareFileWithBranch(compareTarget.filePath, branch);
+        }
+        setCompareTarget(null);
+      }}
+    />
+    </>
+  );
+}
+
+/**
+ * 分支比较选择弹窗
+ */
+function CompareBranchDialog({
+  open,
+  fileName,
+  onClose,
+  onCompare,
+}: {
+  open: boolean;
+  fileName: string;
+  onClose: () => void;
+  onCompare: (branch: string) => void;
+}) {
+  const { branches, loadBranches } = useGitStore();
+  const [selected, setSelected] = useState("");
+  useEffect(() => {
+    if (open) loadBranches();
+  }, [open, loadBranches]);
+  const localBranches = branches.filter((b) => !b.isRemote && !b.current);
+
+  if (!open) return null;
+  return (
+    <div className="cmd-palette-overlay" onClick={onClose}>
+      <div className="compare-branch-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="compare-branch-dialog__title">
+          与分支比较: {fileName}
+        </div>
+        <div className="compare-branch-dialog__list">
+          {localBranches.length === 0 ? (
+            <div style={{ padding: 16, color: "var(--fg-muted)", textAlign: "center" }}>
+              没有其他本地分支
+            </div>
+          ) : (
+            localBranches.map((b) => (
+              <button
+                key={b.name}
+                className={`compare-branch-dialog__item ${selected === b.name ? "compare-branch-dialog__item--active" : ""}`}
+                onClick={() => setSelected(b.name)}
+              >
+                <span>⎇ {b.name}</span>
+              </button>
+            ))
+          )}
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "8px 12px" }}>
+          <button className="btn btn--secondary" onClick={onClose}>取消</button>
+          <button
+            className="btn btn--primary"
+            disabled={!selected}
+            onClick={() => { if (selected) onCompare(selected); }}
+          >
+            比较
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

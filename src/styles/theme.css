@@ -255,24 +255,13 @@ body,
   overflow: hidden;
 }
 
-/* Monaco 编辑器: 背景跟随主题 */
-.monaco-editor,
-.monaco-editor-background,
-.monaco-editor .margin,
-.monaco-editor .margin-view-overlays,
-.monaco-editor .margin-view-overlays .cgutter,
-.monaco-editor .margin-view-overlays > div {
-  background-color: var(--bg-editor) !important;
+/* Monaco 编辑器: 仅防首次白色闪烁(theme 注册前), 不用 !important
+   (行号栏/编辑器/行高亮 全部由 Monaco theme 内部控制) */
+.monaco-editor {
+  background-color: var(--bg-editor);
 }
 .monaco-editor .inputarea.ime-input {
   background-color: transparent;
-}
-.monaco-editor .margin {
-  border-right: 1px solid var(--border-subtle);
-}
-/* 当前行高亮: 确保 theme 的 lineHighlightBackground 可见 */
-.monaco-editor .view-overlays .current-line {
-  background-color: var(--editor-line-highlight) !important;
 }
 
 body {
