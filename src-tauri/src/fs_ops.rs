@@ -72,7 +72,7 @@ fn is_ignored(name: &str, path: &Path, root: &Path, patterns: &[String]) -> bool
 
 /// 列出目录的直接子条目(单层,前端懒加载展开)
 #[tauri::command]
-pub fn list_directory(dir_path: String, show_hidden: Option<bool>) -> Result<Vec<DirEntry>, String> {
+pub fn list_directory(dir_path: String, show_hidden: Option<bool>, sort_by: Option<String>) -> Result<Vec<DirEntry>, String> {
     let root = PathBuf::from(&dir_path);
     if !root.is_dir() {
         return Err(format!("不是目录: {}", dir_path));
@@ -103,11 +103,31 @@ pub fn list_directory(dir_path: String, show_hidden: Option<bool>) -> Result<Vec
         });
     }
 
-    // 文件夹优先,各自按名排序
+    // 排序: 文件夹优先, 各自按选定方式
+    let sort = sort_by.unwrap_or_else(|| "name".to_string());
     entries.sort_by(|a, b| match (a.is_dir, b.is_dir) {
         (true, false) => std::cmp::Ordering::Less,
         (false, true) => std::cmp::Ordering::Greater,
-        _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
+        _ => {
+            if sort == "modified" {
+                // 按修改时间降序(最近在上)
+                let a_time = std::fs::metadata(&a.path)
+                    .and_then(|m| m.modified())
+                    .ok()
+                    .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+                let b_time = std::fs::metadata(&b.path)
+                    .and_then(|m| m.modified())
+                    .ok()
+                    .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+                b_time.cmp(&a_time)
+            } else {
+                a.name.to_lowercase().cmp(&b.name.to_lowercase())
+            }
+        }
     });
 
     Ok(entries)
@@ -186,6 +206,34 @@ pub fn rename_path(from: String, to: String) -> Result<(), String> {
 #[tauri::command]
 pub fn path_exists(path: String) -> bool {
     PathBuf::from(&path).exists()
+}
+
+/// 复制文件/目录
+#[tauri::command]
+pub fn copy_path(src: String, dest: String) -> Result<(), String> {
+    let src_path = PathBuf::from(&src);
+    let dest_path = PathBuf::from(&dest);
+    if src_path.is_dir() {
+        copy_dir_recursive(&src_path, &dest_path)?;
+    } else {
+        fs::copy(&src_path, &dest_path).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+/// 递归复制目录
+fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<(), String> {
+    fs::create_dir_all(dest).map_err(|e| e.to_string())?;
+    for entry in fs::read_dir(src).map_err(|e| e.to_string())?.flatten() {
+        let src_item = entry.path();
+        let dest_item = dest.join(entry.file_name());
+        if src_item.is_dir() {
+            copy_dir_recursive(&src_item, &dest_item)?;
+        } else {
+            fs::copy(&src_item, &dest_item).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
 }
 
 /// 获取文件大小(用于大文件分档判断)

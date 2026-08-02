@@ -1,0 +1,37 @@
+/* ============ 路径面包屑 ============ */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-editor);
+  font-size: var(--fs-xs);
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.breadcrumb::-webkit-scrollbar {
+  height: 0;
+}
+.breadcrumb__item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.breadcrumb__sep {
+  color: var(--fg-muted);
+  opacity: 0.5;
+}
+.breadcrumb__path {
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+.breadcrumb__path:hover {
+  color: var(--fg-secondary);
+}
+.breadcrumb__current {
+  color: var(--fg-secondary);
+  font-weight: 500;
+}

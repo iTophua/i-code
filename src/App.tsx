@@ -20,6 +20,7 @@ import { SettingsContent } from "./components/SettingsPanel";
 import { ProblemsPanel } from "./components/ProblemsPanel";
 import { ToastContainer } from "./components/Toast";
 import { CommandPalette } from "./components/CommandPalette";
+import { Breadcrumb } from "./components/Breadcrumb";
 import { useState } from "react";
 import {
   setSession,
@@ -291,6 +292,7 @@ export default function App() {
           ) : (
             <>
               <EditorTabs />
+              <Breadcrumb />
               <div className="app__editor-area">
                 {zenMode && (
                   <button

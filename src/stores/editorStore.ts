@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { getLanguage } from "../utils/language";
+import { useFileTreeStore } from "./fileTreeStore";
 
 /**
  * 编辑器 Tab 状态管理
@@ -290,7 +291,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set({ tabs: newTabs, activeTabId: newActive, recentlyClosed });
   },
 
-  setActiveTab: (id) => set({ activeTabId: id }),
+  setActiveTab: (id) => {
+    set({ activeTabId: id });
+    // 同步定位到文件树(自动滚动)
+    const tab = get().tabs.find((t) => t.id === id);
+    if (tab && tab.kind === "file") {
+      const { setSelected } = useFileTreeStore.getState();
+      setSelected(tab.path);
+    }
+  },
 
   updateContent: (id, content) =>
     set((state) => ({

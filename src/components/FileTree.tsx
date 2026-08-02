@@ -16,8 +16,9 @@ import {
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { InlineInput } from "./InlineInput";
 import { ConfirmDialog } from "./ConfirmDialog";
-import { createFile, createDir, deletePath, renamePath } from "../utils/fileOps";
+import { createFile, createDir, deletePath, renamePath, copyPath, movePath } from "../utils/fileOps";
 import { toast } from "../stores/toastStore";
+import { useClipStore } from "../stores/clipStore";
 import "../styles/filetree.css";
 
 const ITEM_HEIGHT = 22;
@@ -40,6 +41,8 @@ export function FileTree() {
     rootPath,
     refreshTree,
     recomputeVisible,
+    sortBy,
+    setSortBy,
   } = useFileTreeStore();
   const isDirty = useEditorStore((s) => s.isDirty);
   // Git 状态: 构建"相对路径 → 状态"映射, 供文件树着色
@@ -317,6 +320,13 @@ export function FileTree() {
           <button className="icon-btn" onClick={collapseAll} title="全部折叠">
             <CollapseAllIcon size={15} />
           </button>
+          <button
+            className="icon-btn"
+            onClick={() => setSortBy(sortBy === "name" ? "modified" : "name")}
+            title={`排序: ${sortBy === "name" ? "按名称" : "按修改时间"}`}
+          >
+            {sortBy === "name" ? "A↓" : "⏱"}
+          </button>
         </div>
       </div>
 
@@ -553,6 +563,17 @@ function buildMenuItems(
         onClick: () => {},
       });
     }
+    // 文件剪贴板: 复制/剪切
+    items.push({
+      id: "file-copy",
+      label: "复制",
+      onClick: () => useClipStore.getState().copy(node.path),
+    });
+    items.push({
+      id: "file-cut",
+      label: "剪切",
+      onClick: () => useClipStore.getState().cut(node.path),
+    });
     items.push({
       id: "copy-path",
       label: "复制路径",
@@ -631,6 +652,26 @@ function buildMenuItems(
         rootPath &&
         setInlineEdit({ type: "new-dir", parentPath: rootPath }),
     });
+    // 粘贴(有剪贴板内容时)
+    const clip = useClipStore.getState().clipboard;
+    if (clip && rootPath) {
+      items.push({
+        id: "paste",
+        label: `粘贴 (${clip.op === "copy" ? "复制" : "剪切"})`,
+        onClick: async () => {
+          try {
+            if (clip.op === "copy") {
+              await copyPath(clip.path, rootPath);
+            } else {
+              await movePath(clip.path, rootPath);
+              useClipStore.getState().clear();
+            }
+          } catch (e) {
+            toast.error(`粘贴失败: ${e}`);
+          }
+        },
+      });
+    }
     items.push({ id: "sep", label: "", separator: true });
     items.push({
       id: "refresh",

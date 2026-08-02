@@ -61,6 +61,7 @@ pub fn run() {
             fs_ops::delete_path,
             fs_ops::rename_path,
             fs_ops::path_exists,
+            fs_ops::copy_path,
             // 终端
             terminal::terminal_create,
             terminal::terminal_write,

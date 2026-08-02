@@ -35,6 +35,23 @@ export async function pathExists(path: string): Promise<boolean> {
   return invoke<boolean>("path_exists", { path });
 }
 
+/** 复制文件/目录到目标目录 */
+export async function copyPath(src: string, destDir: string): Promise<void> {
+  const name = src.split("/").pop() || src;
+  const dest = `${destDir}/${name}`;
+  // 用 Rust 的 copy_dir 或 fallback
+  await invoke("copy_path", { src, dest });
+  await useFileTreeStore.getState().refreshTree();
+}
+
+/** 移动文件/目录(剪切的粘贴) */
+export async function movePath(src: string, destDir: string): Promise<void> {
+  const name = src.split("/").pop() || src;
+  const dest = `${destDir}/${name}`;
+  await invoke("rename_path", { from: src, to: dest });
+  await useFileTreeStore.getState().refreshTree();
+}
+
 /**
  * 操作后刷新: 刷新整棵树, 并展开新文件的父目录
  * (简单实现: 直接刷新全树, 已展开的目录会被 reloadExpanded 重新加载)
