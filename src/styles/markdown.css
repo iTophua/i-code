@@ -96,7 +96,7 @@
   margin: 0;
   font-size: var(--fs-sm);
   font-family: var(--font-mono);
-  background: rgba(110, 118, 129, 0.4);
+  background: var(--bg-list-inactive);
   border-radius: var(--radius-sm);
 }
 .markdown-body pre {
@@ -106,7 +106,8 @@
   overflow: auto;
   font-size: var(--fs-sm);
   line-height: 1.45;
-  background: #0d1117;
+  background: var(--bg-app);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
 }
 .markdown-body pre code {
@@ -160,7 +161,7 @@
   border-top: 1px solid var(--border-base);
 }
 .markdown-body table tr:nth-child(2n) {
-  background: rgba(110, 118, 129, 0.1);
+  background: var(--bg-list-hover);
 }
 
 /* 水平线 */
