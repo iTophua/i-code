@@ -5,9 +5,11 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 10001;
+  /* 固定宽高, 不随内容变化 */
   width: 720px;
+  height: 560px;
   max-width: 90vw;
-  max-height: 80vh;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   background: var(--bg-sidebar);
