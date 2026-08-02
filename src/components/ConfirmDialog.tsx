@@ -25,13 +25,13 @@ export function ConfirmDialog({
   return (
     <Dialog.Root open={open} onOpenChange={(o) => !o && onCancel()}>
       <Dialog.Portal>
-        <Dialog.Overlay />
-        <Dialog.Content>
-          <Dialog.Title>{title}</Dialog.Title>
-          <Dialog.Description style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+        <Dialog.Overlay className="app-dialog-overlay" />
+        <Dialog.Content className="app-dialog-content">
+          <Dialog.Title className="app-dialog-title">{title}</Dialog.Title>
+          <Dialog.Description className="app-dialog-description" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
             {message}
           </Dialog.Description>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+          <div className="app-dialog-actions">
             <button className="btn btn--secondary" onClick={onCancel}>
               {cancelLabel}
             </button>

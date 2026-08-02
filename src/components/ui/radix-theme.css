@@ -74,7 +74,8 @@
 }
 
 /* ============ Dialog ============ */
-[class*="DialogContent"] {
+/* 用具体 class 而非 [class*=DialogContent](Radix 不带 className 时无 class, 选择器不命中) */
+.app-dialog-content {
   /* 居中: Radix Dialog Content 默认无定位, 会贴在 portal 末尾导致跑到页面底部 */
   position: fixed;
   top: 50%;
@@ -90,7 +91,7 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
   animation: dialog-pop 0.14s ease;
 }
-[class*="DialogOverlay"] {
+.app-dialog-overlay {
   position: fixed;
   inset: 0;
   z-index: 10000;
@@ -112,17 +113,22 @@
     transform: translate(-50%, -50%) scale(1);
   }
 }
-[class*="DialogTitle"] {
+.app-dialog-title {
   font-size: 15px;
   font-weight: 600;
   color: var(--fg-primary);
   margin-bottom: var(--space-3);
 }
-[class*="DialogDescription"] {
+.app-dialog-description {
   font-size: 13px;
   color: var(--fg-secondary);
   line-height: 1.6;
   margin-bottom: var(--space-5);
+}
+.app-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 /* ============ Select ============ */
