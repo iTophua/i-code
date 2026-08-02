@@ -11,7 +11,9 @@ import { toast } from "../stores/toastStore";
  * - checkout 后刷新文件树
  */
 export function BranchSwitcher() {
-  const { repoRoot, branch, branches, loadBranches, checkout, createBranch } = useGitStore();
+  const { repoRoot, branch, branches, loadBranches, checkout, createBranch, refresh } = useGitStore();
+  // 从文件树取 rootPath(肯定有值), 用于确保 git 状态已初始化
+  const rootPath = useFileTreeStore((s) => s.rootPath);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [newName, setNewName] = useState("");
@@ -20,6 +22,13 @@ export function BranchSwitcher() {
 
   const local = branches.filter((b) => !b.isRemote);
   const remote = branches.filter((b) => b.isRemote);
+
+  // 确保 git 状态已初始化(repoRoot 为空但 rootPath 有值时主动 refresh)
+  useEffect(() => {
+    if (rootPath && !repoRoot) {
+      refresh(rootPath).catch(() => {});
+    }
+  }, [rootPath, repoRoot, refresh]);
 
   // 打开时加载分支列表
   useEffect(() => {
