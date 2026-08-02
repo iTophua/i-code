@@ -109,7 +109,7 @@
   background: var(--bg-list-hover);
 }
 .log-line--match {
-  background: rgba(226, 192, 141, 0.15);
+  background: var(--git-modified-soft);
 }
 .log-line__num {
   color: var(--fg-muted);

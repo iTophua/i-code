@@ -35,7 +35,7 @@
   margin-bottom: var(--space-1);
   cursor: pointer;
   border-radius: var(--radius-md);
-  transition: background 0.1s;
+  transition: background var(--dur-fast);
 }
 .tool-item:hover {
   background: var(--bg-list-hover);
@@ -155,7 +155,7 @@
   font-family: var(--font-ui);
   font-size: var(--fs-sm);
   cursor: pointer;
-  transition: border-color 0.1s, background 0.1s;
+  transition: border-color var(--dur-fast), background 0.1s;
 }
 .tool-btn:hover {
   border-color: var(--border-focus);

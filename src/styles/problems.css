@@ -35,11 +35,11 @@
 }
 .problems-panel__count--error {
   color: var(--fg-error);
-  background: rgba(244, 135, 113, 0.15);
+  background: var(--fg-error-soft);
 }
 .problems-panel__count--warning {
   color: var(--fg-warning);
-  background: rgba(204, 167, 0, 0.15);
+  background: var(--fg-warning-soft);
 }
 .problems-panel__count--ok {
   color: var(--fg-success);

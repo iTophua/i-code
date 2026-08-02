@@ -39,7 +39,7 @@
   color: var(--fg-muted);
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: background 0.1s, color 0.1s;
+  transition: var(--t-color);
 }
 .icon-btn:hover {
   background: var(--bg-list-hover);

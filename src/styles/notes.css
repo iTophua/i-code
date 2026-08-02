@@ -65,7 +65,7 @@
   padding: 8px var(--space-3);
   cursor: pointer;
   border-bottom: 1px solid var(--border-subtle);
-  transition: background 0.05s;
+  transition: background var(--dur-fast);
 }
 .note-row:hover {
   background: var(--bg-list-hover);
@@ -189,7 +189,7 @@
   font-size: var(--fs-md);
   font-weight: 500;
   font-family: var(--font-ui);
-  transition: border-color 0.1s;
+  transition: border-color var(--dur-fast);
 }
 .note-surface__title:hover {
   border-color: var(--border-focus);
@@ -210,7 +210,7 @@
   font-family: var(--font-ui);
   cursor: pointer;
   flex-shrink: 0;
-  transition: border-color 0.1s;
+  transition: border-color var(--dur-fast);
 }
 .note-surface__lang:hover {
   border-color: var(--border-focus);
@@ -232,7 +232,7 @@
   color: var(--fg-secondary);
   cursor: pointer;
   flex-shrink: 0;
-  transition: border-color 0.1s, color 0.1s;
+  transition: border-color var(--dur-fast), color 0.1s;
 }
 .note-surface__btn:hover {
   border-color: var(--border-focus);
@@ -276,7 +276,7 @@
   font-family: var(--font-ui);
   font-size: var(--fs-sm);
   cursor: pointer;
-  transition: border-color 0.1s, color 0.1s;
+  transition: border-color var(--dur-fast), color 0.1s;
 }
 
 .note-quick__trigger:hover {
@@ -309,7 +309,7 @@
   font-family: var(--font-ui);
   font-size: var(--fs-sm);
   cursor: pointer;
-  transition: background 0.05s;
+  transition: background var(--dur-fast);
 }
 
 .note-quick__item:hover {

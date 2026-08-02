@@ -34,7 +34,7 @@
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
-  transition: color 0.1s;
+  transition: color var(--dur-fast);
 }
 .activity-item:hover {
   color: var(--fg-secondary);

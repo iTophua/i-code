@@ -387,7 +387,7 @@
   font-family: monospace;
   font-size: var(--fs-2xs);
   color: var(--git-modified);
-  background: rgba(226, 192, 141, 0.15);
+  background: var(--git-modified-soft);
   padding: 1px 5px;
   border-radius: var(--radius-sm);
   flex-shrink: 0;
@@ -425,7 +425,7 @@
 .commit-row__ref {
   font-size: var(--fs-2xs);
   color: var(--git-modified);
-  background: rgba(226, 192, 141, 0.1);
+  background: var(--git-modified-soft);
   border: 1px solid rgba(226, 192, 141, 0.3);
   padding: 0 5px;
   border-radius: var(--radius-sm);
@@ -498,7 +498,7 @@
   color: var(--fg-muted);
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: background 0.1s, color 0.1s;
+  transition: var(--t-color);
 }
 .git-action-btn:hover {
   background: var(--bg-list-hover);

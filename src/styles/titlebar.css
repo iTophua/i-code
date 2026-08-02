@@ -39,7 +39,7 @@
 .titlebar__branch-count {
   font-size: var(--fs-2xs);
   color: var(--git-modified);
-  background: rgba(226, 192, 141, 0.15);
+  background: var(--git-modified-soft);
   padding: 0 5px;
   border-radius: 8px;
   min-width: 16px;
@@ -68,7 +68,7 @@
   cursor: pointer;
   border-radius: var(--radius-sm);
   font-size: var(--fs-md);
-  transition: background 0.1s, color 0.1s;
+  transition: var(--t-color);
 }
 .titlebar__btn:hover {
   background: var(--bg-list-hover);

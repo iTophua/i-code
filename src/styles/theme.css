@@ -136,6 +136,13 @@
   /* 通用 hover/active 颜色过渡(背景+前景一起, 避免只过渡背景导致文字硬切) */
   --t-color: background var(--dur-fast) ease, color var(--dur-fast) ease, border-color var(--dur-fast) ease;
 
+  /* ===== 半透明语义色(用于背景标记) ===== */
+  --git-modified-soft: rgba(226, 192, 141, 0.15);
+  --git-conflict-soft: rgba(228, 103, 108, 0.15);
+  --fg-error-soft: rgba(244, 135, 113, 0.15);
+  --fg-warning-soft: rgba(204, 167, 0, 0.15);
+  --fg-success-soft: rgba(137, 209, 133, 0.15);
+
   /* ===== 阴影 token ===== */
   --shadow-menu: 0 5px 16px rgba(0, 0, 0, 0.4);
   --shadow-dialog: 0 12px 40px rgba(0, 0, 0, 0.5);
@@ -215,6 +222,13 @@
   --scrollbar-thumb-active: rgba(100, 100, 100, 0.4);
 
   --editor-line-highlight: #f0f0f0;
+
+  /* 半透明语义色(浅色) */
+  --git-modified-soft: rgba(184, 133, 0, 0.12);
+  --git-conflict-soft: rgba(196, 54, 78, 0.12);
+  --fg-error-soft: rgba(209, 36, 36, 0.12);
+  --fg-warning-soft: rgba(184, 133, 0, 0.12);
+  --fg-success-soft: rgba(44, 142, 44, 0.12);
 
   /* 阴影(浅色更轻) */
   --shadow-menu: 0 4px 12px rgba(0, 0, 0, 0.15);

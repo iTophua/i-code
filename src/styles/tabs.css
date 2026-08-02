@@ -43,7 +43,7 @@
   background: transparent;
   color: var(--fg-secondary);
   cursor: pointer;
-  transition: color 0.1s, background 0.1s;
+  transition: var(--t-color);
 }
 .tabs__md-toggle:hover {
   background: var(--bg-list-hover);
@@ -75,7 +75,7 @@
   user-select: none;
   position: relative;
   flex-shrink: 0;
-  transition: background 0.1s;
+  transition: background var(--dur-fast);
 }
 /* 换行模式: 用左边线分隔, 避免行末多余边框 */
 .tabs--wrap .tab {

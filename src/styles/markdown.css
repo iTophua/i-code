@@ -267,7 +267,7 @@
   font-size: var(--fs-xs);
   font-family: var(--font-ui);
   cursor: pointer;
-  transition: border-color 0.1s, color 0.1s;
+  transition: border-color var(--dur-fast), color 0.1s;
 }
 .md-pane__toggle:hover {
   border-color: var(--border-focus);

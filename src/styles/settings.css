@@ -162,7 +162,7 @@
   user-select: none;
   border-radius: var(--radius-sm);
   position: relative;
-  transition: background 0.1s, color 0.1s;
+  transition: var(--t-color);
 }
 .settings-cat:hover {
   background: var(--bg-list-hover);
@@ -287,7 +287,7 @@
   font-family: var(--font-ui);
   font-size: var(--fs-base);
   outline: none;
-  transition: border-color 0.1s;
+  transition: border-color var(--dur-fast);
 }
 /* 原生 select 下拉项适配深色主题(macOS WKWebView) */
 .settings__input option {
@@ -322,7 +322,7 @@
   font-size: var(--fs-base);
   cursor: pointer;
   outline: none;
-  transition: border-color 0.1s;
+  transition: border-color var(--dur-fast);
 }
 .settings-select__trigger:hover {
   border-color: var(--fg-muted);
