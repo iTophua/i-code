@@ -120,16 +120,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
+  padding: 12px var(--space-4);
   gap: var(--space-4);
   min-height: 40px;
   border-bottom: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
 }
 .settings-content__row:last-child {
   border-bottom: none;
 }
 .settings-content__row:hover {
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--bg-list-hover);
 }
 .settings-content__row-label {
   font-size: var(--fs-base);
