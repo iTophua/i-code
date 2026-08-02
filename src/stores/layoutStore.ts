@@ -34,6 +34,8 @@ interface LayoutStore {
   settingsCategory: SettingsCategory;
   /** 设置弹窗是否打开 */
   settingsOpen: boolean;
+  /** 帮助弹窗是否打开 */
+  helpOpen: boolean;
   /** Zen 模式(全屏无干扰) */
   zenMode: boolean;
   /** 当前项目根目录 */
@@ -51,6 +53,7 @@ interface LayoutStore {
   setSettingsCategory: (c: SettingsCategory) => void;
   setSettingsOpen: (open: boolean) => void;
   toggleSettings: () => void;
+  setHelpOpen: (open: boolean) => void;
   toggleZen: () => void;
   setWorkspaceRoot: (root: string | null) => void;
 }
@@ -65,6 +68,7 @@ export const useLayoutStore = create<LayoutStore>((set, get) => ({
   mdView: "preview", // md 文件默认仅预览
   settingsCategory: "theme",
   settingsOpen: false,
+  helpOpen: false,
   zenMode: false,
   workspaceRoot: null,
 
@@ -92,6 +96,7 @@ export const useLayoutStore = create<LayoutStore>((set, get) => ({
   setSettingsCategory: (c) => set({ settingsCategory: c }),
   setSettingsOpen: (open) => set({ settingsOpen: open }),
   toggleSettings: () => set((s) => ({ settingsOpen: !s.settingsOpen })),
+  setHelpOpen: (open) => set({ helpOpen: open }),
   toggleZen: () =>
     set((s) => ({
       zenMode: !s.zenMode,

@@ -95,6 +95,19 @@
   color: var(--fg-muted);
   font-size: var(--fs-base);
 }
+/* 面板隐藏(不卸载, 保持终端实例) */
+.app__panel--hidden {
+  display: none;
+}
+/* 面板内视图切换(常驻 display) */
+.panel__view--hidden {
+  display: none;
+}
+.panel__view--active {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
 
 /* ============ 拖拽分隔条 ============ */
 .resizer {

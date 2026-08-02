@@ -459,25 +459,29 @@ export default function App() {
                   </>
                 )}
               </div>
-              {panelVisible && (
-                <div className="app__panel">
-                  <div className="app__panel-tabs">
-                    <button
-                      className={`app__panel-tab ${panelView === "terminal" ? "app__panel-tab--active" : ""}`}
-                      onClick={() => setPanelView("terminal")}
-                    >
-                      终端
-                    </button>
-                    <button
-                      className={`app__panel-tab ${panelView === "problems" ? "app__panel-tab--active" : ""}`}
-                      onClick={() => setPanelView("problems")}
-                    >
-                      问题
-                    </button>
-                  </div>
-                  {panelView === "terminal" ? <TerminalPanel /> : <ProblemsPanel />}
+              <div className={`app__panel ${panelVisible ? "" : "app__panel--hidden"}`}>
+                <div className="app__panel-tabs">
+                  <button
+                    className={`app__panel-tab ${panelView === "terminal" ? "app__panel-tab--active" : ""}`}
+                    onClick={() => setPanelView("terminal")}
+                  >
+                    终端
+                  </button>
+                  <button
+                    className={`app__panel-tab ${panelView === "problems" ? "app__panel-tab--active" : ""}`}
+                    onClick={() => setPanelView("problems")}
+                  >
+                    问题
+                  </button>
                 </div>
-              )}
+                {/* 两个面板都常驻(display 切换), 避免终端实例被销毁重建 */}
+                <div className={panelView === "terminal" ? "panel__view--active" : "panel__view--hidden"}>
+                  <TerminalPanel />
+                </div>
+                <div className={panelView === "problems" ? "panel__view--active" : "panel__view--hidden"}>
+                  <ProblemsPanel />
+                </div>
+              </div>
           </>
         </main>
       </div>
