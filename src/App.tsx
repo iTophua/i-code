@@ -13,6 +13,7 @@ import { useEditorStore } from "./stores/editorStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { monaco } from "./monaco/setup";
 import { ICODE_DARK_THEME, ICODE_LIGHT_THEME } from "./monaco/theme";
+import { disposeAllLsp } from "./monaco/lsp-bridge";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { TitleBar } from "./components/TitleBar";
@@ -131,6 +132,14 @@ export default function App() {
       setRestored(true);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 应用退出时清理 LSP 进程
+  useEffect(() => {
+    return () => {
+      disposeAllLsp();
+      invoke("lsp_stop_all").catch(console.error);
+    };
   }, []);
 
   // ===== 文件外部修改监听 =====
