@@ -147,12 +147,37 @@ export function defineIThemes(monacoInstance: typeof import("monaco-editor")) {
   monacoInstance.editor.setTheme(ICODE_DARK_THEME);
 }
 
+/** 代码追溯用的 theme(行号区不同背景色) */
+export const ICODE_DARK_BLAME = "i-code-dark-blame";
+export const ICODE_LIGHT_BLAME = "i-code-light-blame";
+
+/** 注册带 blame 背景的 theme(深色/浅色) */
+export function defineBlameThemes(monacoInstance: typeof import("monaco-editor")) {
+  monacoInstance.editor.defineTheme(ICODE_DARK_BLAME, {
+    base: "vs-dark",
+    inherit: true,
+    rules: darkDef.rules,
+    colors: {
+      ...darkDef.colors,
+      "editorGutter.background": "#181818",
+    },
+  });
+  monacoInstance.editor.defineTheme(ICODE_LIGHT_BLAME, {
+    base: "vs",
+    inherit: true,
+    rules: lightDef.rules,
+    colors: {
+      ...lightDef.colors,
+      "editorGutter.background": "#f0f0f0",
+    },
+  });
+}
+
 /** Monaco editor 选项(统一配置) */
 export function getEditorOptions(
   overrides: import("monaco-editor").editor.IStandaloneEditorConstructionOptions = {}
 ): import("monaco-editor").editor.IStandaloneEditorConstructionOptions {
   return {
-    theme: ICODE_DARK_THEME,
     fontFamily: "SF Mono, Menlo, Monaco, Consolas, monospace",
     fontSize: 14,
     lineHeight: 21,

@@ -4,7 +4,8 @@ import type { editor } from "monaco-editor";
 import { useGitStore } from "../stores/gitStore";
 import { invoke } from "@tauri-apps/api/core";
 import { getLanguage } from "../utils/language";
-import { getEditorOptions, defineIThemes, ICODE_DARK_THEME } from "../monaco/theme";
+import { getEditorOptions, defineIThemes, ICODE_DARK_THEME, ICODE_LIGHT_THEME } from "../monaco/theme";
+import { useSettingsStore } from "../stores/settingsStore";
 import "../monaco/setup";
 import { toast } from "../stores/toastStore";
 
@@ -52,7 +53,7 @@ export function BlameView({ filePath, fileName }: { filePath: string; fileName: 
   const handleMount: OnMount = (ed, monaco) => {
     editorRef.current = ed;
     defineIThemes(monaco);
-    monaco.editor.setTheme(ICODE_DARK_THEME);
+    monaco.editor.setTheme(useSettingsStore.getState().theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME);
 
     // 应用 blame 装饰
     if (blameData.size > 0) {
@@ -80,6 +81,7 @@ export function BlameView({ filePath, fileName }: { filePath: string; fileName: 
         <Editor
           value={content}
           language={getLanguage(fileName)}
+          theme={useSettingsStore.getState().theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME}
           onMount={handleMount}
           options={getEditorOptions({
             readOnly: true,
@@ -133,28 +135,20 @@ function parseBlame(output: string): Map<number, BlameInfo> {
   return map;
 }
 
-/** 应用 blame 装饰到 Monaco */
+/** 应用 blame 到 Monaco(用自定义行号显示, 比 after 装饰可靠) */
 function applyBlameDecorations(
   ed: editor.IStandaloneCodeEditor,
   blame: Map<number, BlameInfo>
 ) {
-  const decorations: editor.IModelDeltaDecoration[] = [];
-  for (const [lineNum, info] of blame) {
-    decorations.push({
-      range: {
-        startLineNumber: lineNum,
-        startColumn: 1,
-        endLineNumber: lineNum,
-        endColumn: 1,
-      },
-      options: {
-        after: {
-          content: `  ${info.author} · ${info.time} · ${info.hash}`,
-          inlineClassName: "blame-decoration",
-        },
-        isWholeLine: true,
-      },
-    });
-  }
-  ed.deltaDecorations([], decorations);
+  ed.updateOptions({
+    lineNumbers: (lineNum: number) => {
+      const info = blame.get(lineNum);
+      if (info) {
+        return `${lineNum}  ${info.author} ${info.time} ${info.hash}`;
+      }
+      return String(lineNum);
+    },
+    lineNumbersMinChars: 35,
+    lineDecorationsWidth: 1,
+  });
 }

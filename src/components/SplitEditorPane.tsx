@@ -1,7 +1,7 @@
 import Editor, { DiffEditor, type OnMount } from "@monaco-editor/react";
 import { useEditorStore } from "../stores/editorStore";
 import { useSettingsStore } from "../stores/settingsStore";
-import { getEditorOptions, defineIThemes, ICODE_DARK_THEME } from "../monaco/theme";
+import { getEditorOptions, defineIThemes, ICODE_DARK_THEME, ICODE_LIGHT_THEME } from "../monaco/theme";
 import { setActiveEditor } from "../monaco/activeEditor";
 import { setupColumnDrag } from "../monaco/columnSelect";
 import "../monaco/setup";
@@ -16,7 +16,7 @@ export function SplitEditorPane() {
 
   const handleMount: OnMount = (ed, monaco) => {
     defineIThemes(monaco);
-    monaco.editor.setTheme(ICODE_DARK_THEME);
+    monaco.editor.setTheme(settings.theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME);
     // 多光标 modifier 用 ctrlCmd(Cmd+点击加光标), Option 让给列选(同主编辑器)
     ed.updateOptions({
       multiCursorModifier: "alt",
@@ -65,8 +65,8 @@ export function SplitEditorPane() {
           original={activeTab.diffOriginal ?? ""}
           modified={activeTab.content}
           language={activeTab.language}
-          theme={ICODE_DARK_THEME}
-          onMount={(_e, m) => { defineIThemes(m); m.editor.setTheme(ICODE_DARK_THEME); }}
+          theme={settings.theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME}
+          onMount={(_e, m) => { defineIThemes(m); m.editor.setTheme(settings.theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME); }}
           options={{ readOnly: true, renderSideBySide: true, automaticLayout: true, fontSize: 14, minimap: { enabled: false } }}
         />
       </div>
@@ -79,6 +79,7 @@ export function SplitEditorPane() {
         path={activeTab.path}
         language={activeTab.language}
         value={activeTab.content}
+        theme={settings.theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME}
         onMount={handleMount}
         onChange={(v) => {
           if (splitActiveId && v !== undefined) {

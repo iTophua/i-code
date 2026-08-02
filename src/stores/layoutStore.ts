@@ -36,6 +36,8 @@ interface LayoutStore {
   settingsOpen: boolean;
   /** 帮助弹窗是否打开 */
   helpOpen: boolean;
+  /** 文件历史弹窗目标(为 null 时弹窗关闭) */
+  historyTarget: { filePath: string; fileName: string } | null;
   /** Zen 模式(全屏无干扰) */
   zenMode: boolean;
   /** 当前项目根目录 */
@@ -54,6 +56,7 @@ interface LayoutStore {
   setSettingsOpen: (open: boolean) => void;
   toggleSettings: () => void;
   setHelpOpen: (open: boolean) => void;
+  setHistoryTarget: (t: { filePath: string; fileName: string } | null) => void;
   toggleZen: () => void;
   setWorkspaceRoot: (root: string | null) => void;
 }
@@ -69,6 +72,7 @@ export const useLayoutStore = create<LayoutStore>((set, get) => ({
   settingsCategory: "theme",
   settingsOpen: false,
   helpOpen: false,
+  historyTarget: null,
   zenMode: false,
   workspaceRoot: null,
 
@@ -97,6 +101,7 @@ export const useLayoutStore = create<LayoutStore>((set, get) => ({
   setSettingsOpen: (open) => set({ settingsOpen: open }),
   toggleSettings: () => set((s) => ({ settingsOpen: !s.settingsOpen })),
   setHelpOpen: (open) => set({ helpOpen: open }),
+  setHistoryTarget: (t) => set({ historyTarget: t }),
   toggleZen: () =>
     set((s) => ({
       zenMode: !s.zenMode,

@@ -29,6 +29,7 @@
   --bg-tooltip: #252526;
   --bg-menu: #252526;
   --bg-menu-hover: #094771;
+  --bg-blame-col: #181818;
 
   /* --- 前景类 --- */
   --fg-primary: #d4d4d4;
@@ -185,6 +186,7 @@
   --bg-tooltip: #f3f3f3;
   --bg-menu: #ffffff;
   --bg-menu-hover: #007acc;
+  --bg-blame-col: #f0f0f0;
 
   /* 前景类 */
   --fg-primary: #333333;
@@ -262,6 +264,10 @@ body,
 }
 .monaco-editor .inputarea.ime-input {
   background-color: transparent;
+}
+/* 行号区与代码之间的分隔线 */
+.monaco-editor .margin {
+  border-right: 1px solid var(--border-subtle);
 }
 
 body {

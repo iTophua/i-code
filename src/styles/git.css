@@ -455,6 +455,7 @@
 }
 
 /* ============ 文件历史视图 ============ */
+/* (旧 Tab 版样式, 保留) */
 .file-history-view {
   display: flex;
   flex-direction: column;
@@ -484,6 +485,152 @@
   overflow-y: auto;
   padding: var(--space-3) var(--space-5);
   max-width: 720px;
+}
+
+/* ===== 文件历史弹窗 ===== */
+/* 独立居中遮罩(flex 居中), 不复用命令面板的顶部下拉遮罩 */
+.file-history-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dialog);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  animation: overlay-in 0.16s ease;
+}
+.file-history-dialog {
+  /* 由 .cmd-palette-overlay 用 flex 居中, 这里不再用 transform 居中,
+     这样入场动画可以自由用 transform(缩放) 而不会和居中互相覆盖 → 不再"先底部再瞬移"。 */
+  position: relative;
+  z-index: var(--z-dialog);
+  width: 560px;
+  max-width: 90vw;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dialog);
+  animation: file-history-pop 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes file-history-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.file-history-dialog__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+.file-history-dialog__title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--fg-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-history-dialog__count {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  background: var(--bg-list-inactive);
+  padding: 1px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.file-history-dialog__close {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  transition: var(--t-color);
+  flex-shrink: 0;
+}
+.file-history-dialog__close:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+.file-history-dialog__list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+.file-history-dialog__empty {
+  padding: var(--space-5);
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: var(--fs-base);
+}
+.file-history-dialog__row {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  border-bottom: 1px solid var(--border-subtle);
+  transition: var(--t-color);
+}
+.file-history-dialog__row:last-child {
+  border-bottom: none;
+}
+.file-history-dialog__row:hover {
+  background: var(--bg-list-hover);
+}
+.file-history-dialog__row-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.file-history-dialog__hash {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--git-modified);
+  background: var(--git-modified-soft);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+.file-history-dialog__subject {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--fg-primary);
+  font-size: var(--fs-sm);
+}
+.file-history-dialog__row-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+  padding-left: 30px;
+}
+.file-history-dialog__author {
+  color: var(--fg-secondary);
+  font-size: var(--fs-xs);
+}
+.file-history-dialog__time {
+  color: var(--fg-muted);
+  font-size: var(--fs-xs);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Git 操作按钮(SVG 图标版) */
@@ -569,9 +716,107 @@
   padding-left: 16px;
   white-space: nowrap;
 }
-/* blame 行号区色块标记 */
-.blame-line-marker {
-  background: rgba(100, 150, 200, 0.08);
+/* ===== 代码追溯叠加面板 ===== */
+/* 追溯面板在编辑器左侧, 推开编辑器不遮挡 */
+.editor-pane--blame {
+  padding-left: 148px;
+}
+.blame-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 148px;
+  z-index: 5;
+  overflow: hidden;
+  background: var(--bg-blame-col);
+  border-right: 1px solid var(--border-base);
+}
+.blame-overlay__row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  /* 字号由内联样式注入, 与编辑器行号一致 */
+  font-family: var(--font-ui);
+}
+.blame-overlay__row:hover {
+  background: var(--bg-list-hover);
+}
+.blame-overlay__date {
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.blame-overlay__author {
+  color: var(--fg-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 提交摘要悬浮提示(替代原生 title) */
+.blame-tip {
+  position: fixed;
+  z-index: var(--z-dialog);
+  max-width: 380px;
+  min-width: 200px;
+  padding: 10px 12px;
+  background: var(--bg-menu);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-menu);
+  font-family: var(--font-ui);
+  pointer-events: none;
+  animation: blame-tip-in 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.blame-tip__summary {
+  font-size: var(--fs-sm);
+  color: var(--fg-primary);
+  line-height: 1.45;
+  word-break: break-word;
+  /* 最多 3 行 */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.blame-tip__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: var(--fs-xs);
+}
+.blame-tip__hash {
+  font-family: var(--font-mono);
+  color: var(--git-modified);
+  background: var(--git-modified-soft);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+.blame-tip__author {
+  color: var(--fg-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.blame-tip__time {
+  margin-left: auto;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+@keyframes blame-tip-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ===== 过渡补丁 ===== */

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useFileTreeStore, type VisibleNode } from "../stores/fileTreeStore";
 import { useEditorStore } from "../stores/editorStore";
+import { useLayoutStore } from "../stores/layoutStore";
 import { useGitStore, type FileStatus } from "../stores/gitStore";
 import { invoke } from "@tauri-apps/api/core";
 import { getFileIconType, getLanguage } from "../utils/language";
@@ -595,7 +596,7 @@ function buildMenuItems(
         id: "file-history",
         label: "查看文件历史",
         onClick: () =>
-          useEditorStore.getState().openHistory({
+          useLayoutStore.getState().setHistoryTarget({
             filePath: node.path,
             fileName: node.name,
           }),

@@ -21,11 +21,12 @@ import { ToolSurface } from "./ToolSurface";
 import { NoteQuickTools } from "./NoteQuickTools";
 import { format as sqlFormat } from "sql-formatter";
 import { toast } from "../stores/toastStore";
-import { getExtByLanguage } from "../utils/language";
+import { getExtByLanguage, getLanguage } from "../utils/language";
 import { setActiveEditor, triggerEditorAction } from "../monaco/activeEditor";
 import { setupColumnDrag } from "../monaco/columnSelect";
 import { tabInScope } from "../utils/tabScope";
 import { EditorContextMenu } from "./EditorContextMenu";
+import { BlameOverlay } from "./BlameOverlay";
 
 const LANG_OPTIONS = [
   { value: "plaintext", label: "纯文本" },
@@ -42,14 +43,29 @@ const LANG_OPTIONS = [
   { value: "css", label: "CSS" },
 ];
 
+interface HistoryEntry {
+  hash: string;
+  shortHash: string;
+  author: string;
+  timestamp: number;
+  subject: string;
+}
+
 export function EditorPane() {
   const { tabs, activeTabId, updateContent, markSaved } = useEditorStore();
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   // 与分支比较: 选择目标分支
   const [compareTarget, setCompareTarget] = useState<{ filePath: string; fileName: string } | null>(null);
-  // 行内 Blame 显示开关 + 装饰引用
+  // 文件历史弹窗(状态放在 layoutStore, 文件树右键也能触发)
+  const historyTarget = useLayoutStore((s) => s.historyTarget);
+  const setHistoryTarget = useLayoutStore((s) => s.setHistoryTarget);
+  // 行内 Blame 显示开关 + 数据
   const [showBlame, setShowBlame] = useState(false);
-  const blameDecorationsRef = useRef<string[]>([]);
+  const [blameData, setBlameData] = useState<Map<number, BlameLineInfo> | null>(null);
+  const blameLoadingRef = useRef(false);
+  const showBlameRef = useRef(false); // ref 判断, 避免闭包旧值
+  // 编辑器实例就绪标记(触发 BlameOverlay 重渲染, editorRef.current 是 ref 不触发重渲染)
+  const [editorReady, setEditorReady] = useState(false);
   // 精确订阅设置项(避免无关 state 变化触发重渲染)
   const fontFamily = useSettingsStore((s) => s.fontFamily);
   const fontSize = useSettingsStore((s) => s.fontSize);
@@ -99,6 +115,16 @@ export function EditorPane() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTabId]);
 
+  // 主题变化时更新当前编辑器(不只是 prop, 也要 setTheme 确保已挂载实例切换)
+  useEffect(() => {
+    const ed = editorRef.current;
+    if (ed) {
+      import("monaco-editor").then((m) => {
+        m.editor.setTheme(theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME);
+      });
+    }
+  }, [theme]);
+
   // 菜单域切换: 若当前激活 tab 不在新域内, 自动激活该域第一个 tab(或清除)
   useEffect(() => {
     const store = useEditorStore.getState();
@@ -114,9 +140,12 @@ export function EditorPane() {
 
   const handleMount: OnMount = (editorInstance, monacoInstance) => {
     editorRef.current = editorInstance;
+    setEditorReady(true);
     // 双保险: 每次挂载都确保主题已注册并应用(消除首次白色)
     defineIThemes(monacoInstance);
-    monacoInstance.editor.setTheme(ICODE_DARK_THEME);
+    // 主题跟随设置(不硬编码)
+    const currentTheme = useSettingsStore.getState().theme;
+    monacoInstance.editor.setTheme(currentTheme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME);
     // 多光标 modifier 用 ctrlCmd: Cmd+点击加光标, 把 Option 键让给列选(见 setupColumnDrag),
     // 避免两者在 Alt+mousedown 上冲突(Monaco 默认 alt 会抢先加光标)
     editorInstance.updateOptions({
@@ -268,10 +297,10 @@ export function EditorPane() {
           original={activeTab.diffOriginal ?? ""}
           modified={activeTab.content}
           language={activeTab.language}
-          theme={ICODE_DARK_THEME}
+          theme={theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME}
           onMount={(_e, monacoInstance) => {
             defineIThemes(monacoInstance);
-            monacoInstance.editor.setTheme(ICODE_DARK_THEME);
+            monacoInstance.editor.setTheme(theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME);
           }}
           options={{
             readOnly: true,
@@ -309,23 +338,25 @@ export function EditorPane() {
   const toggleBlame = async () => {
     const ed = editorRef.current;
     const tab = useEditorStore.getState().tabs.find((t) => t.id === activeTabId);
-    if (!ed || !tab) {
-      toast.warning("编辑器未就绪");
-      return;
-    }
+    if (!ed || !tab) return;
     const { repoRoot } = useGitStore.getState();
     if (!repoRoot) {
       toast.warning("非 Git 仓库");
       return;
     }
-    // 用 ref 判断当前是否已显示(避免 state 闭包旧值导致需要点两次)
-    const isShowing = blameDecorationsRef.current.length > 0;
-    if (isShowing) {
-      ed.deltaDecorations(blameDecorationsRef.current, []);
-      blameDecorationsRef.current = [];
+    if (blameLoadingRef.current) return;
+
+    // 用 ref 判断(避免 state 闭包旧值)
+    if (showBlameRef.current) {
+      showBlameRef.current = false;
       setShowBlame(false);
+      setBlameData(null);
       return;
     }
+
+    // 显示: 加载数据
+    blameLoadingRef.current = true;
+    showBlameRef.current = true;
     try {
       const rel = tab.path.startsWith(repoRoot)
         ? tab.path.slice(repoRoot.length + 1)
@@ -333,30 +364,18 @@ export function EditorPane() {
       const out = await useGitStore.getState().blameFile(rel);
       const blameMap = parseBlameInline(out);
       if (blameMap.size === 0) {
-        toast.warning("未获取到 Blame 数据");
+        toast.warning("未获取到代码追溯数据");
+        showBlameRef.current = false;
         return;
       }
-      const decos: editor.IModelDeltaDecoration[] = [];
-      for (const [line, info] of blameMap) {
-        decos.push({
-          range: { startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: 1 },
-          options: {
-            after: {
-              content: `\u00a0\u00a0${info.author} · ${info.time}`,
-              inlineClassName: "blame-decoration",
-              cursorStops: 0,
-            },
-            isWholeLine: true,
-            // 行号区也显示色块标记
-            marginClassName: "blame-line-marker",
-          },
-        });
-      }
-      blameDecorationsRef.current = ed.deltaDecorations([], decos);
+      setBlameData(blameMap);
       setShowBlame(true);
       toast.success(`已显示代码追溯(${blameMap.size} 行)`);
     } catch (e) {
       toast.error(`代码追溯加载失败: ${e}`);
+      showBlameRef.current = false;
+    } finally {
+      blameLoadingRef.current = false;
     }
   };
 
@@ -364,11 +383,8 @@ export function EditorPane() {
     ? [
         { id: "sep-git", label: "", separator: true },
         { id: "git-blame-inline", label: showBlame ? "隐藏代码追溯" : "显示代码追溯", onClick: () => toggleBlame() },
-        { id: "git-blame", label: "查看代码追溯(新标签)", onClick: () => {
-          useEditorStore.getState().openBlame({ filePath: activeTab.path, fileName: activeTab.name });
-        } },
         { id: "git-history", label: "查看文件历史", onClick: () => {
-          useEditorStore.getState().openHistory({ filePath: activeTab.path, fileName: activeTab.name });
+          setHistoryTarget({ filePath: activeTab.path, fileName: activeTab.name });
         } },
         { id: "git-stage", label: "暂存此文件", onClick: async () => {
           const { repoRoot } = useGitStore.getState();
@@ -418,7 +434,8 @@ export function EditorPane() {
         ...gitItems,
       ]}
     >
-      <div className="editor-pane" onKeyDown={handleKeyDown}>
+      <div className={`editor-pane ${showBlame ? "editor-pane--blame" : ""}`} onKeyDown={handleKeyDown}>
+        {showBlame && editorReady && <BlameOverlay ed={editorRef.current} blameMap={blameData} />}
         <Editor
           path={activeTab.path}
           language={activeTab.language}
@@ -441,6 +458,10 @@ export function EditorPane() {
         }
         setCompareTarget(null);
       }}
+    />
+    <FileHistoryDialog
+      target={historyTarget}
+      onClose={() => setHistoryTarget(null)}
     />
     </>
   );
@@ -504,6 +525,123 @@ function CompareBranchDialog({
       </div>
     </div>
   );
+}
+
+/**
+ * 文件历史弹窗
+ * 列出该文件的所有 commit, 点击某条与当前工作区版本对比(打开 Diff Tab)
+ */
+function FileHistoryDialog({
+  target,
+  onClose,
+}: {
+  target: { filePath: string; fileName: string } | null;
+  onClose: () => void;
+}) {
+  const { repoRoot, fileHistory, showFileVersion } = useGitStore();
+  const openDiff = useEditorStore((s) => s.openDiff);
+  const [entries, setEntries] = useState<HistoryEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!target || !repoRoot) return;
+    setLoading(true);
+    setEntries([]);
+    const relPath = target.filePath.startsWith(repoRoot)
+      ? target.filePath.slice(repoRoot.length + 1)
+      : target.filePath;
+    fileHistory(relPath)
+      .then((out) => {
+        const list = out
+          .split("\n")
+          .filter((l) => l.trim())
+          .map((line) => {
+            const [hash, shortHash, author, ts, ...subjectParts] = line.split("|");
+            return {
+              hash,
+              shortHash,
+              author,
+              timestamp: parseInt(ts) || 0,
+              subject: subjectParts.join("|"),
+            };
+          });
+        setEntries(list);
+        setLoading(false);
+      })
+      .catch((e) => {
+        toast.error(`加载文件历史失败: ${e}`);
+        setLoading(false);
+      });
+  }, [target, repoRoot, fileHistory]);
+
+  const compareWithCurrent = async (entry: HistoryEntry) => {
+    if (!target || !repoRoot) return;
+    const relPath = target.filePath.startsWith(repoRoot)
+      ? target.filePath.slice(repoRoot.length + 1)
+      : target.filePath;
+    try {
+      const oldContent = await showFileVersion(entry.hash, relPath);
+      const { invoke } = await import("@tauri-apps/api/core");
+      const [newContent] = await invoke<[string, string]>("read_file", { filePath: target.filePath });
+      openDiff({
+        id: `history-${relPath}-${entry.shortHash}`,
+        title: `${target.fileName} @${entry.shortHash} ↔ 当前`,
+        original: oldContent,
+        modified: newContent,
+        language: getLanguage(target.fileName),
+      });
+      onClose();
+    } catch (e) {
+      toast.error(`对比失败: ${e}`);
+    }
+  };
+
+  if (!target) return null;
+
+  return (
+    <div className="file-history-overlay" onClick={onClose}>
+      <div className="file-history-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="file-history-dialog__header">
+          <span className="file-history-dialog__title">📋 {target.fileName} 的历史</span>
+          {!loading && entries.length > 0 && (
+            <span className="file-history-dialog__count">{entries.length} 个提交</span>
+          )}
+          <button className="file-history-dialog__close" onClick={onClose} title="关闭">✕</button>
+        </div>
+        <div className="file-history-dialog__list">
+          {loading ? (
+            <div className="file-history-dialog__empty">加载中...</div>
+          ) : entries.length === 0 ? (
+            <div className="file-history-dialog__empty">无历史记录</div>
+          ) : (
+            entries.map((entry) => (
+              <div
+                key={entry.hash}
+                className="file-history-dialog__row"
+                onClick={() => compareWithCurrent(entry)}
+                title={`点击对比 ${entry.shortHash} 与当前版本`}
+              >
+                <div className="file-history-dialog__row-main">
+                  <span className="file-history-dialog__hash">{entry.shortHash}</span>
+                  <span className="file-history-dialog__subject">{entry.subject}</span>
+                </div>
+                <div className="file-history-dialog__row-meta">
+                  <span className="file-history-dialog__author">{entry.author}</span>
+                  <span className="file-history-dialog__time">{formatHistoryTime(entry.timestamp)}</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatHistoryTime(ts: number): string {
+  if (!ts) return "";
+  const d = new Date(ts * 1000);
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 }
 
 /**
@@ -755,31 +893,46 @@ function NoteEditorSurface({
 }
 
 /** 简易 blame 解析(行号 → 作者+时间) */
-function parseBlameInline(output: string): Map<number, { author: string; time: string }> {
-  const map = new Map<number, { author: string; time: string }>();
+interface BlameLineInfo {
+  author: string;
+  time: string;
+  summary: string;
+  hash: string;
+}
+
+function parseBlameInline(output: string): Map<number, BlameLineInfo> {
+  const map = new Map<number, BlameLineInfo>();
   const lines = output.split("\n");
   let currentLine = 0;
-  let lineCount = 1; // 这个 commit 覆盖的行数
+  let lineCount = 1;
+  let currentHash = "";
   let currentAuthor = "";
   let currentTime = "";
+  let currentSummary = "";
   let hasData = false;
 
-  /** 保存当前记录(展开 lineCount 行) */
   const flush = () => {
     if (!hasData || currentLine <= 0) return;
     for (let i = 0; i < lineCount; i++) {
-      map.set(currentLine + i, { author: currentAuthor, time: currentTime });
+      map.set(currentLine + i, {
+        author: currentAuthor,
+        time: currentTime,
+        summary: currentSummary,
+        hash: currentHash,
+      });
     }
   };
 
   for (const line of lines) {
     if (/^[0-9a-f]{40}/.test(line)) {
-      flush(); // 保存上一条
+      flush();
       const parts = line.split(/\s+/);
+      currentHash = parts[0].slice(0, 8);
       currentLine = parseInt(parts[2]) || 0;
       lineCount = parts[3] ? parseInt(parts[3]) || 1 : 1;
       currentAuthor = "";
       currentTime = "";
+      currentSummary = "";
       hasData = false;
     } else if (line.startsWith("author ")) {
       currentAuthor = line.slice(7).trim();
@@ -788,8 +941,10 @@ function parseBlameInline(output: string): Map<number, { author: string; time: s
       const ts = parseInt(line.slice(12));
       const d = new Date(ts * 1000);
       currentTime = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+    } else if (line.startsWith("summary ")) {
+      currentSummary = line.slice(8).trim();
     }
   }
-  flush(); // 最后一条
+  flush();
   return map;
 }
