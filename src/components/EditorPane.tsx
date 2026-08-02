@@ -306,27 +306,38 @@ export function EditorPane() {
 
   // 行内 Blame: 切换显示/隐藏
   const toggleBlame = async () => {
-    if (!ed || !activeTab) return;
+    // 实时从 ref 取编辑器实例(避免闭包旧值)
+    const ed = editorRef.current;
+    const tab = useEditorStore.getState().tabs.find((t) => t.id === activeTabId);
+    if (!ed || !tab) {
+      toast.warning("编辑器未就绪");
+      return;
+    }
     const { repoRoot } = useGitStore.getState();
-    if (!repoRoot) return;
+    if (!repoRoot) {
+      toast.warning("非 Git 仓库");
+      return;
+    }
     if (showBlame) {
-      // 隐藏
       ed.deltaDecorations(blameDecorationsRef.current, []);
       blameDecorationsRef.current = [];
       setShowBlame(false);
       return;
     }
-    // 显示: 获取 blame 数据
     try {
-      const rel = activeTab.path.replace(repoRoot + "/", "");
+      const rel = tab.path.replace(repoRoot + "/", "");
       const out = await useGitStore.getState().blameFile(rel);
       const blameMap = parseBlameInline(out);
+      if (blameMap.size === 0) {
+        toast.warning("未获取到 Blame 数据");
+        return;
+      }
       const decos: editor.IModelDeltaDecoration[] = [];
       for (const [line, info] of blameMap) {
         decos.push({
           range: { startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: 1 },
           options: {
-            after: { content: `  ${info.author} · ${info.time}`, inlineClassName: "blame-decoration" },
+            after: { content: `   ${info.author} · ${info.time}`, inlineClassName: "blame-decoration" },
             isWholeLine: true,
           },
         });
