@@ -71,7 +71,7 @@
 
 /* ============ DropdownMenu / ContextMenu 通用 ============ */
 [data-radix-popper-content-wrapper] {
-  z-index: 9999 !important;
+  z-index: var(--z-menu) !important;
 }
 
 /* 菜单内容(右键菜单/下拉菜单共用) */
@@ -84,7 +84,7 @@
   background: var(--bg-menu) !important;
   border: 1px solid var(--border-base);
   border-radius: var(--radius-md);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-menu);
   font-size: var(--fs-base);
   transform-origin: var(--radix-context-menu-content-transform-origin, top center);
 }
@@ -222,14 +222,14 @@
   top: 50%;
   left: 50%;
   /* 注意: animation 的 from/to 已含 translate(-50%,-50%) 居中 */
-  z-index: 10001; /* 高于 Overlay(10000) */
+  z-index: var(--z-dialog); /* 高于 Overlay(10000) */
   min-width: 360px;
   max-width: 480px;
   padding: var(--space-5);
   background: var(--bg-sidebar);
   border: 1px solid var(--border-base);
   border-radius: var(--radius-lg);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-dialog);
 }
 /* 进出动画(Radia 在动画期间挂 data-state=open/closed) */
 .app-dialog-content[data-state="open"] {
@@ -268,7 +268,7 @@
 .app-dialog-overlay {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: var(--z-overlay);
   background: rgba(0, 0, 0, 0.45);
 }
 .app-dialog-overlay[data-state="open"] {
@@ -364,9 +364,9 @@
   background: var(--bg-menu);
   border: 1px solid var(--border-base);
   border-radius: var(--radius-md);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-menu);
   overflow: hidden;
-  z-index: 9999;
+  z-index: var(--z-menu);
 }
 [class*="SelectContent"][data-state="open"] {
   animation: menu-in 0.13s cubic-bezier(0.16, 1, 0.3, 1);
@@ -398,8 +398,8 @@
   border-radius: var(--radius-sm);
   color: var(--fg-primary);
   font-size: var(--fs-xs);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  z-index: 9999;
+  box-shadow: var(--shadow-tooltip);
+  z-index: var(--z-menu);
 }
 [class*="TooltipContent"][data-state="delayed-open"],
 [class*="TooltipContent"][data-state="instant-open"] {
@@ -509,8 +509,8 @@
   background: var(--bg-menu);
   border: 1px solid var(--border-base);
   border-radius: var(--radius-md);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.4);
-  z-index: 9999;
+  box-shadow: var(--shadow-menu);
+  z-index: var(--z-menu);
   overflow: hidden;
 }
 .app-select__content[data-state="open"] {

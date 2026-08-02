@@ -4,7 +4,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 10001;
+  z-index: var(--z-dialog);
   /* 固定宽高, 不随内容变化 */
   width: 720px;
   height: 560px;
@@ -15,7 +15,7 @@
   background: var(--bg-sidebar);
   border: 1px solid var(--border-base);
   border-radius: var(--radius-lg);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-dialog);
 }
 .settings-dialog[data-state="open"] {
   animation: dialog-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
@@ -337,8 +337,8 @@
   background: var(--bg-menu);
   border: 1px solid var(--border-base);
   border-radius: var(--radius-md);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.4);
-  z-index: 10001;
+  box-shadow: var(--shadow-menu);
+  z-index: var(--z-dialog);
   overflow: hidden;
 }
 .settings-select__item {
