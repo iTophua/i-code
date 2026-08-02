@@ -44,7 +44,10 @@ export function SettingsDialog() {
     <Dialog.Root open={open} onOpenChange={(o) => setOpen(o)}>
       <Dialog.Portal>
         <Dialog.Overlay className="app-dialog-overlay" />
-        <Dialog.Content className="settings-dialog">
+        <Dialog.Content
+          className="settings-dialog"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <Dialog.Title className="settings-dialog__title">
             设置
           </Dialog.Title>

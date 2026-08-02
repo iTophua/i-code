@@ -24,8 +24,8 @@ export function AppSelect({ value, options, onChange, placeholder, title }: Prop
           <ChevronDown size={12} />
         </Select.Icon>
       </Select.Trigger>
-      <Select.Portal>
-        <Select.Content className="app-select__content">
+      <Select.Portal container={undefined}>
+        <Select.Content className="app-select__content" position="popper" sideOffset={4} style={{ zIndex: 10010 }}>
           <Select.ScrollUpButton />
           <Select.Viewport>
             {options.map((opt) => (
