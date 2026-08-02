@@ -19,6 +19,7 @@ import { TitleBar } from "./components/TitleBar";
 import { SettingsContent } from "./components/SettingsPanel";
 import { ProblemsPanel } from "./components/ProblemsPanel";
 import { ToastContainer } from "./components/Toast";
+import { CommandPalette } from "./components/CommandPalette";
 import { useState } from "react";
 import {
   setSession,
@@ -343,6 +344,7 @@ export default function App() {
         onCancel={() => setCloseConfirm(null)}
       />
       <ToastContainer />
+      <CommandPalette />
     </div>
   );
 }
