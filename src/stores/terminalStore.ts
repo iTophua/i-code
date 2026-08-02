@@ -44,10 +44,11 @@ export const useTerminalStore = create<TerminalStore>((set, get) => ({
         cols: 80,
         rows: 24,
       });
-      // login shell 启动后 .zshrc 可能 cd ~, 发 cd 确保在项目目录
+      // login shell 启动后 .zshrc 可能 cd ~, 等 shell 就绪后发 cd 确保在项目目录
+      // 用清屏序列避免 cd 命令显示在终端历史里
       if (cwd) {
-        await new Promise((r) => setTimeout(r, 100));
-        await invoke("terminal_write", { id, data: `cd '${cwd}'\n` });
+        await new Promise((r) => setTimeout(r, 500));
+        await invoke("terminal_write", { id, data: `cd '${cwd}' && clear\n` });
       }
       set((s) => ({
         tabs: s.tabs.map((t) => (t.id === id ? { ...t, ready: true } : t)),
