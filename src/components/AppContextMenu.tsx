@@ -24,18 +24,18 @@ export function AppContextMenu({ children, items }: Props) {
         <ContextMenu.Content className="radix-menu-content">
           {items.map((item) =>
             item.separator ? (
-              <ContextMenu.Separator key={item.id} />
+              <ContextMenu.Separator key={item.id} className="radix-menu-sep" />
             ) : (
               <ContextMenu.Item
                 key={item.id}
                 disabled={item.disabled}
                 onSelect={item.onSelect}
-                style={item.danger ? { color: "var(--fg-error)" } : undefined}
+                className={`radix-menu-item ${item.danger ? "radix-menu-item--danger" : ""}`}
               >
                 {item.icon && (
-                  <span style={{ display: "flex", width: 16 }}>{item.icon}</span>
+                  <span className="radix-menu-item__icon">{item.icon}</span>
                 )}
-                <span>{item.label}</span>
+                <span className="radix-menu-item__label">{item.label}</span>
               </ContextMenu.Item>
             )
           )}

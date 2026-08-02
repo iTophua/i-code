@@ -156,6 +156,56 @@
   background: var(--border-subtle);
 }
 
+/* ============ AppContextMenu 具体类(确保样式命中) ============ */
+.radix-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-primary);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  position: relative;
+}
+.radix-menu-item[data-highlighted] {
+  background: var(--bg-menu-hover);
+  color: var(--fg-on-accent);
+}
+.radix-menu-item[data-disabled] {
+  color: var(--fg-disabled);
+  pointer-events: none;
+  opacity: 0.5;
+}
+/* 危险项: 红色文字, hover 时红色背景 */
+.radix-menu-item--danger {
+  color: var(--fg-error);
+}
+.radix-menu-item--danger[data-highlighted] {
+  background: var(--danger-bg);
+  color: var(--danger-on);
+}
+.radix-menu-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.radix-menu-item__label {
+  flex: 1;
+}
+.radix-menu-sep {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--border-subtle);
+}
+
 /* 菜单快捷键 */
 [class*="DropdownMenuShortcut"],
 [class*="ContextMenuShortcut"] {

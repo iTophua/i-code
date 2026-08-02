@@ -6,7 +6,7 @@ import { FileIcon } from "./FileIcon";
 import { CloseIcon, NotesIcon, ToolsIcon, SplitViewIcon, PreviewOnlyIcon, CodeOnlyIcon } from "./Icons";
 import { AppContextMenu, type ContextMenuItem } from "./AppContextMenu";
 import { ConfirmDialog } from "./ConfirmDialog";
-import { SplitSquareHorizontal } from "lucide-react";
+import { SplitSquareHorizontal, SplitSquareVertical } from "lucide-react";
 import "../styles/tabs.css";
 
 export function EditorTabs() {
@@ -69,13 +69,24 @@ export function EditorTabs() {
       } },
       { id: "sep2", separator: true },
       {
-        id: "split",
-        label: "分屏打开",
+        id: "split-h",
+        label: "分屏打开 (左右)",
         icon: <SplitSquareHorizontal size={14} strokeWidth={1.5} />,
         onSelect: () => {
-          const { moveToSplit, splitEnabled } = useEditorStore.getState();
-          // 若未开启分屏, moveToSplit 会自动开启; 已开启则把该 tab 移到第二组
-          if (!splitEnabled) moveToSplit(tabId);
+          const st = useEditorStore.getState();
+          st.setSplitOrientation("horizontal");
+          // 若该 tab 不在第二组则移过去
+          if (!st.splitTabs.some((t) => t.id === tabId)) st.moveToSplit(tabId);
+        },
+      },
+      {
+        id: "split-v",
+        label: "分屏打开 (上下)",
+        icon: <SplitSquareVertical size={14} strokeWidth={1.5} />,
+        onSelect: () => {
+          const st = useEditorStore.getState();
+          st.setSplitOrientation("vertical");
+          if (!st.splitTabs.some((t) => t.id === tabId)) st.moveToSplit(tabId);
         },
       },
     ];

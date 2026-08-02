@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import Editor, { DiffEditor, type OnMount } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { useEditorStore } from "../stores/editorStore";
-import { useNotesStore } from "../stores/notesStore";
+import { useNotesStore, noteDisplayTitle } from "../stores/notesStore";
 import { useLayoutStore } from "../stores/layoutStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getEditorOptions, defineIThemes, ICODE_DARK_THEME } from "../monaco/theme";
@@ -399,19 +399,27 @@ function NoteEditorSurface({
         t.id === tab.id
           ? {
               ...t,
-              name: title || "无标题便签",
+              // 有自定义标题用标题, 否则仍按内容首行显示
+              name: title.trim() ? title : noteDisplayTitle({ title: "", content: t.content }),
               noteTitle: title,
               isDirty: true,
-              originalContent: t.originalContent, // 保持原内容基准
             }
           : t
       ),
     }));
   };
 
-  // 内容修改: 只走 updateContent(设 isDirty), 不写库
+  // 内容修改: 走 updateContent(设 isDirty), 不写库; 无自定义标题时实时更新 tab 名为首行
   const onContentChange = (v: string | undefined) => {
     onChange(v);
+    // 没有自定义标题 → tab 名跟随内容首行
+    if (!tab.noteTitle?.trim() && v !== undefined) {
+      useEditorStore.setState((s) => ({
+        tabs: s.tabs.map((t) =>
+          t.id === tab.id ? { ...t, name: noteDisplayTitle({ title: "", content: v }) } : t
+        ),
+      }));
+    }
   };
 
   // 语言切换: 只更新内存 Tab(标记 dirty), 不写库

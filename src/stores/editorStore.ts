@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { getLanguage } from "../utils/language";
+import { noteDisplayTitle } from "./notesStore";
 import { useFileTreeStore } from "./fileTreeStore";
 
 /**
@@ -111,12 +112,16 @@ interface EditorStore {
   // ===== 分栏 =====
   /** 是否分栏 */
   splitEnabled: boolean;
+  /** 分栏方向: horizontal(左右) | vertical(上下) */
+  splitOrientation: "horizontal" | "vertical";
   /** 第二组的 tabs */
   splitTabs: EditorTab[];
   /** 第二组激活的 Tab */
   splitActiveId: string | null;
-  /** 切换分栏 */
+  /** 切换分栏(无方向时默认水平) */
   toggleSplit: () => void;
+  /** 以指定方向开启分栏 */
+  setSplitOrientation: (o: "horizontal" | "vertical") => void;
   /** 移动 Tab 到另一组 */
   moveToSplit: (id: string) => void;
   /** 从第二组移回第一组 */
@@ -132,6 +137,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   activeTabId: null,
   recentlyClosed: [],
   splitEnabled: false,
+  splitOrientation: "horizontal",
   splitTabs: [],
   splitActiveId: null,
 
@@ -203,7 +209,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       id: tabId,
       kind: "note",
       path: tabId,
-      name: title || "无标题便签",
+      // tab 名: 自定义标题优先, 否则取内容第一行
+      name: noteDisplayTitle({ title, content }),
       isPreview: false,
       isDirty: false,
       content,
@@ -516,6 +523,13 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
             splitActiveId: null,
           }
         : {}),
+    })),
+
+  setSplitOrientation: (o) =>
+    set(() => ({
+      splitOrientation: o,
+      // 切换方向时若未开启分屏则一并开启
+      splitEnabled: true,
     })),
 
   moveToSplit: (id) => {

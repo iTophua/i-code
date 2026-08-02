@@ -16,6 +16,20 @@ export interface Note {
   updated_at: number;
 }
 
+/**
+ * 便签显示标题: 有自定义标题用标题, 否则取内容第一行(去掉 Markdown 前导 # 等),
+ * 都为空时回退"无标题便签"。
+ */
+export function noteDisplayTitle(note: { title?: string; content?: string }): string {
+  if (note.title && note.title.trim()) return note.title.trim();
+  const firstLine = (note.content || "").split("\n").map((l) => l.trim()).find((l) => l.length > 0);
+  if (firstLine) {
+    // 去掉 Markdown 标题前缀
+    return firstLine.replace(/^#{1,6}\s*/, "").slice(0, 60);
+  }
+  return "无标题便签";
+}
+
 let dbPromise: Promise<Database> | null = null;
 
 async function getDb(): Promise<Database> {

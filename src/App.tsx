@@ -10,7 +10,7 @@ import { VerticalResizer } from "./components/Resizer";
 import { useLayoutStore } from "./stores/layoutStore";
 import { useFileTreeStore } from "./stores/fileTreeStore";
 import { useEditorStore } from "./stores/editorStore";
-import { useNotesStore } from "./stores/notesStore";
+import { useNotesStore, noteDisplayTitle } from "./stores/notesStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { monaco } from "./monaco/setup";
 import { ICODE_DARK_THEME, ICODE_LIGHT_THEME } from "./monaco/theme";
@@ -56,6 +56,10 @@ export default function App() {
   } = useLayoutStore();
   const setRootPath = useFileTreeStore((s) => s.setRootPath);
   const splitEnabled = useEditorStore((s) => s.splitEnabled);
+  const splitOrientation = useEditorStore((s) => s.splitOrientation);
+  // 响应式订阅 tabs/activeTabId: 否则编辑后持久化 effect 的 deps 是死值, 草稿不会存
+  const editorTabs = useEditorStore((s) => s.tabs);
+  const editorActiveTabId = useEditorStore((s) => s.activeTabId);
   const [closeConfirm, setCloseConfirm] = useState<{ id: string; name: string } | null>(null);
   const [savingTab, setSavingTab] = useState(false);
   const [restored, setRestored] = useState(false);
@@ -119,9 +123,20 @@ export default function App() {
       // 同步隐藏文件设置到文件树
       const showHidden = useSettingsStore.getState().showHiddenFiles;
       useFileTreeStore.getState().setShowHidden(showHidden);
-      // 恢复布局
+      // 恢复布局: 侧栏宽度 + 视图 + 可见性
       const savedWidth = await getSession<number>(SESSION_KEYS.sidebarWidth);
       if (savedWidth) setSidebarWidth(savedWidth);
+      const savedView = await getSession<string>(SESSION_KEYS.sidebarView);
+      if (savedView) {
+        const validViews = ["explorer", "search", "git", "notes", "tools", "settings"];
+        if (validViews.includes(savedView)) {
+          useLayoutStore.getState().setSidebarView(savedView as typeof sidebarView);
+        }
+      }
+      const savedVisible = await getSession<boolean>(SESSION_KEYS.sidebarVisible);
+      if (savedVisible !== null) {
+        useLayoutStore.setState({ sidebarVisible: savedVisible });
+      }
 
       // 恢复项目根
       const savedRoot = await getSession<string>(SESSION_KEYS.workspaceRoot);
@@ -155,7 +170,8 @@ export default function App() {
                 id: t.id,
                 kind: "note",
                 path: t.id,
-                name: t.noteTitle || baseTitle || "无标题便签",
+                // tab 名: 草稿内容优先算显示标题, 否则基准内容
+                name: noteDisplayTitle({ title: t.noteTitle ?? baseTitle, content: t.draft ?? baseContent }),
                 isPreview: false,
                 isDirty: t.draft != null,
                 content: t.draft ?? baseContent,
@@ -280,8 +296,7 @@ export default function App() {
   useEffect(() => {
     if (!restored) return;
     const t = setTimeout(() => {
-      const { tabs } = useEditorStore.getState();
-      const toSave: SavedTab[] = tabs
+      const toSave: SavedTab[] = editorTabs
         .filter((tab) => !tab.isPreview)
         .map((tab) => ({
           id: tab.id,
@@ -300,13 +315,20 @@ export default function App() {
       setSession(SESSION_KEYS.openTabs, toSave);
     }, 800);
     return () => clearTimeout(t);
-  }, [restored, useEditorStore.getState().tabs]);
+  }, [restored, editorTabs]);
 
   // 持久化活跃 Tab
   useEffect(() => {
     if (!restored) return;
-    setSession(SESSION_KEYS.activeTabId, useEditorStore.getState().activeTabId);
-  }, [restored, useEditorStore.getState().activeTabId]);
+    setSession(SESSION_KEYS.activeTabId, editorActiveTabId);
+  }, [restored, editorActiveTabId]);
+
+  // 持久化侧栏视图 + 可见性(启动记忆"上次在什么菜单")
+  useEffect(() => {
+    if (!restored) return;
+    setSession(SESSION_KEYS.sidebarView, sidebarView);
+    setSession(SESSION_KEYS.sidebarVisible, sidebarVisible);
+  }, [restored, sidebarView, sidebarVisible]);
 
   // ===== 全局快捷键 =====
   useEffect(() => {
@@ -396,28 +418,34 @@ export default function App() {
             <>
               <EditorTabs />
               <Breadcrumb />
-              <div className={`app__editor-area ${splitEnabled ? "app__editor-area--split" : ""}`}>
-                {zenMode && (
-                  <button
-                    className="zen-exit"
-                    onClick={toggleZen}
-                    title="退出 Zen 模式 (Cmd+Shift+Z)"
-                  >
-                    退出 Zen
-                  </button>
+              <div
+                className={`app__split-wrap ${splitEnabled ? "app__split-wrap--on" : ""} ${
+                  splitEnabled ? `app__split-wrap--${splitOrientation}` : ""
+                }`}
+              >
+                <div className={`app__editor-area ${splitEnabled ? "app__editor-area--split" : ""}`}>
+                  {zenMode && (
+                    <button
+                      className="zen-exit"
+                      onClick={toggleZen}
+                      title="退出 Zen 模式 (Cmd+Shift+Z)"
+                    >
+                      退出 Zen
+                    </button>
+                  )}
+                  <EditorPane />
+                </div>
+                {/* 分栏第二组 */}
+                {splitEnabled && (
+                  <>
+                    <div className={`app__split-divider app__split-divider--${splitOrientation}`} />
+                    <div className="app__editor-area app__editor-area--split">
+                      <SplitEditorTabs />
+                      <SplitEditorPane />
+                    </div>
+                  </>
                 )}
-                <EditorPane />
               </div>
-              {/* 分栏第二组 */}
-              {splitEnabled && (
-                <>
-                  <div className="app__split-divider" />
-                  <div className="app__editor-area app__editor-area--split">
-                    <SplitEditorTabs />
-                    <SplitEditorPane />
-                  </div>
-                </>
-              )}
               {panelVisible && (
                 <div className="app__panel">
                   <div className="app__panel-tabs">

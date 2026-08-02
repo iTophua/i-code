@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNotesStore, type Note } from "../stores/notesStore";
+import { useNotesStore, noteDisplayTitle, type Note } from "../stores/notesStore";
 import { useEditorStore } from "../stores/editorStore";
 import { useLayoutStore } from "../stores/layoutStore";
 import { CloseIcon } from "./Icons";
@@ -39,7 +39,7 @@ export function NotesPanel() {
       )
     : notes;
 
-  // 点击便签 → 在主编辑区打开
+  // 点击便签 → 在主编辑区打开(tab 名用显示标题: 自定义标题优先, 否则第一行)
   const handleOpen = (note: Note) => {
     openNote({
       id: note.id,
@@ -47,6 +47,12 @@ export function NotesPanel() {
       content: note.content,
       language: note.language,
     });
+    // 同步 tab 显示名
+    useEditorStore.setState((s) => ({
+      tabs: s.tabs.map((t) =>
+        t.id === `note:${note.id}` ? { ...t, name: noteDisplayTitle(note) } : t
+      ),
+    }));
   };
 
   // 新建便签 → 创建后立即打开
@@ -156,9 +162,15 @@ function NoteRow({
   onTogglePin: () => void;
   onDelete: () => void;
 }) {
-  const preview = (note.title || note.content || "空便签")
-    .replace(/\n/g, " ")
+  const displayTitle = noteDisplayTitle(note);
+  // 预览: 内容去掉首行(已用作标题), 截断
+  const preview = (note.content || "")
+    .split("\n")
+    .filter((l) => l.trim().length > 0)
+    .slice(1) // 跳过首行
+    .join(" ")
     .slice(0, 50);
+  const isUntitled = displayTitle === "无标题便签";
   return (
     <div
       className={`note-row ${active ? "note-row--active" : ""}`}
@@ -176,9 +188,13 @@ function NoteRow({
       </button>
       <div className="note-row__content">
         <div className="note-row__preview">
-          {note.title || <span className="note-row__untitled">无标题</span>}
+          {isUntitled ? (
+            <span className="note-row__untitled">{displayTitle}</span>
+          ) : (
+            displayTitle
+          )}
         </div>
-        <div className="note-row__sub">{preview}</div>
+        {preview && <div className="note-row__sub">{preview}</div>}
         <div className="note-row__meta">{formatTime(note.updated_at)}</div>
       </div>
       <button
