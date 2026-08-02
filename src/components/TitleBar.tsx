@@ -1,9 +1,9 @@
 import { useLayoutStore } from "../stores/layoutStore";
 import { useGitStore } from "../stores/gitStore";
+import { Settings } from "lucide-react";
 import "../styles/titlebar.css";
 
 export function TitleBar() {
-  const { toggleSidebar } = useLayoutStore();
   const { branch, changes } = useGitStore();
 
   return (
@@ -23,11 +23,11 @@ export function TitleBar() {
       </div>
       <div className="titlebar__actions">
         <button
-          className="titlebar__btn"
-          onClick={toggleSidebar}
-          title="切换侧栏 (Cmd+B)"
+          className={`titlebar__btn ${useLayoutStore.getState().settingsOpen ? "titlebar__btn--active" : ""}`}
+          onClick={() => useLayoutStore.getState().setSettingsOpen(true)}
+          title="设置 (Cmd+,)"
         >
-          ☰
+          <Settings size={15} strokeWidth={1.5} />
         </button>
       </div>
     </div>

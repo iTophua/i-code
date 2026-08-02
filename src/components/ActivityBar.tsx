@@ -7,7 +7,7 @@ import {
   NotesIcon,
   ToolsIcon,
 } from "./Icons";
-import { Settings, TerminalSquare } from "lucide-react";
+import { TerminalSquare } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNotesStore } from "../stores/notesStore";
 import { useEditorStore } from "../stores/editorStore";
@@ -99,13 +99,6 @@ export function ActivityBar() {
         onClick={() => useLayoutStore.getState().togglePanel()}
       >
         <TerminalSquare size={20} strokeWidth={1.5} />
-      </button>
-      <button
-        className={`activity-item ${useLayoutStore.getState().settingsOpen ? "activity-item--active" : ""}`}
-        title="设置 (Cmd+,)"
-        onClick={() => useLayoutStore.getState().setSettingsOpen(true)}
-      >
-        <Settings size={20} strokeWidth={1.5} />
       </button>
     </div>
   );
