@@ -216,22 +216,21 @@ body,
   overflow: hidden;
 }
 
-/* Monaco 编辑器背景: 跟随主题变量(避免主题注册前白色闪烁) */
+/* Monaco 编辑器背景: 仅防首次白色闪烁, 不用 !important(否则覆盖行高亮) */
 .monaco-editor,
-.monaco-editor .margin,
 .monaco-editor-background {
-  background-color: var(--bg-editor) !important;
+  background-color: var(--bg-editor);
 }
 .monaco-editor .inputarea.ime-input {
   background-color: transparent;
 }
 /* 行号栏: 跟随主题 */
 .monaco-editor .margin {
-  background-color: var(--bg-editor) !important;
+  background-color: var(--bg-editor);
   border-right: 1px solid var(--border-subtle);
 }
 .monaco-editor .margin-view-overlays .cgutter {
-  background-color: var(--bg-editor) !important;
+  background-color: var(--bg-editor);
 }
 
 body {
