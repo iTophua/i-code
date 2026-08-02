@@ -86,12 +86,12 @@ pub fn list_directory(dir_path: String, show_hidden: Option<bool>, sort_by: Opti
     for entry in read.flatten() {
         let name = entry.file_name().to_string_lossy().to_string();
         let path = entry.path();
-        // .git/node_modules 始终忽略(即使 show_hidden=true)
-        if name == ".git" || name == "node_modules" {
+        // .git 始终忽略(系统目录, 即使 show_hidden=true)
+        if name == ".git" {
             continue;
         }
-        // show_hidden=false 时: 过滤 ignore patterns + 隐藏文件(.开头)
-        // show_hidden=true 时: 显示隐藏文件 + .gitignore 里的文件(仅 .git/node_modules 排除)
+        // show_hidden=false 时: 过滤 ignore patterns(含 node_modules) + 隐藏文件(.开头)
+        // show_hidden=true 时: 显示所有文件(含 node_modules, 仅 .git 排除)
         if !show_hidden {
             if is_ignored(&name, &path, &root, &patterns) {
                 continue;
