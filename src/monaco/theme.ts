@@ -54,7 +54,7 @@ const darkDef: ThemeDef = {
     "editor.findMatchHighlightBackground": "#EA5C0055",
     "editorBracketMatch.background": "#0064001A",
     "editorBracketMatch.border": "#888",
-    "editorGutter.background": "#191919",
+    "editorGutter.background": "#1E1E1E",
     "editorError.foreground": "#F48771",
     "editorWarning.foreground": "#CCA700",
     "editorInfo.foreground": "#75BEFF",
