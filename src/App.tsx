@@ -12,6 +12,7 @@ import { useFileTreeStore } from "./stores/fileTreeStore";
 import { useEditorStore } from "./stores/editorStore";
 import { useNotesStore, noteDisplayTitle } from "./stores/notesStore";
 import { useSettingsStore } from "./stores/settingsStore";
+import { useGitStore } from "./stores/gitStore";
 import { monaco } from "./monaco/setup";
 import { ICODE_DARK_THEME, ICODE_LIGHT_THEME } from "./monaco/theme";
 import { disposeAllLsp } from "./monaco/lsp-bridge";
@@ -144,6 +145,8 @@ export default function App() {
         if (exists) {
           await setRootPath(savedRoot);
           setWorkspaceRoot(savedRoot);
+          // 初始化 git 状态(让文件树分支切换器等全局可用, 不依赖切到 Git 面板)
+          useGitStore.getState().refresh(savedRoot).catch(console.error);
         }
       }
 
