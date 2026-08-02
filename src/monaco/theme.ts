@@ -65,9 +65,9 @@ const darkDef: ThemeDef = {
     "editorSuggestWidget.selectedBackground": "#094771",
     "editorHoverWidget.background": "#252526",
     "scrollbar.shadow": "#00000033",
-    "scrollbarSlider.background": "#79797966",
-    "scrollbarSlider.hoverBackground": "#646464B3",
-    "scrollbarSlider.activeBackground": "#BFBFBF66",
+    "scrollbarSlider.background": "#85858559",
+    "scrollbarSlider.hoverBackground": "#85858599",
+    "scrollbarSlider.activeBackground": "#858585CC",
   },
 };
 
@@ -124,9 +124,9 @@ const lightDef: ThemeDef = {
     "editorSuggestWidget.selectedBackground": "#0060C0",
     "editorHoverWidget.background": "#F3F3F3",
     "scrollbar.shadow": "#00000033",
-    "scrollbarSlider.background": "#79797966",
-    "scrollbarSlider.hoverBackground": "#646464B3",
-    "scrollbarSlider.activeBackground": "#BFBFBF66",
+    "scrollbarSlider.background": "#00000033",
+    "scrollbarSlider.hoverBackground": "#00000059",
+    "scrollbarSlider.activeBackground": "#00000080",
   },
 };
 
@@ -198,6 +198,12 @@ export function getEditorOptions(
     },
     scrollBeyondLastLine: false,
     padding: { top: 12, bottom: 12 },
+    // 滚动条: 与全局 8px 统一, 默认 14px 偏粗
+    scrollbar: {
+      verticalScrollbarSize: 8,
+      horizontalScrollbarSize: 8,
+      useShadows: true,
+    },
     // 点击行号不选中整行(避免触控板误触)
     selectOnLineNumbers: false,
     // 禁用拖放(避免触控板点击后移动误触发选区拖拽)

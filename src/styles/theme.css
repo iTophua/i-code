@@ -62,9 +62,10 @@
   --git-ignored: #858585;
 
   /* --- 滚动条 --- */
-  --scrollbar-thumb: rgba(121, 121, 121, 0.4);
-  --scrollbar-thumb-hover: rgba(100, 100, 100, 0.7);
-  --scrollbar-thumb-active: rgba(191, 191, 191, 0.4);
+  --scrollbar-size: 8px;
+  --scrollbar-thumb: rgba(133, 133, 133, 0.35);
+  --scrollbar-thumb-hover: rgba(133, 133, 133, 0.6);
+  --scrollbar-thumb-active: rgba(133, 133, 133, 0.8);
 
   /* --- 编辑器(Monaco 外围) --- */
   --editor-line-highlight: #2a2d2e;
@@ -219,9 +220,10 @@
   --git-ignored: #8a8a8a;
 
   /* 滚动条 */
-  --scrollbar-thumb: rgba(100, 100, 100, 0.4);
-  --scrollbar-thumb-hover: rgba(100, 100, 100, 0.7);
-  --scrollbar-thumb-active: rgba(100, 100, 100, 0.4);
+  --scrollbar-size: 8px;
+  --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.35);
+  --scrollbar-thumb-active: rgba(0, 0, 0, 0.5);
 
   --editor-line-highlight: #f0f0f0;
 
@@ -295,22 +297,35 @@ svg.lucide {
 }
 
 /* ============ 滚动条全局样式 ============ */
+/* Firefox: 细滚动条 + 主题色 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+/* WebKit/Chromium(WKWebView): 精致细滚动条 */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: var(--radius-sm);
+  /* 透明边框 + 裁剪 → thumb 不贴轨道, macOS overlay 风格 */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: var(--scrollbar-size);
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:active {
   background: var(--scrollbar-thumb-active);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-corner {
   background: transparent;
