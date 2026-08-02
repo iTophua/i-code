@@ -3,6 +3,74 @@
  * 让 Radix 组件视觉上融入 VS Code Dark+ 风格
  */
 
+/* ============ 通用按钮(Dialog/其他复用) ============
+ * 全部用语义变量(--bg-button/--fg-primary/--border-base 等),
+ * 这些变量在 theme.css 里按 data-theme=dark/light 分别定义,
+ * 按钮因此自动跟随主题切换。
+ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease,
+    opacity 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* 主按钮: 强调色实心 */
+.btn--primary {
+  background: var(--bg-button);
+  color: var(--fg-on-accent);
+}
+.btn--primary:hover {
+  background: var(--bg-button-hover);
+}
+.btn--primary:active {
+  opacity: 0.88;
+}
+
+/* 次按钮: 透明描边 */
+.btn--secondary {
+  background: transparent;
+  color: var(--fg-primary);
+  border-color: var(--border-base);
+}
+.btn--secondary:hover {
+  background: var(--bg-list-hover);
+  border-color: var(--border-focus);
+}
+.btn--secondary:active {
+  background: var(--bg-list-active);
+}
+
+/* 危险按钮: 红色实心(语义化危险色, 浅深主题各自取值) */
+.btn--danger {
+  background: var(--danger-bg);
+  color: var(--danger-on);
+  border-color: transparent;
+}
+.btn--danger:hover {
+  background: var(--danger-bg-hover);
+}
+.btn--danger:active {
+  opacity: 0.88;
+}
+
+/* 键盘焦点环(可达性) */
+.btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--bg-app), 0 0 0 4px var(--border-focus);
+}
+
 /* ============ DropdownMenu / ContextMenu 通用 ============ */
 [data-radix-popper-content-wrapper] {
   z-index: 9999 !important;

@@ -42,6 +42,11 @@
   --fg-warning: #cca700;
   --fg-success: #89d185;
 
+  /* --- 危险(用于 danger 按钮/删除态实心背景, 区别于 --fg-error 文字色) --- */
+  --danger-bg: #c53030;
+  --danger-bg-hover: #e03131;
+  --danger-on: #ffffff;
+
   /* --- 边框/分隔 --- */
   --border-base: #3c3c3c;
   --border-subtle: #2d2d2d;
@@ -149,6 +154,11 @@
   --fg-error: #d12424;
   --fg-warning: #b88500;
   --fg-success: #2c8e2c;
+
+  /* 危险色(浅色主题取更深的红, 保证白底对比度) */
+  --danger-bg: #c92a2a;
+  --danger-bg-hover: #e03131;
+  --danger-on: #ffffff;
 
   /* 边框 */
   --border-base: #d4d4d4;
