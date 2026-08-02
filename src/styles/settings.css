@@ -289,6 +289,11 @@
   outline: none;
   transition: border-color 0.1s;
 }
+/* 原生 select 下拉项适配深色主题(macOS WKWebView) */
+.settings__input option {
+  background: var(--bg-menu);
+  color: var(--fg-primary);
+}
 .settings__input:hover {
   border-color: var(--fg-muted);
 }

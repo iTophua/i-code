@@ -7,10 +7,31 @@ import { useSettingsStore } from "../stores/settingsStore";
 import { useFileTreeStore } from "../stores/fileTreeStore";
 import { useLspStore } from "../stores/lspStore";
 import { setSession, SESSION_KEYS } from "../utils/session";
-import { AppSelect } from "./AppSelect";
 import { ConfirmDialog } from "./ConfirmDialog";
 import "./ui/radix-theme.css";
 import "../styles/settings.css";
+
+/**
+ * 原生 select(设置弹窗内使用, 避免 Radix Select + Dialog focus trap 冲突)
+ */
+function NativeSelect({ value, options, onChange }: {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <select
+      className="settings__input"
+      style={{ width: "auto", minWidth: 140, cursor: "pointer", height: 30 }}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value}>{opt.label}</option>
+      ))}
+    </select>
+  );
+}
 
 const CATEGORIES: { id: SettingsCategory; label: string; icon: string }[] = [
   { id: "theme", label: "主题", icon: "🎨" },
@@ -123,7 +144,7 @@ function ThemeSettings({ s }: { s: S }) {
   return (
     <Group title="外观">
       <Row label="配色主题" desc="切换深色/浅色主题">
-        <AppSelect
+        <NativeSelect
           value={s.theme}
           options={[
             { value: "dark", label: "深色 (Dark+)" },
@@ -161,7 +182,7 @@ function EditorSettings({ s }: { s: S }) {
           <input type="number" className="settings__input settings__input--num" value={s.tabSize} min={2} max={8} onChange={(e) => s.update("tabSize", Number(e.target.value))} />
         </Row>
         <Row label="自动换行" desc="长行是否折行显示">
-          <AppSelect
+          <NativeSelect
             value={s.wordWrap}
             options={[
               { value: "off", label: "关闭" },
@@ -174,7 +195,7 @@ function EditorSettings({ s }: { s: S }) {
           <Toggle value={s.minimap} onChange={(v) => s.update("minimap", v)} />
         </Row>
         <Row label="自动保存">
-          <AppSelect
+          <NativeSelect
             value={s.autoSave}
             options={[
               { value: "off", label: "关闭" },
