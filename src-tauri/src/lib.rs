@@ -6,7 +6,12 @@ mod lsp;
 mod search;
 mod terminal;
 
-use tauri::Manager;
+use tauri::{Emitter, Manager};
+use std::sync::Mutex;
+
+/// 缓存 macOS 首次启动时通过 Apple Events 传入的文件路径。
+/// 应用刚启动时前端还没注册监听, emit 会丢失; 前端 ready 后主动调 take_pending_files 拉取。
+struct PendingFiles(Mutex<Vec<String>>);
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -38,6 +43,7 @@ pub fn run() {
         .manage(log_viewer::LogIndexCache::default())
         .manage(lsp::LspManager::default())
         .manage(file_watcher::FileWatcher::default())
+        .manage(PendingFiles(Mutex::new(Vec::new())))
         .setup(|app| {
             // macOS: 设置标题栏为 overlay 模式(红绿灯保留, 标题栏区域可被 webview 覆盖)
             #[cfg(target_os = "macos")]
@@ -115,7 +121,38 @@ pub fn run() {
             git_ops::git_blame,
             git_ops::git_file_history,
             git_ops::git_show_file,
+            take_pending_files,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            // macOS: 访达"打开方式 → iCode"时, 系统通过 Apple Events 传文件 URL。
+            // Tauri 2 暴露为 RunEvent::Opened。
+            if let tauri::RunEvent::Opened { urls } = event {
+                let paths: Vec<String> = urls
+                    .iter()
+                    .filter_map(|u| u.to_file_path().ok())
+                    .map(|p| p.to_string_lossy().to_string())
+                    .collect();
+                if !paths.is_empty() {
+                    // 1. 缓存(首次启动时前端还没 ready, emit 会丢)
+                    if let Some(pending) = app_handle.try_state::<PendingFiles>() {
+                        if let Ok(mut guard) = pending.0.lock() {
+                            guard.extend(paths.clone());
+                        }
+                    }
+                    // 2. 同时 emit(应用已运行时前端能直接收到)
+                    let _ = app_handle.emit("open-external-files", paths);
+                }
+            }
+        });
+}
+
+/// 前端恢复完成后调用, 拉取启动时缓存的待打开文件(然后清空)
+#[tauri::command]
+fn take_pending_files(pending: tauri::State<'_, PendingFiles>) -> Vec<String> {
+    let mut guard = pending.0.lock().unwrap_or_else(|e| e.into_inner());
+    let files = guard.clone();
+    guard.clear();
+    files
 }

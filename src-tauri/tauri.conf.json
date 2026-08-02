@@ -42,6 +42,38 @@
       "icons/icon.png",
       "icons/icon.icns",
       "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      {
+        "ext": ["js","jsx","ts","tsx","json","html","css","scss","less","vue","svelte"],
+        "name": "Source Code",
+        "role": "Editor"
+      },
+      {
+        "ext": ["py","rb","go","rs","java","kt","c","cpp","h","hpp","cs","php","swift","dart","lua","r","scala","pl","sh","bash","zsh","fish","ps1","bat","cmd"],
+        "name": "Source Code",
+        "role": "Editor"
+      },
+      {
+        "ext": ["xml","yaml","yml","toml","ini","conf","cfg","env","gitignore","dockerfile","makefile"],
+        "name": "Config File",
+        "role": "Editor"
+      },
+      {
+        "ext": ["md","markdown","txt","log","csv","tsv"],
+        "name": "Text Document",
+        "role": "Editor"
+      },
+      {
+        "ext": ["sql","graphql","gql","proto"],
+        "name": "Data File",
+        "role": "Editor"
+      },
+      {
+        "ext": ["png","jpg","jpeg","gif","svg","webp","bmp","ico"],
+        "name": "Image",
+        "role": "Viewer"
+      }
     ]
   }
 }

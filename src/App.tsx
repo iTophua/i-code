@@ -39,6 +39,7 @@ import { getLanguage } from "./utils/language";
 import { addRecentProject } from "./utils/recentProjects";
 import { toast } from "./stores/toastStore";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import "./styles/app.css";
 
 export default function App() {
@@ -84,6 +85,31 @@ export default function App() {
       console.error("打开文件夹失败:", e);
     }
   }, [setRootPath, setWorkspaceRoot]);
+
+  // 打开外部文件(从访达"打开方式"或拖拽): 读取并打开为 Tab
+  const openExternalFiles = useCallback(async (paths: string[]) => {
+    for (const filePath of paths) {
+      try {
+        const name = filePath.split("/").pop() || filePath;
+        const lower = name.toLowerCase();
+        // 图片走图片预览
+        if (/\.(png|jpe?g|gif|svg|webp|bmp|ico)$/i.test(lower)) {
+          useEditorStore.getState().openImage({ filePath, fileName: name });
+          continue;
+        }
+        const [content] = await invoke<[string, string]>("read_file", { filePath });
+        useEditorStore.getState().openFile({
+          path: filePath,
+          name,
+          content,
+          language: getLanguage(name),
+          preview: false,
+        });
+      } catch (e) {
+        toast.error(`打开失败: ${e}`);
+      }
+    }
+  }, []);
 
   // 关闭前保存当前 Tab(文件写磁盘, 便签存 SQLite), 成功后关闭
   const saveAndClose = useCallback(async (id: string) => {
@@ -421,6 +447,35 @@ export default function App() {
       window.removeEventListener("tab-close-request", onCloseRequest);
     };
   }, [handleOpenFolder, toggleSidebar, setSidebarView, togglePanel]);
+
+  // ===== 从访达"打开方式 → iCode" / 拖拽文件到窗口 =====
+  useEffect(() => {
+    if (!restored) return;
+    let unlistenDrop: UnlistenFn | null = null;
+    let unlistenOpen: UnlistenFn | null = null;
+    // 拖拽文件到窗口(Tauri 2: getCurrentWebview().onDragDropEvent)
+    getCurrentWebview()
+      .onDragDropEvent((e) => {
+        if (e.payload.type === "drop" && e.payload.paths.length > 0) {
+          openExternalFiles(e.payload.paths);
+        }
+      })
+      .then((fn) => (unlistenDrop = fn));
+    // macOS: 访达"打开方式"传来的文件(应用已运行时, RunEvent::Opened → Rust emit)
+    listen<string[]>("open-external-files", (e) => {
+      if (e.payload && e.payload.length > 0) {
+        openExternalFiles(e.payload);
+      }
+    }).then((fn) => (unlistenOpen = fn));
+    // macOS: 首次启动时前端还没 ready, emit 会丢失 → 主动拉取 Rust 缓存的待打开文件
+    invoke<string[]>("take_pending_files")
+      .then((files) => {
+        if (files.length > 0) openExternalFiles(files);
+      })
+      .catch(() => {});
+    return () => { unlistenDrop?.(); unlistenOpen?.(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restored, openExternalFiles]);
 
   return (
     <div className={`app ${zenMode ? "app--zen" : ""}`}>
