@@ -146,10 +146,12 @@ export function getEditorOptions(
     scrollBeyondLastLine: false,
     padding: { top: 8, bottom: 8 },
     // ===== 多光标 / 列选择编辑 =====
-    // columnSelection: 开启列(块)选择模式, 用方向键移动光标即可形成矩形选区
-    // multiCursorModifier: 'alt' → Alt+点击加光标, Alt+拖拽框选列(与 VS Code 默认一致)
+    // multiCursorModifier: 'alt' → 按住 Option(Alt) 拖拽 = 矩形列选;
+    //                      Option + 点击 = 在任意位置加光标(与 VS Code 默认一致)
     // multiCursorPaste: 多光标下粘贴按各自光标分行粘贴
-    columnSelection: true,
+    // 注: columnSelection 保持 false(默认), 它控制的是键盘方向键是否进入列模式,
+    //     开启会让普通 Shift+方向键 变成方块选择, 干扰正常编辑。
+    columnSelection: false,
     multiCursorModifier: "alt",
     multiCursorPaste: "full",
     ...overrides,

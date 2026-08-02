@@ -89,8 +89,8 @@ export function CommandPalette() {
       },
       {
         id: "mc-column-box-select",
-        label: "选区每行加光标(列编辑)",
-        shortcut: "Shift+Option+I",
+        label: "列选择: 按住 Option(Alt) 拖拽选矩形块",
+        shortcut: "Option+Drag",
         action: () => triggerEditorAction("editor.action.insertCursorAtEndOfEachLineSelected"),
       },
       {
