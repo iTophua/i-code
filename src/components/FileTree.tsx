@@ -479,6 +479,8 @@ function TreeRow({
 
   // Git 着色: 选中态不染色(用选中背景), 文件名按状态上色
   const gitClass = !selected && gitStatus ? `tree-row--git-${gitStatus}` : "";
+  const ignoredClass = node.gitIgnored && !selected ? "tree-row--ignored" : "";
+  const dirClass = node.isDir ? "tree-row--is-dir" : "";
   // 状态字母(M/U/A/D 等), 仅文件显示, 目录不显示字母
   const statusLetter: Record<FileStatus, string> = {
     modified: "M",
@@ -491,7 +493,7 @@ function TreeRow({
 
   return (
     <div
-      className={`tree-row ${selected ? "tree-row--selected" : ""} ${gitClass}`}
+      className={`tree-row ${selected ? "tree-row--selected" : ""} ${gitClass} ${ignoredClass} ${dirClass}`}
       style={{ height: ITEM_HEIGHT, paddingLeft }}
       onClick={onClick}
       onDoubleClick={onDoubleClick}

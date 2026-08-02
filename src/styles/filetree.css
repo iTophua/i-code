@@ -333,6 +333,18 @@
   text-overflow: ellipsis;
   font-size: var(--fs-base);
 }
+/* 文件夹名: 加粗, 与普通文件区分 */
+.tree-row--is-dir .tree-row__name {
+  font-weight: 600;
+  color: var(--fg-primary);
+}
+/* git 忽略的文件/文件夹: 灰色(如 node_modules, .gitignore 匹配项) */
+.tree-row--ignored .tree-row__name {
+  color: var(--fg-disabled);
+}
+.tree-row--ignored .tree-row__icon {
+  opacity: 0.5;
+}
 
 /* 未保存标记(后续在 name 后加) */
 .tree-row__dirty {

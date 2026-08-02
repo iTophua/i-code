@@ -15,6 +15,8 @@ export interface TreeNode {
   children?: TreeNode[];
   /** 是否已加载子项(目录懒加载) */
   loaded?: boolean;
+  /** 是否被 git 忽略(node_modules / .gitignore 匹配) */
+  gitIgnored?: boolean;
 }
 
 /** 可见节点(带深度,供缩进) */

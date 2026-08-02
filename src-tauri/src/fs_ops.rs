@@ -11,6 +11,8 @@ pub struct DirEntry {
     pub path: String,
     pub is_dir: bool,
     pub size: u64,
+    /// 是否被 git 忽略(node_modules/.gitignore 匹配等)
+    pub git_ignored: bool,
     /// 子条目(仅目录展开时有)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub children: Option<Vec<DirEntry>>,
@@ -101,11 +103,14 @@ pub fn list_directory(dir_path: String, show_hidden: Option<bool>, sort_by: Opti
             }
         }
         let meta = entry.metadata().map_err(|e| e.to_string())?;
+        // 检测是否被 git 忽略(.gitignore / node_modules 等)
+        let ignored = is_ignored(&name, &path, &root, &patterns);
         entries.push(DirEntry {
             name,
             path: path.to_string_lossy().to_string(),
             is_dir: meta.is_dir(),
             size: if meta.is_file() { meta.len() } else { 0 },
+            git_ignored: ignored,
             children: None,
         });
     }
