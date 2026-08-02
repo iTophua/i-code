@@ -232,6 +232,10 @@ body,
 .monaco-editor .margin-view-overlays .cgutter {
   background-color: var(--bg-editor);
 }
+/* 当前行高亮: 确保 theme 的 lineHighlightBackground 可见(不被背景层覆盖) */
+.monaco-editor .view-overlays .current-line {
+  background-color: var(--editor-line-highlight) !important;
+}
 
 body {
   font-family: var(--font-ui);
