@@ -95,64 +95,100 @@ const ICON_COLORS: Record<string, string> = {
   folder: "#C09553",
 };
 
+/**
+ * 文件夹名称 → 颜色映射(参考 VS Code Material Icon Theme)
+ * 没有命中的用默认棕色
+ */
+const FOLDER_COLORS: Record<string, { top: string; body: string; light: string }> = {
+  src: { top: "#519ABA", body: "#4A8FA8", light: "#6BB5D8" },
+  source: { top: "#519ABA", body: "#4A8FA8", light: "#6BB5D8" },
+  components: { top: "#E0B02E", body: "#C99520", light: "#F0C84A" },
+  public: { top: "#E8A33D", body: "#D08827", light: "#F5BC60" },
+  assets: { top: "#E8A33D", body: "#D08827", light: "#F5BC60" },
+  static: { top: "#E8A33D", body: "#D08827", light: "#F5BC60" },
+  node_modules: { top: "#5FA04E", body: "#4E8A40", light: "#7BC068" },
+  docs: { top: "#42A5F5", body: "#3490D4", light: "#64BFF7" },
+  doc: { top: "#42A5F5", body: "#3490D4", light: "#64BFF7" },
+  config: { top: "#90A4AE", body: "#78909C", light: "#B0BEC5" },
+  configs: { top: "#90A4AE", body: "#78909C", light: "#B0BEC5" },
+  test: { top: "#F06292", body: "#D84A7C", light: "#F88BB0" },
+  tests: { top: "#F06292", body: "#D84A7C", light: "#F88BB0" },
+  __tests__: { top: "#F06292", body: "#D84A7C", light: "#F88BB0" },
+  lib: { top: "#7E57C2", body: "#6E48B0", light: "#9B7DD8" },
+  utils: { top: "#7E57C2", body: "#6E48B0", light: "#9B7DD8" },
+  hooks: { top: "#EF5350", body: "#D84A47", light: "#F77A77" },
+  dist: { top: "#78909C", body: "#607D8B", light: "#9FAFB8" },
+  build: { top: "#78909C", body: "#607D8B", light: "#9FAFB8" },
+  styles: { top: "#EC407A", body: "#D32F6F", light: "#F068A0" },
+  css: { top: "#42A5F5", body: "#3490D4", light: "#64BFF7" },
+  images: { top: "#AB47BC", body: "#94335A", light: "#C175D0" },
+  img: { top: "#AB47BC", body: "#94335A", light: "#C175D0" },
+  locales: { top: "#26A69A", body: "#1E8C82", light: "#4DBCB2" },
+  i18n: { top: "#26A69A", body: "#1E8C82", light: "#4DBCB2" },
+  api: { top: "#66BB6A", body: "#52A85A", light: "#85CF88" },
+  server: { top: "#66BB6A", body: "#52A85A", light: "#85CF88" },
+  scripts: { top: "#FFA726", body: "#E8911A", light: "#FFBE5A" },
+  bin: { top: "#FFA726", body: "#E8911A", light: "#FFBE5A" },
+};
+
+const DEFAULT_FOLDER = { top: "#DFB376", body: "#C19250", light: "#E8C280" };
+
 interface Props {
   type: FileIconType;
   isFolderOpen?: boolean;
+  /** 文件夹名(用于按名称着色, 如 src=蓝 node_modules=绿) */
+  folderName?: string;
   size?: number;
 }
 
-export function FileIcon({ type, isFolderOpen, size = 16 }: Props) {
-  // 文件夹: 精致的 VS Code 风格(柔和渐变 + 清晰轮廓)
+export function FileIcon({ type, isFolderOpen, folderName, size = 16 }: Props) {
+  // 文件夹: 按名称着色(参考 VS Code Material Icon Theme)
   if (type === "folder") {
+    const c = (folderName && FOLDER_COLORS[folderName.toLowerCase()]) || DEFAULT_FOLDER;
+    const gid = folderName ? `f-${folderName.replace(/[^a-zA-Z0-9]/g, "")}` : "f-default";
     if (isFolderOpen) {
       return (
         <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
           <defs>
-            <linearGradient id="folder-open-top" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#DFB376" />
-              <stop offset="100%" stopColor="#C19250" />
+            <linearGradient id={`${gid}-ot`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={c.light} />
+              <stop offset="100%" stopColor={c.body} />
             </linearGradient>
-            <linearGradient id="folder-open-body" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#D4A05A" />
-              <stop offset="100%" stopColor="#B07A3E" />
+            <linearGradient id={`${gid}-ob`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={c.top} />
+              <stop offset="100%" stopColor={c.body} />
             </linearGradient>
           </defs>
-          {/* 后片(深色底) */}
-          <path d="M1.5 4a1 1 0 011-1H6l1.5 1.5h6a1 1 0 011 1v1H4.5L2 8.5V4z" fill="url(#folder-open-top)" />
-          {/* 前片(展开的文件夹主体) */}
+          <path d="M1.5 4a1 1 0 011-1H6l1.5 1.5h6a1 1 0 011 1v1H4.5L2 8.5V4z" fill={`url(#${gid}-ot)`} />
           <path
             d="M2 8.5L4.5 6h10.5a.6.6 0 01.6.8l-1.6 5.5a1 1 0 01-1 .7H2.8a1 1 0 01-1-1.2L2 8.5z"
-            fill="url(#folder-open-body)"
+            fill={`url(#${gid}-ob)`}
           />
-          {/* 内部高光 */}
-          <path d="M4.5 6h10.5l-.15.5H4.7L2.8 8.5H2.2L4.5 6z" fill="#E8C280" fillOpacity="0.4" />
+          <path d="M4.5 6h10.5l-.15.5H4.7L2.8 8.5H2.2L4.5 6z" fill={c.light} fillOpacity="0.4" />
         </svg>
       );
     }
     return (
       <svg width={size} height={size} viewBox="0 0 16 16" fill="none">
         <defs>
-          <linearGradient id="folder-closed-top" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#DFB376" />
-            <stop offset="100%" stopColor="#C19250" />
+          <linearGradient id={`${gid}-ct`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={c.light} />
+            <stop offset="100%" stopColor={c.body} />
           </linearGradient>
-          <linearGradient id="folder-closed-body" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#D4A05A" />
-            <stop offset="100%" stopColor="#B07A3E" />
+          <linearGradient id={`${gid}-cb`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={c.top} />
+            <stop offset="100%" stopColor={c.body} />
           </linearGradient>
         </defs>
-        {/* 主体 */}
         <path
           d="M1.5 4.5a1 1 0 011-1H6l1.5 1.3h6a1 1 0 011 1V12a1 1 0 01-1 1H2.5a1 1 0 01-1-1V4.5z"
-          fill="url(#folder-closed-body)"
+          fill={`url(#${gid}-cb)`}
         />
-        {/* 顶部标签 */}
         <path
           d="M1.5 4.5a1 1 0 011-1H6l1.5 1.3h6a1 1 0 011 1v.4H1.5v-1.7z"
-          fill="url(#folder-closed-top)"
+          fill={`url(#${gid}-ct)`}
         />
-        {/* 高光 */}
-        <path d="M2.5 4H5.8l.8.7H2.5V4z" fill="#E8C280" fillOpacity="0.45" />
+        <path d="M2.5 4H5.8l.8.7H2.5V4z" fill={c.light} fillOpacity="0.45" />
       </svg>
     );
   }

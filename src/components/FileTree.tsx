@@ -504,7 +504,7 @@ function TreeRow({
         {node.isDir ? <ChevronRight size={14} /> : null}
       </span>
       <span className="tree-row__icon">
-        <FileIcon type={iconType} isFolderOpen={node.expanded} size={16} />
+        <FileIcon type={iconType} isFolderOpen={node.expanded} folderName={node.isDir ? node.name : undefined} size={16} />
       </span>
       {isEditing ? (
         <InlineInput
@@ -515,7 +515,7 @@ function TreeRow({
       ) : (
         <>
           <span className="tree-row__name">{node.name}</span>
-          {gitStatus && !node.isDir && (
+          {gitStatus && (
             <span className={`tree-row__git-letter tree-row--git-${gitStatus}`}>
               {statusLetter[gitStatus]}
             </span>
