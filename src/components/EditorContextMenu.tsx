@@ -88,12 +88,18 @@ export function EditorContextMenu({
       style={{ display: "flex", flex: 1, minHeight: 0, flexDirection: "column" }}
       onContextMenu={(e) => {
         e.preventDefault();
-        setPos({ x: e.clientX, y: e.clientY });
+        // 估算菜单高度(每项 28px + padding), 底部超出视口时向上偏移
+        const estHeight = items.length * 28 + 16;
+        const maxY = window.innerHeight - estHeight - 8;
+        setPos({
+          x: Math.min(e.clientX, window.innerWidth - 220),
+          y: e.clientY > maxY ? maxY : e.clientY,
+        });
       }}
     >
       {children}
       {pos && (
-        <div ref={ref} style={{ ...menuStyles, left: pos.x, top: pos.y }}>
+        <div ref={ref} style={{ ...menuStyles, left: pos.x, top: pos.y, maxHeight: "70vh", overflowY: "auto" }}>
           {items.map((item, i) =>
             item.separator ? (
               <div key={i} style={sepStyles} />

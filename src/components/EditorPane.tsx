@@ -6,7 +6,7 @@ import { useNotesStore, noteDisplayTitle } from "../stores/notesStore";
 import { useLayoutStore } from "../stores/layoutStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { useGitStore } from "../stores/gitStore";
-import { getEditorOptions, defineIThemes, ICODE_DARK_THEME } from "../monaco/theme";
+import { getEditorOptions, defineIThemes, ICODE_DARK_THEME, ICODE_LIGHT_THEME } from "../monaco/theme";
 import { saveAsFile } from "../utils/exportNote";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { FileHistoryView } from "./FileHistoryView";
@@ -334,6 +334,7 @@ export function EditorPane() {
         toast.warning("未获取到 Blame 数据");
         return;
       }
+      const model = ed.getModel();
       const decos: editor.IModelDeltaDecoration[] = [];
       for (const [line, info] of blameMap) {
         decos.push({
@@ -414,6 +415,7 @@ export function EditorPane() {
           path={activeTab.path}
           language={activeTab.language}
           value={activeTab.content}
+          theme={useSettingsStore.getState().theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME}
           onMount={handleMount}
           onChange={handleChange}
           loading={<div className="editor-loading">加载中...</div>}
