@@ -80,6 +80,13 @@ export function TerminalView({ termId, active }: Props) {
     termRef.current = term;
     fitRef.current = fit;
 
+    // macOS 触控板修复: 无物理按键时阻止 pointermove, 避免 xterm 误触发拖拽选择
+    const container = containerRef.current;
+    const onPointerMoveCapture = (e: PointerEvent) => {
+      if (e.buttons === 0) e.stopPropagation();
+    };
+    container?.addEventListener("pointermove", onPointerMoveCapture, true);
+
     // 用户输入 → 写入 PTY
     const onData = term.onData((data) => {
       invoke("terminal_write", { id: termId, data }).catch(console.error);
@@ -140,6 +147,7 @@ export function TerminalView({ termId, active }: Props) {
       unlisten?.();
       unlistenExit?.();
       ro.disconnect();
+      container?.removeEventListener("pointermove", onPointerMoveCapture, true);
       term.dispose();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
