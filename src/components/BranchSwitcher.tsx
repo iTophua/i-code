@@ -3,17 +3,22 @@ import { GitBranch as GitBranchIcon, Check, Plus, ChevronDown } from "lucide-rea
 import { useGitStore, type GitBranch } from "../stores/gitStore";
 import { useFileTreeStore } from "../stores/fileTreeStore";
 import { toast } from "../stores/toastStore";
+import { invoke } from "@tauri-apps/api/core";
 
 /**
  * 文件树分支切换器: 项目名右侧显示当前分支, 点击弹出分支列表。
  * - 本地分支 + 远程分支分组
  * - 新建分支输入框
  * - checkout 后刷新文件树
+ *
+ * 当前分支名自己直接调 git_current_branch 获取(不依赖 gitStore 异步初始化),
+ * 分支列表/切换操作复用 gitStore。
  */
 export function BranchSwitcher() {
-  const { repoRoot, branch, branches, loadBranches, checkout, createBranch, refresh } = useGitStore();
-  // 从文件树取 rootPath(肯定有值), 用于确保 git 状态已初始化
+  const { branches, loadBranches, checkout, createBranch } = useGitStore();
   const rootPath = useFileTreeStore((s) => s.rootPath);
+  const [currentBranch, setCurrentBranch] = useState("");
+  const [repoRoot, setRepoRoot] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [newName, setNewName] = useState("");
@@ -23,12 +28,31 @@ export function BranchSwitcher() {
   const local = branches.filter((b) => !b.isRemote);
   const remote = branches.filter((b) => b.isRemote);
 
-  // 确保 git 状态已初始化(repoRoot 为空但 rootPath 有值时主动 refresh)
+  // rootPath 变化时, 直接获取当前分支 + 仓库根(不依赖 gitStore 初始化时序)
   useEffect(() => {
-    if (rootPath && !repoRoot) {
-      refresh(rootPath).catch(() => {});
+    if (!rootPath) {
+      setCurrentBranch("");
+      setRepoRoot(null);
+      return;
     }
-  }, [rootPath, repoRoot, refresh]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const root = await invoke<string>("git_repo_root", { path: rootPath });
+        const branch = await invoke<string>("git_current_branch", { path: root });
+        if (!cancelled) {
+          setRepoRoot(root);
+          setCurrentBranch(branch);
+        }
+      } catch {
+        if (!cancelled) {
+          setRepoRoot(null);
+          setCurrentBranch("");
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [rootPath]);
 
   // 打开时加载分支列表
   useEffect(() => {
@@ -59,8 +83,10 @@ export function BranchSwitcher() {
       } else {
         await checkout(b.name);
       }
-      // 切换后刷新文件树
+      // 切换后: 刷新文件树 + 更新本地当前分支
       await useFileTreeStore.getState().refreshTree();
+      const newBranch = await invoke<string>("git_current_branch", { path: repoRoot! });
+      setCurrentBranch(newBranch);
       setOpen(false);
     } catch (e) {
       toast.error(`切换分支失败: ${e}`);
@@ -77,6 +103,7 @@ export function BranchSwitcher() {
     try {
       await createBranch(name, true);
       await useFileTreeStore.getState().refreshTree();
+      setCurrentBranch(name);
       setNewName("");
       setShowNew(false);
       setOpen(false);
@@ -87,20 +114,22 @@ export function BranchSwitcher() {
     }
   };
 
-  if (!repoRoot || !branch) return null;
+  if (!repoRoot || !currentBranch) return null;
 
   const renderBranch = (b: GitBranch) => {
     const display = b.name.replace("remotes/", "");
+    // 用本地 currentBranch 判断当前(比 gitStore 解析的 b.current 更可靠)
+    const isCurrent = display === currentBranch || b.name === currentBranch;
     return (
       <button
         key={b.name}
-        className={`branch-switcher__item ${b.current ? "branch-switcher__item--current" : ""}`}
-        disabled={busy || b.current}
+        className={`branch-switcher__item ${isCurrent ? "branch-switcher__item--current" : ""}`}
+        disabled={busy || isCurrent}
         onClick={() => handleCheckout(b)}
         title={b.upstream ? `${display} ← ${b.upstream}` : display}
       >
         <span className="branch-switcher__check">
-          {b.current && <Check size={13} strokeWidth={2} />}
+          {isCurrent && <Check size={13} strokeWidth={2} />}
         </span>
         <span className="branch-switcher__name">{display}</span>
       </button>
@@ -115,7 +144,7 @@ export function BranchSwitcher() {
         title="切换分支"
       >
         <GitBranchIcon size={12} strokeWidth={1.75} />
-        <span className="branch-switcher__name">{branch}</span>
+        <span className="branch-switcher__name">{currentBranch}</span>
         <ChevronDown size={11} strokeWidth={1.75} className="branch-switcher__caret" />
       </button>
 
