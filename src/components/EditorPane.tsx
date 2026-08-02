@@ -59,6 +59,7 @@ export function EditorPane() {
   const minimap = useSettingsStore((s) => s.minimap);
   const fontLigatures = useSettingsStore((s) => s.fontLigatures);
   const showWhitespace = useSettingsStore((s) => s.showWhitespace);
+  const theme = useSettingsStore((s) => s.theme);
   // 按当前侧栏菜单域过滤: activeTab 不在域内时, 取域内第一个(或显示空白页)
   const sidebarView = useLayoutStore((s) => s.sidebarView);
   const scopedTabs = tabs.filter((t) => tabInScope(t.kind, sidebarView));
@@ -340,8 +341,14 @@ export function EditorPane() {
         decos.push({
           range: { startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: 1 },
           options: {
-            after: { content: `   ${info.author} · ${info.time}`, inlineClassName: "blame-decoration" },
+            after: {
+              content: `\u00a0\u00a0${info.author} · ${info.time}`,
+              inlineClassName: "blame-decoration",
+              cursorStops: 0,
+            },
             isWholeLine: true,
+            // 行号区也显示色块标记
+            marginClassName: "blame-line-marker",
           },
         });
       }
@@ -416,7 +423,7 @@ export function EditorPane() {
           path={activeTab.path}
           language={activeTab.language}
           value={activeTab.content}
-          theme={useSettingsStore.getState().theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME}
+          theme={theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME}
           onMount={handleMount}
           onChange={handleChange}
           loading={<div className="editor-loading">加载中...</div>}

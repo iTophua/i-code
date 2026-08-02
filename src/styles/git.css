@@ -560,12 +560,18 @@
   height: 100%;
 }
 
-/* blame 行尾装饰 */
+/* blame 行尾装饰(代码追溯) */
 .blame-decoration {
   color: var(--fg-muted) !important;
   font-size: var(--fs-xs) !important;
   font-style: italic;
-  opacity: 0.6;
+  opacity: 0.7;
+  padding-left: 16px;
+  white-space: nowrap;
+}
+/* blame 行号区色块标记 */
+.blame-line-marker {
+  background: rgba(100, 150, 200, 0.08);
 }
 
 /* ===== 过渡补丁 ===== */
