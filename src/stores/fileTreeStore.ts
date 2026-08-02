@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
+import { setSession, getSession, SESSION_KEYS } from "../utils/session";
 
 /**
  * 文件树状态管理
@@ -53,7 +54,20 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
   sortBy: "name",
 
   setRootPath: async (path) => {
-    set({ rootPath: path, treeData: [], expandedPaths: new Set(), filter: "" });
+    // 恢复上次展开的目录(从 session 读)
+    let restoredExpanded = new Set<string>();
+    try {
+      const saved = await getSession<string[]>(SESSION_KEYS.treeExpanded);
+      if (saved && saved.length > 0) restoredExpanded = new Set(saved);
+    } catch { /* ignore */ }
+    const savedSelected = await getSession<string>(SESSION_KEYS.treeSelected);
+    set({
+      rootPath: path,
+      treeData: [],
+      expandedPaths: restoredExpanded,
+      selectedPath: savedSelected ?? null,
+      filter: "",
+    });
     await get().refreshTree();
   },
 
@@ -109,6 +123,8 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
     }
     set({ expandedPaths: newExpanded, treeData: [...treeData] });
     get().recomputeVisible();
+    // 持久化展开状态(防抖由调用频率自然限流)
+    setSession(SESSION_KEYS.treeExpanded, [...newExpanded]).catch(() => {});
   },
 
   setFilter: (f) => {
@@ -116,7 +132,10 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
     get().recomputeVisible();
   },
 
-  setSelected: (path) => set({ selectedPath: path }),
+  setSelected: (path) => {
+    set({ selectedPath: path });
+    if (path) setSession(SESSION_KEYS.treeSelected, path).catch(() => {});
+  },
 
   recomputeVisible: () => {
     const { treeData, expandedPaths, filter } = get();

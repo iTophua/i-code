@@ -46,6 +46,8 @@ export const SESSION_KEYS = {
   sidebarWidth: "sidebarWidth",
   sidebarVisible: "sidebarVisible",
   sidebarView: "sidebarView",
+  treeExpanded: "treeExpanded",
+  treeSelected: "treeSelected",
 } as const;
 
 /**
