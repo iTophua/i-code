@@ -72,12 +72,13 @@ fn is_ignored(name: &str, path: &Path, root: &Path, patterns: &[String]) -> bool
 
 /// 列出目录的直接子条目(单层,前端懒加载展开)
 #[tauri::command]
-pub fn list_directory(dir_path: String) -> Result<Vec<DirEntry>, String> {
+pub fn list_directory(dir_path: String, show_hidden: Option<bool>) -> Result<Vec<DirEntry>, String> {
     let root = PathBuf::from(&dir_path);
     if !root.is_dir() {
         return Err(format!("不是目录: {}", dir_path));
     }
     let patterns = load_ignore_patterns(&root);
+    let show_hidden = show_hidden.unwrap_or(false);
 
     let mut entries: Vec<DirEntry> = Vec::new();
     let read = fs::read_dir(&root).map_err(|e| e.to_string())?;
@@ -86,6 +87,10 @@ pub fn list_directory(dir_path: String) -> Result<Vec<DirEntry>, String> {
         let name = entry.file_name().to_string_lossy().to_string();
         let path = entry.path();
         if is_ignored(&name, &path, &root, &patterns) {
+            continue;
+        }
+        // 隐藏文件过滤
+        if !show_hidden && name.starts_with('.') && name != "." && name != ".." {
             continue;
         }
         let meta = entry.metadata().map_err(|e| e.to_string())?;

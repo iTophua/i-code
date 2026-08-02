@@ -71,6 +71,9 @@ export default function App() {
     (async () => {
       // 先加载设置
       await useSettingsStore.getState().load();
+      // 同步隐藏文件设置到文件树
+      const showHidden = useSettingsStore.getState().showHiddenFiles;
+      useFileTreeStore.getState().setShowHidden(showHidden);
       // 恢复布局
       const savedWidth = await getSession<number>(SESSION_KEYS.sidebarWidth);
       if (savedWidth) setSidebarWidth(savedWidth);

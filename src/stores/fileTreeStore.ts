@@ -29,12 +29,14 @@ interface FileTreeStore {
   expandedPaths: Set<string>;
   filter: string;
   selectedPath: string | null;
+  showHidden: boolean;
 
   setRootPath: (path: string) => Promise<void>;
   refreshTree: () => Promise<void>;
   toggleNode: (node: VisibleNode) => Promise<void>;
   setFilter: (f: string) => void;
   setSelected: (path: string | null) => void;
+  setShowHidden: (v: boolean) => void;
   recomputeVisible: () => void;
 }
 
@@ -45,17 +47,23 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
   expandedPaths: new Set(),
   filter: "",
   selectedPath: null,
+  showHidden: false,
 
   setRootPath: async (path) => {
     set({ rootPath: path, treeData: [], expandedPaths: new Set(), filter: "" });
     await get().refreshTree();
   },
 
+  setShowHidden: (v: boolean) => {
+    set({ showHidden: v });
+    get().refreshTree();
+  },
+
   refreshTree: async () => {
-    const { rootPath, expandedPaths } = get();
+    const { rootPath, expandedPaths, showHidden } = get();
     if (!rootPath) return;
     try {
-      const entries = (await invoke("list_directory", {
+      const entries = (await invoke("list_directory", { showHidden, 
         dirPath: rootPath,
       })) as TreeNode[];
       // 重新加载之前展开的目录
@@ -70,7 +78,7 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
 
   toggleNode: async (node) => {
     if (!node.isDir) return;
-    const { expandedPaths, treeData } = get();
+    const { expandedPaths, treeData, showHidden } = get();
     const newExpanded = new Set(expandedPaths);
 
     if (expandedPaths.has(node.path)) {
@@ -81,7 +89,7 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
       const cached = findNode(treeData, node.path);
       if (cached && !cached.loaded) {
         try {
-          const children = (await invoke("list_directory", {
+          const children = (await invoke("list_directory", { showHidden, 
             dirPath: node.path,
           })) as TreeNode[];
           cached.children = children;
@@ -157,10 +165,11 @@ function hasDescendantMatch(node: TreeNode, fl: string): boolean {
 
 /** 重新加载所有已展开目录的子项 */
 async function reloadExpanded(nodes: TreeNode[], expanded: Set<string>) {
+  const { showHidden } = useFileTreeStore.getState();
   for (const node of nodes) {
     if (node.isDir && expanded.has(node.path)) {
       try {
-        node.children = (await invoke("list_directory", {
+        node.children = (await invoke("list_directory", { showHidden,
           dirPath: node.path,
         })) as TreeNode[];
         node.loaded = true;

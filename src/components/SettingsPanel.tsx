@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLayoutStore } from "../stores/layoutStore";
 import type { SettingsCategory } from "../stores/layoutStore";
 import { useSettingsStore } from "../stores/settingsStore";
+import { useFileTreeStore } from "../stores/fileTreeStore";
 import { useLspStore } from "../stores/lspStore";
 import { AppSelect } from "./AppSelect";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -175,7 +176,10 @@ function WindowSettings({ s }: { s: S }) {
         <Toggle value={s.restoreOnStartup} onChange={(v) => s.update("restoreOnStartup", v)} />
       </Row>
       <Row label="显示隐藏文件" desc="以 . 开头的文件和目录">
-        <Toggle value={s.showHiddenFiles} onChange={(v) => s.update("showHiddenFiles", v)} />
+        <Toggle value={s.showHiddenFiles} onChange={(v) => {
+          s.update("showHiddenFiles", v);
+          useFileTreeStore.getState().setShowHidden(v);
+        }} />
       </Row>
       <Row label="排除文件/目录" desc="逗号分隔, 不在文件树显示">
         <input className="settings__input" value={s.filesExclude} onChange={(e) => s.update("filesExclude", e.target.value)} placeholder="node_modules, dist" />
