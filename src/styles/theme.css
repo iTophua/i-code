@@ -233,6 +233,10 @@ body,
 .monaco-editor .margin-view-overlays .cgutter {
   background-color: #191919 !important;
 }
+/* 代码内容区: 与行号分隔线之间留间距, 第一列不紧贴 */
+.monaco-editor .view-lines {
+  padding-left: 10px;
+}
 
 body {
   font-family: var(--font-ui);
