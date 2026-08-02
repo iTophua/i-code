@@ -21,7 +21,7 @@ import { NoteQuickTools } from "./NoteQuickTools";
 import { format as sqlFormat } from "sql-formatter";
 import { toast } from "../stores/toastStore";
 import { getExtByLanguage } from "../utils/language";
-import { setActiveEditor } from "../monaco/activeEditor";
+import { setActiveEditor, triggerEditorAction } from "../monaco/activeEditor";
 import { setupColumnDrag } from "../monaco/columnSelect";
 import { tabInScope } from "../utils/tabScope";
 
@@ -137,6 +137,101 @@ export function EditorPane() {
     if (activeTab?.scrollTop) {
       editorInstance.setScrollTop(activeTab.scrollTop);
     }
+
+    // ===== 右键菜单自定义项 =====
+    // 剪切/复制/粘贴/全选(Monaco 自带但确保在右键菜单可见)
+    editorInstance.addAction({
+      id: "ctx-cut",
+      label: "剪切",
+      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyX],
+      contextMenuGroupId: "9_cutcopypaste",
+      contextMenuOrder: 1,
+      run: (ed) => {
+        const sel = ed.getSelection();
+        if (sel && !sel.isEmpty()) {
+          navigator.clipboard.writeText(ed.getModel()!.getValueInRange(sel));
+          ed.executeEdits("ctx-cut", [{ range: sel, text: "" }]);
+        }
+      },
+    });
+    editorInstance.addAction({
+      id: "ctx-copy",
+      label: "复制",
+      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyC],
+      contextMenuGroupId: "9_cutcopypaste",
+      contextMenuOrder: 2,
+      run: (ed) => {
+        const sel = ed.getSelection();
+        if (sel && !sel.isEmpty()) {
+          navigator.clipboard.writeText(ed.getModel()!.getValueInRange(sel));
+        }
+      },
+    });
+    editorInstance.addAction({
+      id: "ctx-paste",
+      label: "粘贴",
+      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyV],
+      contextMenuGroupId: "9_cutcopypaste",
+      contextMenuOrder: 3,
+      run: async (ed) => {
+        const text = await navigator.clipboard.readText();
+        const sel = ed.getSelection();
+        if (sel && text) {
+          ed.executeEdits("ctx-paste", [{ range: sel, text }]);
+        }
+      },
+    });
+    editorInstance.addAction({
+      id: "ctx-select-all",
+      label: "全选",
+      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyA],
+      contextMenuGroupId: "9_cutcopypaste",
+      contextMenuOrder: 4,
+      run: (ed) => {
+        const model = ed.getModel();
+        if (model) {
+          ed.setSelection(model.getFullModelRange());
+        }
+      },
+    });
+
+    // 查找替换
+    editorInstance.addAction({
+      id: "ctx-find",
+      label: "查找",
+      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyF],
+      contextMenuGroupId: "99_search",
+      contextMenuOrder: 1,
+      run: () => { triggerEditorAction("actions.find"); },
+    });
+    editorInstance.addAction({
+      id: "ctx-replace",
+      label: "替换",
+      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF],
+      contextMenuGroupId: "99_search",
+      contextMenuOrder: 2,
+      run: () => { triggerEditorAction("editor.action.startFindReplaceAction"); },
+    });
+
+    // 命令面板
+    editorInstance.addAction({
+      id: "ctx-command-palette",
+      label: "命令面板",
+      keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.KeyP],
+      contextMenuGroupId: "zz_command",
+      contextMenuOrder: 1,
+      run: () => { window.dispatchEvent(new KeyboardEvent("keydown", { metaKey: true, shiftKey: true, key: "p" })); },
+    });
+
+    // 格式化
+    editorInstance.addAction({
+      id: "ctx-format",
+      label: "格式化代码",
+      keybindings: [monacoInstance.KeyMod.Shift | monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF],
+      contextMenuGroupId: "zz_command",
+      contextMenuOrder: 2,
+      run: () => { triggerEditorAction("editor.action.formatDocument"); },
+    });
 
     // 记录光标位置(节流, 供重启恢复)
     let cursorTimer: number | null = null;
