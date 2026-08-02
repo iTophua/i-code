@@ -6,11 +6,14 @@ import type { editor } from "monaco-editor";
  * 背景: standalone Monaco 不内置 column/box selection(VS Code 专有,
  * 见 microsoft/monaco-editor#2035)。
  *
- * 前提: 编辑器 multiCursorModifier 设为 'alt'(Option+点击加光标),
- * Option 不再被 Monaco 抢占, 可放心用于列选。
+ * 实现: 全部用 Monaco 原生鼠标事件(onMouseDown/onMouseMove/onMouseUp),
+ * 不在 DOM 捕获阶段拦截(避免干扰 Monaco 内部 mousedown/mouseup 配对,
+ * 导致触控板点击移动误触发选区)。
  *
- * 实现: DOM 捕获阶段拦截 mousedown, 仅 Alt+左键时接管(阻止 Monaco 默认),
- * 拖拽中用 editor.onMouseMove 原生事件实时取行列(坐标可靠), 对矩形范围每行 setSelections。
+ * 额外: 修复 macOS 触控板「点击 A → 移动 → 点击 B 误选区」问题。
+ * 原因: WKWebView 下触控板点击可能丢失 mouseup, Monaco 停留在「按下」状态,
+ * 后续 mousemove 被当作拖拽选区扩展。这里在编辑器 DOM 上补一个 mouseup
+ * 兜底, 确保每次点击后 Monaco 都能退出「按下」状态。
  */
 export function setupColumnDrag(ed: editor.IStandaloneCodeEditor): () => void {
   let dragging = false;
@@ -18,20 +21,17 @@ export function setupColumnDrag(ed: editor.IStandaloneCodeEditor): () => void {
   const domNode = ed.getDomNode();
   if (!domNode) return () => {};
 
-  // 捕获阶段拦截: 先于 Monaco, 仅 Alt+左键接管为列选
-  const onMouseDownCapture = (e: MouseEvent) => {
-    if (!e.altKey || e.button !== 0) return;
-    const target = ed.getTargetAtClientPoint(e.clientX, e.clientY);
-    const pos = target?.position;
+  // mousedown: 仅 Alt+左键进入列选(用 Monaco 原生事件, 不阻止默认行为)
+  const downSub = ed.onMouseDown((e) => {
+    if (!e.event.altKey || e.event.leftButton === false) return;
+    const pos = e.target?.position;
     if (!pos) return;
-    e.preventDefault();
-    e.stopPropagation();
     dragging = true;
     start = { line: pos.lineNumber, col: pos.column };
     applyRect(pos.lineNumber, pos.column);
-  };
+  });
 
-  // 用 Monaco 原生 mousemove 取行列(比 getTargetAtClientPoint 稳定)
+  // mousemove: 列选拖拽中实时更新
   const moveSub = ed.onMouseMove((e) => {
     if (!dragging || !start) return;
     const pos = e.target?.position;
@@ -39,10 +39,28 @@ export function setupColumnDrag(ed: editor.IStandaloneCodeEditor): () => void {
     applyRect(pos.lineNumber, pos.column);
   });
 
-  const onMouseUp = () => {
+  // mouseup: 结束列选(用 Monaco 原生事件)
+  const upSub = ed.onMouseUp(() => {
+    dragging = false;
+    start = null;
+  });
+
+  /**
+   * macOS 触控板兜底: WKWebView 下触控板点击可能丢失 mouseup 事件,
+   * 导致 Monaco 停留「鼠标按下」状态, 后续移动产生意外选区。
+   * 在编辑器 DOM 上监听 mouseup(冒泡阶段), 确保按下状态被清除。
+   * 另外在 mouseleave 时也清除, 避免鼠标移出编辑器后仍处于按下态。
+   */
+  const onMouseUpDom = () => {
     dragging = false;
     start = null;
   };
+  const onMouseLeave = () => {
+    dragging = false;
+    start = null;
+  };
+  domNode.addEventListener("mouseup", onMouseUpDom);
+  domNode.addEventListener("mouseleave", onMouseLeave);
 
   /** 矩形范围每行设选区(多光标 = 列编辑) */
   const applyRect = (curLine: number, curCol: number) => {
@@ -72,12 +90,12 @@ export function setupColumnDrag(ed: editor.IStandaloneCodeEditor): () => void {
     ed.focus();
   };
 
-  domNode.addEventListener("mousedown", onMouseDownCapture, true);
-  document.addEventListener("mouseup", onMouseUp);
-
   return () => {
-    domNode.removeEventListener("mousedown", onMouseDownCapture, true);
+    downSub.dispose();
     moveSub.dispose();
-    document.removeEventListener("mouseup", onMouseUp);
+    upSub.dispose();
+    domNode.removeEventListener("mouseup", onMouseUpDom);
+    domNode.removeEventListener("mouseleave", onMouseLeave);
   };
 }
+
