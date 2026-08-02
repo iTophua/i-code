@@ -216,23 +216,22 @@ body,
   overflow: hidden;
 }
 
-/* Monaco 编辑器背景: 仅防首次白色闪烁, 不用 !important(否则覆盖行高亮) */
+/* Monaco 编辑器: 背景跟随主题 */
 .monaco-editor,
-.monaco-editor-background {
-  background-color: var(--bg-editor);
+.monaco-editor-background,
+.monaco-editor .margin,
+.monaco-editor .margin-view-overlays,
+.monaco-editor .margin-view-overlays .cgutter,
+.monaco-editor .margin-view-overlays > div {
+  background-color: var(--bg-editor) !important;
 }
 .monaco-editor .inputarea.ime-input {
   background-color: transparent;
 }
-/* 行号栏: 跟随主题(!important 覆盖 Monaco 内联样式; 不影响行高亮层) */
 .monaco-editor .margin {
-  background-color: var(--bg-editor) !important;
   border-right: 1px solid var(--border-subtle);
 }
-.monaco-editor .margin-view-overlays .cgutter {
-  background-color: var(--bg-editor) !important;
-}
-/* 当前行高亮: 确保 theme 的 lineHighlightBackground 可见(不被背景层覆盖) */
+/* 当前行高亮: 确保 theme 的 lineHighlightBackground 可见 */
 .monaco-editor .view-overlays .current-line {
   background-color: var(--editor-line-highlight) !important;
 }
