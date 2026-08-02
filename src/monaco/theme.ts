@@ -144,7 +144,7 @@ export function getEditorOptions(
       indentation: true,
     },
     scrollBeyondLastLine: false,
-    padding: { top: 8, bottom: 8 },
+    padding: { top: 12, bottom: 12, left: 16 },
     // ===== 多光标 / 列选择编辑 =====
     // multiCursorModifier: 'ctrlCmd' → Cmd+点击加光标(Monaco 默认 alt 会让 Option 冲突);
     //                       Option(Alt) 让给 setupColumnDrag 做矩形列选拖拽
