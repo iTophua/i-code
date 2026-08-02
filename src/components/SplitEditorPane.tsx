@@ -17,9 +17,9 @@ export function SplitEditorPane() {
   const handleMount: OnMount = (ed, monaco) => {
     defineIThemes(monaco);
     monaco.editor.setTheme(ICODE_DARK_THEME);
-    // 显式设置多光标/列选(同主编辑器)
+    // 多光标 modifier 用 ctrlCmd(Cmd+点击加光标), Option 让给列选(同主编辑器)
     ed.updateOptions({
-      multiCursorModifier: "alt",
+      multiCursorModifier: "ctrlCmd",
       columnSelection: false,
       multiCursorPaste: "full",
     });

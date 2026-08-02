@@ -96,10 +96,10 @@ export function EditorPane() {
     // 双保险: 每次挂载都确保主题已注册并应用(消除首次白色)
     defineIThemes(monacoInstance);
     monacoInstance.editor.setTheme(ICODE_DARK_THEME);
-    // 多光标: Alt/Option + 点击加光标; standalone Monaco 不支持拖拽框选,
-    // 由下方 setupColumnDrag 手动实现 Option+拖拽矩形多光标
+    // 多光标 modifier 用 ctrlCmd: Cmd+点击加光标, 把 Option 键让给列选(见 setupColumnDrag),
+    // 避免两者在 Alt+mousedown 上冲突(Monaco 默认 alt 会抢先加光标)
     editorInstance.updateOptions({
-      multiCursorModifier: "alt",
+      multiCursorModifier: "ctrlCmd",
       columnSelection: false,
       multiCursorPaste: "full",
     });

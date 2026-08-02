@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useLayoutStore } from "../stores/layoutStore";
 import { useEditorStore } from "../stores/editorStore";
 import { triggerEditorAction } from "../monaco/activeEditor";
+import { toast } from "../stores/toastStore";
 import { Search } from "lucide-react";
 import "../styles/command-palette.css";
 
@@ -77,9 +78,15 @@ export function CommandPalette() {
       },
       {
         id: "mc-add-next",
-        label: "将下一个匹配项添加到选择",
+        label: "将下一个匹配项添加到选择 (Cmd+D)",
         shortcut: "Cmd+D",
         action: () => triggerEditorAction("editor.action.addSelectionToNextFindMatch"),
+      },
+      {
+        id: "mc-add-cursor-click",
+        label: "加光标: Cmd + 点击任意位置",
+        shortcut: "Cmd+Click",
+        action: () => toast.info("按住 Cmd 并点击编辑器任意位置即可加光标"),
       },
       {
         id: "mc-select-all-matches",

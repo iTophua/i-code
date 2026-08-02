@@ -146,13 +146,11 @@ export function getEditorOptions(
     scrollBeyondLastLine: false,
     padding: { top: 8, bottom: 8 },
     // ===== 多光标 / 列选择编辑 =====
-    // multiCursorModifier: 'alt' → 按住 Option(Alt) 拖拽 = 矩形列选;
-    //                      Option + 点击 = 在任意位置加光标(与 VS Code 默认一致)
+    // multiCursorModifier: 'ctrlCmd' → Cmd+点击加光标(Monaco 默认 alt 会让 Option 冲突);
+    //                       Option(Alt) 让给 setupColumnDrag 做矩形列选拖拽
     // multiCursorPaste: 多光标下粘贴按各自光标分行粘贴
-    // 注: columnSelection 保持 false(默认), 它控制的是键盘方向键是否进入列模式,
-    //     开启会让普通 Shift+方向键 变成方块选择, 干扰正常编辑。
     columnSelection: false,
-    multiCursorModifier: "alt",
+    multiCursorModifier: "ctrlCmd",
     multiCursorPaste: "full",
     ...overrides,
   };
