@@ -61,6 +61,7 @@ export function CommandPalette() {
       { id: "view-problems", label: "视图: 问题", action: () => layout.setPanelView("problems") },
       { id: "close-tab", label: "关闭当前标签", shortcut: "Cmd+W", action: () => { if (editor.activeTabId) editor.closeTab(editor.activeTabId); } },
       { id: "reopen-closed", label: "恢复关闭的标签", shortcut: "Cmd+Shift+T", action: editor.reopenClosed },
+      { id: "open-settings", label: "打开设置", action: () => layout.setSidebarView("settings") },
     ];
   }, [open]);
 

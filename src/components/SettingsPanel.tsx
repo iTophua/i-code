@@ -119,6 +119,9 @@ function EditorSettings({ s }: { s: S }) {
         <Row label="字体连字" desc="需字体支持(如 Fira Code)">
           <Toggle value={s.fontLigatures} onChange={(v) => s.update("fontLigatures", v)} />
         </Row>
+        <Row label="显示空白字符" desc="显示空格/制表符">
+          <Toggle value={s.showWhitespace} onChange={(v) => s.update("showWhitespace", v)} />
+        </Row>
       </Group>
       <Group title="编辑">
         <Row label="Tab 宽度">

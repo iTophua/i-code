@@ -15,6 +15,7 @@ export interface Settings {
   wordWrap: "on" | "off";
   minimap: boolean;
   fontLigatures: boolean;
+  showWhitespace: boolean;
   autoSave: "off" | "onFocusChange" | "afterDelay";
 
   // —— 主题 ——
@@ -43,6 +44,7 @@ const DEFAULTS: Settings = {
   wordWrap: "off",
   minimap: true,
   fontLigatures: false,
+  showWhitespace: false,
   autoSave: "off",
 
   theme: "dark",

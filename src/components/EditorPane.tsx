@@ -38,14 +38,23 @@ export function EditorPane() {
   const activeTab = tabs.find((t) => t.id === activeTabId);
 
   // 从设置构建编辑器选项(响应设置变化)
+  // 按语言覆盖: SQL 默认不换行, Markdown 默认换行
+  const langOverrides: Record<string, { wordWrap?: "on" | "off" }> = {
+    sql: { wordWrap: "off" },
+    markdown: { wordWrap: "on" },
+    json: { wordWrap: "off" },
+  };
+  const currentLang = activeTab?.language || "";
+  const langOverride = langOverrides[currentLang] || {};
   const editorOpts = getEditorOptions({
     fontFamily: settings.fontFamily,
     fontSize: settings.fontSize,
     lineHeight: Math.round(settings.fontSize * settings.lineHeight),
     tabSize: settings.tabSize,
-    wordWrap: settings.wordWrap,
+    wordWrap: langOverride.wordWrap || settings.wordWrap,
     minimap: { enabled: settings.minimap },
     fontLigatures: settings.fontLigatures,
+    renderWhitespace: settings.showWhitespace ? "all" : "selection",
   });
 
   // 切换到 md 文件时, 默认重置为仅预览模式
