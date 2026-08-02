@@ -159,6 +159,33 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
   animation: dialog-pop 0.14s ease;
 }
+
+/* 右上角关闭按钮(替代底部"取消") */
+.app-dialog-close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  outline: none;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.app-dialog-close:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+.app-dialog-close:focus-visible {
+  box-shadow: 0 0 0 2px var(--border-focus);
+}
 .app-dialog-overlay {
   position: fixed;
   inset: 0;

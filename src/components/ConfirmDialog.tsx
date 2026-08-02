@@ -1,4 +1,5 @@
 import * as Dialog from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
 import "./ui/radix-theme.css";
 
 interface Props {
@@ -8,7 +9,7 @@ interface Props {
   confirmLabel?: string;
   cancelLabel?: string;
   danger?: boolean;
-  /** 可选的第三按钮(主操作, 如"保存")。提供时按 [取消][确认][第三] 排列 */
+  /** 可选的第三按钮(主操作, 如"保存")。提供时按 [确认][第三] 排列 */
   tertiaryLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
@@ -34,17 +35,19 @@ export function ConfirmDialog({
         <Dialog.Overlay className="app-dialog-overlay" />
         <Dialog.Content className="app-dialog-content">
           <Dialog.Title className="app-dialog-title">{title}</Dialog.Title>
+          {/* 右上角关闭按钮(与"取消"等效) */}
+          <button
+            className="app-dialog-close"
+            onClick={onCancel}
+            title={cancelLabel}
+            aria-label={cancelLabel}
+          >
+            <X size={16} strokeWidth={1.75} />
+          </button>
           <Dialog.Description className="app-dialog-description" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
             {message}
           </Dialog.Description>
           <div className="app-dialog-actions">
-            <button
-              className="btn btn--secondary"
-              onClick={onCancel}
-              autoFocus={hasTertiary}
-            >
-              {cancelLabel}
-            </button>
             <button
               className={`btn ${danger ? "btn--danger" : "btn--primary"}`}
               onClick={onConfirm}
