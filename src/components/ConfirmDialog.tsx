@@ -8,8 +8,11 @@ interface Props {
   confirmLabel?: string;
   cancelLabel?: string;
   danger?: boolean;
+  /** 可选的第三按钮(主操作, 如"保存")。提供时按 [取消][确认][第三] 排列 */
+  tertiaryLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
+  onTertiary?: () => void;
 }
 
 export function ConfirmDialog({
@@ -19,9 +22,12 @@ export function ConfirmDialog({
   confirmLabel = "确定",
   cancelLabel = "取消",
   danger = false,
+  tertiaryLabel,
   onConfirm,
   onCancel,
+  onTertiary,
 }: Props) {
+  const hasTertiary = !!onTertiary;
   return (
     <Dialog.Root open={open} onOpenChange={(o) => !o && onCancel()}>
       <Dialog.Portal>
@@ -32,16 +38,25 @@ export function ConfirmDialog({
             {message}
           </Dialog.Description>
           <div className="app-dialog-actions">
-            <button className="btn btn--secondary" onClick={onCancel}>
+            <button
+              className="btn btn--secondary"
+              onClick={onCancel}
+              autoFocus={hasTertiary}
+            >
               {cancelLabel}
             </button>
             <button
               className={`btn ${danger ? "btn--danger" : "btn--primary"}`}
               onClick={onConfirm}
-              autoFocus
+              autoFocus={!hasTertiary}
             >
               {confirmLabel}
             </button>
+            {hasTertiary && (
+              <button className="btn btn--primary" onClick={onTertiary}>
+                {tertiaryLabel}
+              </button>
+            )}
           </div>
         </Dialog.Content>
       </Dialog.Portal>

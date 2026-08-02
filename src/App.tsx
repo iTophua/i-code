@@ -10,6 +10,7 @@ import { VerticalResizer } from "./components/Resizer";
 import { useLayoutStore } from "./stores/layoutStore";
 import { useFileTreeStore } from "./stores/fileTreeStore";
 import { useEditorStore } from "./stores/editorStore";
+import { useNotesStore } from "./stores/notesStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { monaco } from "./monaco/setup";
 import { ICODE_DARK_THEME, ICODE_LIGHT_THEME } from "./monaco/theme";
@@ -54,6 +55,7 @@ export default function App() {
   } = useLayoutStore();
   const setRootPath = useFileTreeStore((s) => s.setRootPath);
   const [closeConfirm, setCloseConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [savingTab, setSavingTab] = useState(false);
   const [restored, setRestored] = useState(false);
 
   // 打开文件夹
@@ -74,6 +76,33 @@ export default function App() {
       console.error("打开文件夹失败:", e);
     }
   }, [setRootPath, setWorkspaceRoot]);
+
+  // 关闭前保存当前 Tab(文件写磁盘, 便签存 SQLite), 成功后关闭
+  const saveAndClose = useCallback(async (id: string) => {
+    setSavingTab(true);
+    try {
+      const tab = useEditorStore
+        .getState()
+        .tabs.find((t) => t.id === id);
+      if (!tab) {
+        useEditorStore.getState().closeTab(id);
+        return;
+      }
+      if (tab.kind === "note" && tab.noteId) {
+        await useNotesStore.getState().updateNote(tab.noteId, { content: tab.content });
+      } else if (tab.kind === "file") {
+        await invoke("write_file", { filePath: tab.path, content: tab.content });
+      }
+      useEditorStore.getState().markSaved(id);
+      useEditorStore.getState().closeTab(id);
+    } catch (e) {
+      console.error("保存失败:", e);
+      toast.error(`保存失败: ${e}`);
+    } finally {
+      setSavingTab(false);
+      setCloseConfirm(null);
+    }
+  }, []);
 
   // ===== 启动时恢复会话 + 加载设置 =====
   useEffect(() => {
@@ -361,16 +390,21 @@ export default function App() {
         title="未保存的修改"
         message={
           closeConfirm
-            ? `"${closeConfirm.name}" 有未保存的修改，关闭后将丢失。\n是否不保存直接关闭？`
+            ? `"${closeConfirm.name}" 有未保存的修改。\n要保存后再关闭吗？`
             : ""
         }
+        cancelLabel="取消"
         confirmLabel="不保存"
+        tertiaryLabel={savingTab ? "保存中..." : "保存"}
         danger
         onConfirm={() => {
           if (closeConfirm) useEditorStore.getState().closeTab(closeConfirm.id);
           setCloseConfirm(null);
         }}
         onCancel={() => setCloseConfirm(null)}
+        onTertiary={() => {
+          if (closeConfirm) saveAndClose(closeConfirm.id);
+        }}
       />
       <ToastContainer />
       <CommandPalette />
