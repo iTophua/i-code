@@ -13,9 +13,28 @@ interface Props {
   onChange: (value: string) => void;
   placeholder?: string;
   title?: string;
+  /** inline=true 时不使用 Portal(在 Radix Dialog 内使用, 避免 focus trap 冲突) */
+  inline?: boolean;
 }
 
-export function AppSelect({ value, options, onChange, placeholder, title }: Props) {
+export function AppSelect({ value, options, onChange, placeholder, title, inline }: Props) {
+  const content = (
+    <Select.Content className="app-select__content" position="popper" sideOffset={4}>
+      <Select.ScrollUpButton />
+      <Select.Viewport>
+        {options.map((opt) => (
+          <Select.Item key={opt.value} value={opt.value} className="app-select__item">
+            <Select.ItemText>{opt.label}</Select.ItemText>
+            <Select.ItemIndicator style={{ marginLeft: 8, display: "flex", alignItems: "center" }}>
+              <Check size={12} />
+            </Select.ItemIndicator>
+          </Select.Item>
+        ))}
+      </Select.Viewport>
+      <Select.ScrollDownButton />
+    </Select.Content>
+  );
+
   return (
     <Select.Root value={value} onValueChange={onChange}>
       <Select.Trigger className="app-select__trigger" title={title}>
@@ -24,22 +43,7 @@ export function AppSelect({ value, options, onChange, placeholder, title }: Prop
           <ChevronDown size={12} />
         </Select.Icon>
       </Select.Trigger>
-      <Select.Portal container={undefined}>
-        <Select.Content className="app-select__content" position="popper" sideOffset={4} style={{ zIndex: 10010 }}>
-          <Select.ScrollUpButton />
-          <Select.Viewport>
-            {options.map((opt) => (
-              <Select.Item key={opt.value} value={opt.value} className="app-select__item">
-                <Select.ItemText>{opt.label}</Select.ItemText>
-                <Select.ItemIndicator style={{ marginLeft: 8, display: "flex", alignItems: "center" }}>
-                  <Check size={12} />
-                </Select.ItemIndicator>
-              </Select.Item>
-            ))}
-          </Select.Viewport>
-          <Select.ScrollDownButton />
-        </Select.Content>
-      </Select.Portal>
+      {inline ? content : <Select.Portal>{content}</Select.Portal>}
     </Select.Root>
   );
 }
