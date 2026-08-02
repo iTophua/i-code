@@ -30,6 +30,8 @@ interface LayoutStore {
   mdView: MdViewMode;
   /** 设置分类(设置面板激活时) */
   settingsCategory: SettingsCategory;
+  /** Zen 模式(全屏无干扰) */
+  zenMode: boolean;
   /** 当前项目根目录 */
   workspaceRoot: string | null;
 
@@ -42,6 +44,7 @@ interface LayoutStore {
   cycleMdView: () => void;
   setMdView: (v: MdViewMode) => void;
   setSettingsCategory: (c: SettingsCategory) => void;
+  toggleZen: () => void;
   setWorkspaceRoot: (root: string | null) => void;
 }
 
@@ -53,6 +56,7 @@ export const useLayoutStore = create<LayoutStore>((set, get) => ({
   panelHeight: 220,
   mdView: "preview", // md 文件默认仅预览
   settingsCategory: "theme",
+  zenMode: false,
   workspaceRoot: null,
 
   setSidebarView: (view) => {
@@ -75,5 +79,12 @@ export const useLayoutStore = create<LayoutStore>((set, get) => ({
     })),
   setMdView: (v) => set({ mdView: v }),
   setSettingsCategory: (c) => set({ settingsCategory: c }),
+  toggleZen: () =>
+    set((s) => ({
+      zenMode: !s.zenMode,
+      // 进入 Zen 时记住状态, 退出时恢复
+      sidebarVisible: s.zenMode ? true : false,
+      panelVisible: s.zenMode ? s.panelVisible : false,
+    })),
   setWorkspaceRoot: (root) => set({ workspaceRoot: root }),
 }));

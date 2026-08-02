@@ -33,11 +33,13 @@ export default function App() {
     sidebarWidth,
     sidebarView,
     panelVisible,
+    zenMode,
     setSidebarView,
     setWorkspaceRoot,
     setSidebarWidth,
     toggleSidebar,
     togglePanel,
+    toggleZen,
   } = useLayoutStore();
   const setRootPath = useFileTreeStore((s) => s.setRootPath);
   const [closeConfirm, setCloseConfirm] = useState<{ id: string; name: string } | null>(null);
@@ -201,6 +203,12 @@ export default function App() {
         togglePanel();
         return;
       }
+      // Cmd/Ctrl+K Z → Zen 模式
+      if (mod && e.key.toLowerCase() === "z" && e.shiftKey) {
+        e.preventDefault();
+        toggleZen();
+        return;
+      }
     };
     window.addEventListener("keydown", onKey);
 
@@ -217,10 +225,10 @@ export default function App() {
   }, [handleOpenFolder, toggleSidebar, setSidebarView, togglePanel]);
 
   return (
-    <div className="app">
-      <TitleBar />
+    <div className={`app ${zenMode ? "app--zen" : ""}`}>
+      {!zenMode && <TitleBar />}
       <div className="app__body">
-        <ActivityBar />
+        {!zenMode && <ActivityBar />}
         {sidebarVisible && (
           <>
             <aside className="app__sidebar" style={{ width: sidebarWidth }}>
@@ -236,6 +244,15 @@ export default function App() {
             <>
               <EditorTabs />
               <div className="app__editor-area">
+                {zenMode && (
+                  <button
+                    className="zen-exit"
+                    onClick={toggleZen}
+                    title="退出 Zen 模式 (Cmd+Shift+Z)"
+                  >
+                    退出 Zen
+                  </button>
+                )}
                 <EditorPane />
               </div>
               {panelVisible && (
@@ -247,7 +264,7 @@ export default function App() {
           )}
         </main>
       </div>
-      <StatusBar />
+      {!zenMode && <StatusBar />}
       <ConfirmDialog
         open={closeConfirm !== null}
         title="未保存的修改"

@@ -140,3 +140,27 @@
   color: var(--fg-muted);
   font-size: var(--fs-sm);
 }
+
+/* Zen 模式退出按钮 */
+.zen-exit {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-3);
+  z-index: 100;
+  height: 26px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  background: var(--bg-list-inactive);
+  color: var(--fg-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+.zen-exit:hover {
+  opacity: 1;
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
