@@ -7,7 +7,7 @@ import {
   NotesIcon,
   ToolsIcon,
 } from "./Icons";
-import { Settings } from "lucide-react";
+import { Settings, TerminalSquare } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNotesStore } from "../stores/notesStore";
 import { useEditorStore } from "../stores/editorStore";
@@ -93,6 +93,13 @@ export function ActivityBar() {
       {AUX_ITEMS.map(renderItem)}
 
       <div className="activity-bar__spacer" />
+      <button
+        className={`activity-item ${useLayoutStore.getState().panelVisible ? "activity-item--active" : ""}`}
+        title="终端 (Ctrl+`)"
+        onClick={() => useLayoutStore.getState().togglePanel()}
+      >
+        <TerminalSquare size={20} strokeWidth={1.5} />
+      </button>
       <button
         className={`activity-item ${useLayoutStore.getState().settingsOpen ? "activity-item--active" : ""}`}
         title="设置 (Cmd+,)"

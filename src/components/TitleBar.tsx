@@ -1,10 +1,9 @@
 import { useLayoutStore } from "../stores/layoutStore";
 import { useGitStore } from "../stores/gitStore";
-import { TerminalIcon } from "./Icons";
 import "../styles/titlebar.css";
 
 export function TitleBar() {
-  const { panelVisible, togglePanel, toggleSidebar } = useLayoutStore();
+  const { toggleSidebar } = useLayoutStore();
   const { branch, changes } = useGitStore();
 
   return (
@@ -29,13 +28,6 @@ export function TitleBar() {
           title="切换侧栏 (Cmd+B)"
         >
           ☰
-        </button>
-        <button
-          className={`titlebar__btn ${panelVisible ? "titlebar__btn--active" : ""}`}
-          onClick={togglePanel}
-          title="终端 (Ctrl+`)"
-        >
-          <TerminalIcon size={15} />
         </button>
       </div>
     </div>
