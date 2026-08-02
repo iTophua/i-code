@@ -3,6 +3,7 @@ import { useLayoutStore } from "../stores/layoutStore";
 import { getFileIconType } from "../utils/language";
 import { FileIcon } from "./FileIcon";
 import { CloseIcon, NotesIcon, SplitViewIcon, PreviewOnlyIcon, CodeOnlyIcon } from "./Icons";
+import { ArrowRightFromLine } from "lucide-react";
 import "../styles/tabs.css";
 
 export function EditorTabs() {
@@ -84,6 +85,21 @@ export function EditorTabs() {
           )}
         </button>
       )}
+      {/* 分栏按钮 */}
+      <button
+        className="tabs__md-toggle"
+        onClick={() => {
+          const { splitEnabled, toggleSplit, activeTabId, moveToSplit } = useEditorStore.getState();
+          if (!splitEnabled && activeTabId) {
+            moveToSplit(activeTabId);
+          } else {
+            toggleSplit();
+          }
+        }}
+        title={useEditorStore.getState().splitEnabled ? "关闭分栏" : "分栏编辑 (Cmd+\\)"}
+      >
+        <ArrowRightFromLine size={14} />
+      </button>
     </div>
   );
 }

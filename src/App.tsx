@@ -21,6 +21,8 @@ import { ProblemsPanel } from "./components/ProblemsPanel";
 import { ToastContainer } from "./components/Toast";
 import { CommandPalette } from "./components/CommandPalette";
 import { Breadcrumb } from "./components/Breadcrumb";
+import { SplitEditorTabs } from "./components/SplitEditorTabs";
+import { SplitEditorPane } from "./components/SplitEditorPane";
 import { useState } from "react";
 import {
   setSession,
@@ -252,6 +254,12 @@ export default function App() {
         togglePanel();
         return;
       }
+          // Cmd/Ctrl+\ → 切换分栏
+      if (mod && e.key === "\\" && !e.shiftKey) {
+        e.preventDefault();
+        useEditorStore.getState().toggleSplit();
+        return;
+      }
       // Cmd/Ctrl+K Z → Zen 模式
       if (mod && e.key.toLowerCase() === "z" && e.shiftKey) {
         e.preventDefault();
@@ -293,7 +301,7 @@ export default function App() {
             <>
               <EditorTabs />
               <Breadcrumb />
-              <div className="app__editor-area">
+              <div className={`app__editor-area ${useEditorStore.getState().splitEnabled ? "app__editor-area--split" : ""}`}>
                 {zenMode && (
                   <button
                     className="zen-exit"
@@ -305,6 +313,16 @@ export default function App() {
                 )}
                 <EditorPane />
               </div>
+              {/* 分栏第二组 */}
+              {useEditorStore.getState().splitEnabled && (
+                <>
+                  <div className="app__split-divider" />
+                  <div className="app__editor-area app__editor-area--split">
+                    <SplitEditorTabs />
+                    <SplitEditorPane />
+                  </div>
+                </>
+              )}
               {panelVisible && (
                 <div className="app__panel">
                   <div className="app__panel-tabs">

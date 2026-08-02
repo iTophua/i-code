@@ -195,3 +195,14 @@
   background: var(--bg-list-inactive);
   color: var(--fg-primary);
 }
+
+/* ============ 编辑器分栏 ============ */
+.app__editor-area--split {
+  flex: 1;
+}
+.app__split-divider {
+  width: 1px;
+  background: var(--border-base);
+  flex-shrink: 0;
+  cursor: col-resize;
+}

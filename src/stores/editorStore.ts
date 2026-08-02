@@ -89,12 +89,33 @@ interface EditorStore {
   reopenClosed: () => void;
   /** 判断路径是否有未保存修改(给文件树标记用) */
   isDirty: (path: string) => boolean;
+
+  // ===== 分栏 =====
+  /** 是否分栏 */
+  splitEnabled: boolean;
+  /** 第二组的 tabs */
+  splitTabs: EditorTab[];
+  /** 第二组激活的 Tab */
+  splitActiveId: string | null;
+  /** 切换分栏 */
+  toggleSplit: () => void;
+  /** 移动 Tab 到另一组 */
+  moveToSplit: (id: string) => void;
+  /** 从第二组移回第一组 */
+  moveFromSplit: (id: string) => void;
+  /** 第二组激活 */
+  setSplitActive: (id: string) => void;
+  /** 关闭第二组 Tab */
+  closeSplitTab: (id: string) => void;
 }
 
 export const useEditorStore = create<EditorStore>((set, get) => ({
   tabs: [],
   activeTabId: null,
   recentlyClosed: [],
+  splitEnabled: false,
+  splitTabs: [],
+  splitActiveId: null,
 
   openFile: ({ path, name, content, language, preview = true }) => {
     const { tabs } = get();
@@ -343,6 +364,70 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
 
   isDirty: (path) => {
-    return get().tabs.some((t) => t.path === path && t.isDirty);
+    const all = [...get().tabs, ...get().splitTabs];
+    return all.some((t) => t.path === path && t.isDirty);
+  },
+
+  // ===== 分栏实现 =====
+  toggleSplit: () =>
+    set((s) => ({
+      splitEnabled: !s.splitEnabled,
+      // 关闭分栏时, 把第二组 Tab 移回第一组
+      ...(s.splitEnabled
+        ? {
+            tabs: [...s.tabs, ...s.splitTabs],
+            splitTabs: [],
+            splitActiveId: null,
+          }
+        : {}),
+    })),
+
+  moveToSplit: (id) => {
+    const { tabs, splitTabs } = get();
+    const tab = tabs.find((t) => t.id === id);
+    if (!tab) return;
+    set({
+      tabs: tabs.filter((t) => t.id !== id),
+      splitTabs: [...splitTabs, tab],
+      splitActiveId: tab.id,
+      splitEnabled: true,
+    });
+    // 修正第一组激活
+    const { tabs: remaining } = get();
+    if (get().activeTabId === id) {
+      set({ activeTabId: remaining[remaining.length - 1]?.id ?? null });
+    }
+  },
+
+  moveFromSplit: (id) => {
+    const { tabs, splitTabs } = get();
+    const tab = splitTabs.find((t) => t.id === id);
+    if (!tab) return;
+    set({
+      splitTabs: splitTabs.filter((t) => t.id !== id),
+      tabs: [...tabs, tab],
+      activeTabId: tab.id,
+    });
+    // 修正第二组激活
+    const { splitTabs: remaining } = get();
+    if (get().splitActiveId === id) {
+      set({ splitActiveId: remaining[remaining.length - 1]?.id ?? null });
+    }
+  },
+
+  setSplitActive: (id) => set({ splitActiveId: id }),
+
+  closeSplitTab: (id) => {
+    const { splitTabs, splitActiveId } = get();
+    const closed = splitTabs.find((t) => t.id === id);
+    const newSplit = splitTabs.filter((t) => t.id !== id);
+    let newActive = splitActiveId;
+    if (splitActiveId === id) {
+      newActive = newSplit[newSplit.length - 1]?.id ?? null;
+    }
+    const recentlyClosed = closed
+      ? [closed, ...get().recentlyClosed].slice(0, 20)
+      : get().recentlyClosed;
+    set({ splitTabs: newSplit, splitActiveId: newActive, recentlyClosed });
   },
 }));
