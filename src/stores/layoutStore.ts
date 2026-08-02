@@ -24,6 +24,8 @@ interface LayoutStore {
   sidebarWidth: number;
   /** 底部面板是否可见 */
   panelVisible: boolean;
+  /** 底部面板当前视图: terminal | problems */
+  panelView: "terminal" | "problems";
   /** 底部面板高度 */
   panelHeight: number;
   /** Markdown 视图模式: split(分屏) | preview(仅预览) | source(仅源码) */
@@ -39,6 +41,7 @@ interface LayoutStore {
   toggleSidebar: () => void;
   setSidebarWidth: (w: number) => void;
   togglePanel: () => void;
+  setPanelView: (view: "terminal" | "problems") => void;
   setPanelHeight: (h: number) => void;
   /** 三态循环: split → preview → source → split */
   cycleMdView: () => void;
@@ -53,6 +56,7 @@ export const useLayoutStore = create<LayoutStore>((set, get) => ({
   sidebarVisible: true,
   sidebarWidth: DEFAULT_WIDTH,
   panelVisible: false,
+  panelView: "terminal",
   panelHeight: 220,
   mdView: "preview", // md 文件默认仅预览
   settingsCategory: "theme",
@@ -71,6 +75,8 @@ export const useLayoutStore = create<LayoutStore>((set, get) => ({
   toggleSidebar: () => set((s) => ({ sidebarVisible: !s.sidebarVisible })),
   setSidebarWidth: (w) => set({ sidebarWidth: w }),
   togglePanel: () => set((s) => ({ panelVisible: !s.panelVisible })),
+  setPanelView: (view: "terminal" | "problems") =>
+    set({ panelView: view, panelVisible: true }),
   setPanelHeight: (h) => set({ panelHeight: h }),
   cycleMdView: () =>
     set((s) => ({

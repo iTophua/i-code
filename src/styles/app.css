@@ -164,3 +164,34 @@
   background: var(--bg-list-hover);
   color: var(--fg-primary);
 }
+
+/* 底部面板 Tab 切换 */
+.app__panel-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 30px;
+  padding: 0 var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+.app__panel-tab {
+  height: 22px;
+  padding: 0 var(--space-3);
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  transition: background 0.1s, color 0.1s;
+}
+.app__panel-tab:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-secondary);
+}
+.app__panel-tab--active {
+  background: var(--bg-list-inactive);
+  color: var(--fg-primary);
+}

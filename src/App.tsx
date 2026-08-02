@@ -17,6 +17,7 @@ import { ConfirmDialog } from "./components/ConfirmDialog";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { TitleBar } from "./components/TitleBar";
 import { SettingsContent } from "./components/SettingsPanel";
+import { ProblemsPanel } from "./components/ProblemsPanel";
 import { ToastContainer } from "./components/Toast";
 import { useState } from "react";
 import {
@@ -33,8 +34,10 @@ export default function App() {
     sidebarWidth,
     sidebarView,
     panelVisible,
+    panelView,
     zenMode,
     setSidebarView,
+    setPanelView,
     setWorkspaceRoot,
     setSidebarWidth,
     toggleSidebar,
@@ -257,7 +260,21 @@ export default function App() {
               </div>
               {panelVisible && (
                 <div className="app__panel">
-                  <TerminalPanel />
+                  <div className="app__panel-tabs">
+                    <button
+                      className={`app__panel-tab ${panelView === "terminal" ? "app__panel-tab--active" : ""}`}
+                      onClick={() => setPanelView("terminal")}
+                    >
+                      终端
+                    </button>
+                    <button
+                      className={`app__panel-tab ${panelView === "problems" ? "app__panel-tab--active" : ""}`}
+                      onClick={() => setPanelView("problems")}
+                    >
+                      问题
+                    </button>
+                  </div>
+                  {panelView === "terminal" ? <TerminalPanel /> : <ProblemsPanel />}
                 </div>
               )}
             </>

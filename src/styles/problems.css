@@ -1,0 +1,120 @@
+/* ============ Problems 面板 ============ */
+.problems-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-panel);
+}
+
+.problems-panel__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 30px;
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+.problems-panel__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--fg-secondary);
+}
+.problems-panel__counts {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.problems-panel__count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+}
+.problems-panel__count--error {
+  color: var(--fg-error);
+  background: rgba(244, 135, 113, 0.15);
+}
+.problems-panel__count--warning {
+  color: var(--fg-warning);
+  background: rgba(204, 167, 0, 0.15);
+}
+.problems-panel__count--ok {
+  color: var(--fg-success);
+}
+
+.problems-panel__list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* 分组 */
+.problem-group__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px var(--space-3);
+  font-size: var(--fs-sm);
+  cursor: default;
+}
+.problem-group__name {
+  color: var(--fg-primary);
+  font-weight: 500;
+}
+.problem-group__path {
+  flex: 1;
+  color: var(--fg-muted);
+  font-size: var(--fs-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.problem-group__count {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  background: var(--bg-list-inactive);
+  padding: 0 5px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
+}
+
+/* 问题项 */
+.problem-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px var(--space-3) 3px 24px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.problem-item:hover {
+  background: var(--bg-list-hover);
+}
+.problem-item__icon {
+  flex-shrink: 0;
+}
+.problem-item--error .problem-item__icon {
+  color: var(--fg-error);
+}
+.problem-item--warning .problem-item__icon {
+  color: var(--fg-warning);
+}
+.problem-item--info .problem-item__icon {
+  color: var(--fg-accent-bright);
+}
+.problem-item__msg {
+  flex: 1;
+  color: var(--fg-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.problem-item__pos {
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  flex-shrink: 0;
+}
