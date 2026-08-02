@@ -97,20 +97,26 @@ function parseBlame(output: string): Map<number, BlameInfo> {
   const map = new Map<number, BlameInfo>();
   const lines = output.split("\n");
   let currentLine = 0;
+  let lineCount = 1;
   let currentHash = "";
   let currentAuthor = "";
   let currentTime = "";
   let hasData = false;
 
+  const flush = () => {
+    if (!hasData || currentLine <= 0) return;
+    for (let i = 0; i < lineCount; i++) {
+      map.set(currentLine + i, { hash: currentHash, author: currentAuthor, time: currentTime, line: currentLine + i });
+    }
+  };
+
   for (const line of lines) {
     if (/^[0-9a-f]{40}/.test(line)) {
-      // 保存上一条
-      if (hasData && currentLine > 0) {
-        map.set(currentLine, { hash: currentHash, author: currentAuthor, time: currentTime, line: currentLine });
-      }
+      flush();
       const parts = line.split(/\s+/);
       currentHash = parts[0].slice(0, 8);
       currentLine = parseInt(parts[2]) || 0;
+      lineCount = parts[3] ? parseInt(parts[3]) || 1 : 1;
       currentAuthor = "";
       currentTime = "";
       hasData = false;
@@ -123,10 +129,7 @@ function parseBlame(output: string): Map<number, BlameInfo> {
       currentTime = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
     }
   }
-  // 最后一条
-  if (hasData && currentLine > 0) {
-    map.set(currentLine, { hash: currentHash, author: currentAuthor, time: currentTime, line: currentLine });
-  }
+  flush();
   return map;
 }
 

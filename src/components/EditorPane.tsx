@@ -306,7 +306,6 @@ export function EditorPane() {
 
   // 行内 Blame: 切换显示/隐藏
   const toggleBlame = async () => {
-    // 实时从 ref 取编辑器实例(避免闭包旧值)
     const ed = editorRef.current;
     const tab = useEditorStore.getState().tabs.find((t) => t.id === activeTabId);
     if (!ed || !tab) {
@@ -318,7 +317,9 @@ export function EditorPane() {
       toast.warning("非 Git 仓库");
       return;
     }
-    if (showBlame) {
+    // 用 ref 判断当前是否已显示(避免 state 闭包旧值导致需要点两次)
+    const isShowing = blameDecorationsRef.current.length > 0;
+    if (isShowing) {
       ed.deltaDecorations(blameDecorationsRef.current, []);
       blameDecorationsRef.current = [];
       setShowBlame(false);
@@ -334,7 +335,6 @@ export function EditorPane() {
         toast.warning("未获取到 Blame 数据");
         return;
       }
-      const model = ed.getModel();
       const decos: editor.IModelDeltaDecoration[] = [];
       for (const [line, info] of blameMap) {
         decos.push({
@@ -347,16 +347,17 @@ export function EditorPane() {
       }
       blameDecorationsRef.current = ed.deltaDecorations([], decos);
       setShowBlame(true);
+      toast.success(`已显示代码追溯(${blameMap.size} 行)`);
     } catch (e) {
-      toast.error(`Blame 加载失败: ${e}`);
+      toast.error(`代码追溯加载失败: ${e}`);
     }
   };
 
   const gitItems = activeTab.kind === "file" && useGitStore.getState().repoRoot
     ? [
         { id: "sep-git", label: "", separator: true },
-        { id: "git-blame-inline", label: showBlame ? "隐藏 Blame" : "显示 Blame", onClick: () => toggleBlame() },
-        { id: "git-blame", label: "查看 Blame(新标签)", onClick: () => {
+        { id: "git-blame-inline", label: showBlame ? "隐藏代码追溯" : "显示代码追溯", onClick: () => toggleBlame() },
+        { id: "git-blame", label: "查看代码追溯(新标签)", onClick: () => {
           useEditorStore.getState().openBlame({ filePath: activeTab.path, fileName: activeTab.name });
         } },
         { id: "git-history", label: "查看文件历史", onClick: () => {
@@ -751,19 +752,25 @@ function parseBlameInline(output: string): Map<number, { author: string; time: s
   const map = new Map<number, { author: string; time: string }>();
   const lines = output.split("\n");
   let currentLine = 0;
+  let lineCount = 1; // 这个 commit 覆盖的行数
   let currentAuthor = "";
   let currentTime = "";
   let hasData = false;
 
+  /** 保存当前记录(展开 lineCount 行) */
+  const flush = () => {
+    if (!hasData || currentLine <= 0) return;
+    for (let i = 0; i < lineCount; i++) {
+      map.set(currentLine + i, { author: currentAuthor, time: currentTime });
+    }
+  };
+
   for (const line of lines) {
-    // hash 行(空格分隔): <40hash> <orig> <final> [<num>]
     if (/^[0-9a-f]{40}/.test(line)) {
-      // 保存上一条记录
-      if (hasData && currentLine > 0) {
-        map.set(currentLine, { author: currentAuthor, time: currentTime });
-      }
+      flush(); // 保存上一条
       const parts = line.split(/\s+/);
       currentLine = parseInt(parts[2]) || 0;
+      lineCount = parts[3] ? parseInt(parts[3]) || 1 : 1;
       currentAuthor = "";
       currentTime = "";
       hasData = false;
@@ -776,9 +783,6 @@ function parseBlameInline(output: string): Map<number, { author: string; time: s
       currentTime = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
     }
   }
-  // 最后一条记录
-  if (hasData && currentLine > 0) {
-    map.set(currentLine, { author: currentAuthor, time: currentTime });
-  }
+  flush(); // 最后一条
   return map;
 }
