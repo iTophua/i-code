@@ -47,6 +47,9 @@ export function EditorPane() {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   // 与分支比较: 选择目标分支
   const [compareTarget, setCompareTarget] = useState<{ filePath: string; fileName: string } | null>(null);
+  // 行内 Blame 显示开关 + 装饰引用
+  const [showBlame, setShowBlame] = useState(false);
+  const blameDecorationsRef = useRef<string[]>([]);
   // 精确订阅设置项(避免无关 state 变化触发重渲染)
   const fontFamily = useSettingsStore((s) => s.fontFamily);
   const fontSize = useSettingsStore((s) => s.fontSize);
@@ -300,10 +303,46 @@ export function EditorPane() {
 
   // 普通文件
   const ed = editorRef.current;
+
+  // 行内 Blame: 切换显示/隐藏
+  const toggleBlame = async () => {
+    if (!ed || !activeTab) return;
+    const { repoRoot } = useGitStore.getState();
+    if (!repoRoot) return;
+    if (showBlame) {
+      // 隐藏
+      ed.deltaDecorations(blameDecorationsRef.current, []);
+      blameDecorationsRef.current = [];
+      setShowBlame(false);
+      return;
+    }
+    // 显示: 获取 blame 数据
+    try {
+      const rel = activeTab.path.replace(repoRoot + "/", "");
+      const out = await useGitStore.getState().blameFile(rel);
+      const blameMap = parseBlameInline(out);
+      const decos: editor.IModelDeltaDecoration[] = [];
+      for (const [line, info] of blameMap) {
+        decos.push({
+          range: { startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: 1 },
+          options: {
+            after: { content: `  ${info.author} · ${info.time}`, inlineClassName: "blame-decoration" },
+            isWholeLine: true,
+          },
+        });
+      }
+      blameDecorationsRef.current = ed.deltaDecorations([], decos);
+      setShowBlame(true);
+    } catch (e) {
+      toast.error(`Blame 加载失败: ${e}`);
+    }
+  };
+
   const gitItems = activeTab.kind === "file" && useGitStore.getState().repoRoot
     ? [
         { id: "sep-git", label: "", separator: true },
-        { id: "git-blame", label: "查看 Blame", onClick: () => {
+        { id: "git-blame-inline", label: showBlame ? "隐藏 Blame" : "显示 Blame", onClick: () => toggleBlame() },
+        { id: "git-blame", label: "查看 Blame(新标签)", onClick: () => {
           useEditorStore.getState().openBlame({ filePath: activeTab.path, fileName: activeTab.name });
         } },
         { id: "git-history", label: "查看文件历史", onClick: () => {
@@ -690,4 +729,28 @@ function NoteEditorSurface({
       </div>
     </div>
   );
+}
+
+/** 简易 blame 解析(行号 → 作者+时间) */
+function parseBlameInline(output: string): Map<number, { author: string; time: string }> {
+  const map = new Map<number, { author: string; time: string }>();
+  const lines = output.split("\n");
+  let currentLine = 0;
+  let currentAuthor = "";
+  let currentTime = "";
+  for (const line of lines) {
+    if (/^[0-9a-f]{40}/.test(line)) {
+      const parts = line.split("\t");
+      currentLine = parseInt(parts[2]) || 0;
+    } else if (line.startsWith("author ")) {
+      currentAuthor = line.slice(7).trim();
+    } else if (line.startsWith("author-time ")) {
+      const ts = parseInt(line.slice(12));
+      const d = new Date(ts * 1000);
+      currentTime = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+    } else if (line.startsWith("filename ") && currentLine > 0) {
+      map.set(currentLine, { author: currentAuthor, time: currentTime });
+    }
+  }
+  return map;
 }
