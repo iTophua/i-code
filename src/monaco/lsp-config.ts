@@ -12,7 +12,12 @@ import { languages } from "monaco-editor";
 export const tsDiagnosticsOptions = {
   noSemanticValidation: false,
   noSyntaxValidation: false,
-  diagnosticCodesToIgnore: [] as number[],
+  // 忽略常见误报(Monaco TS worker 缺少 node_modules 类型定义)
+  diagnosticCodesToIgnore: [
+    2307, // Cannot find module 'xxx' (worker 无 node_modules 解析)
+    1259, // Module can only be default-imported usingesModuleInterop
+    2792, // Cannot find module. Did you mean to enable allowSyntheticDefaultImports
+  ],
 };
 
 /** TS/JS 编译配置 */
@@ -20,7 +25,7 @@ export const tsCompilerOptions = {
   target: languages.typescript.ScriptTarget.ESNext,
   module: languages.typescript.ModuleKind.ESNext,
   moduleResolution: languages.typescript.ModuleResolutionKind.NodeJs,
-  jsx: languages.typescript.JsxEmit.React,
+  jsx: languages.typescript.JsxEmit.ReactJSX,
   allowNonTsExtensions: true,
   esModuleInterop: true,
   allowJs: true,
