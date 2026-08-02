@@ -75,6 +75,12 @@
 
 /* ============ Dialog ============ */
 [class*="DialogContent"] {
+  /* 居中: Radix Dialog Content 默认无定位, 会贴在 portal 末尾导致跑到页面底部 */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10001; /* 高于 Overlay(10000) */
   min-width: 360px;
   max-width: 480px;
   padding: var(--space-5);
@@ -98,8 +104,12 @@
 }
 @keyframes dialog-pop {
   from {
-    transform: scale(0.96);
+    /* 保留居中 translate, 再叠加缩放(否则动画期间 transform 会覆盖居中) */
+    transform: translate(-50%, -50%) scale(0.96);
     opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 [class*="DialogTitle"] {
