@@ -145,6 +145,9 @@ export function getEditorOptions(
     },
     scrollBeyondLastLine: false,
     padding: { top: 12, bottom: 12 },
+    // 行号区窄一点 + 行号与代码之间留间距(代码第一列不紧贴行号)
+    lineNumbersMinChars: 3,
+    lineDecorationsWidth: 12,
     // ===== 多光标 / 列选择编辑 =====
     // multiCursorModifier: 'ctrlCmd' → Cmd+点击加光标(Monaco 默认 alt 会让 Option 冲突);
     //                       Option(Alt) 让给 setupColumnDrag 做矩形列选拖拽
