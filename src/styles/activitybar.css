@@ -1,0 +1,44 @@
+/* ============ 活动栏(最左图标条) ============ */
+.activity-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: var(--width-activitybar);
+  background: var(--bg-activity-bar);
+  flex-shrink: 0;
+  padding-top: var(--space-2);
+}
+
+.activity-bar__spacer {
+  flex: 1;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--width-activitybar);
+  height: 42px;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: color 0.1s;
+}
+.activity-item:hover {
+  color: var(--fg-secondary);
+}
+.activity-item--active {
+  color: var(--fg-primary);
+}
+.activity-item--active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--fg-accent);
+}

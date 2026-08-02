@@ -1,0 +1,258 @@
+/* ============ 便签面板(侧栏列表) ============ */
+.notes {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.notes__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-3);
+  height: 35px;
+  flex-shrink: 0;
+}
+.notes__title {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--fg-secondary);
+}
+.notes__header .icon-btn {
+  font-size: var(--fs-xl);
+  line-height: 1;
+}
+
+.notes__search {
+  padding: 0 var(--space-3) var(--space-2);
+  flex-shrink: 0;
+}
+.notes__search input {
+  width: 100%;
+  height: 26px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--fg-primary);
+  font-size: var(--fs-ui-base);
+  font-family: var(--font-ui);
+}
+.notes__search input:focus {
+  border-color: var(--border-focus);
+}
+
+/* 列表(全宽, 撑满侧栏) */
+.notes__list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.notes__empty {
+  padding: var(--space-5);
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: var(--fs-sm);
+}
+
+.note-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px var(--space-3);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.05s;
+}
+.note-row:hover {
+  background: var(--bg-list-hover);
+}
+.note-row--active {
+  background: var(--bg-list-active);
+  color: var(--fg-on-accent);
+}
+
+.note-row__pin {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--fs-xs);
+  opacity: 0.35;
+  flex-shrink: 0;
+  padding: 2px;
+  margin-top: 1px;
+}
+.note-row__pin--on {
+  opacity: 1;
+}
+.note-row:hover .note-row__pin {
+  opacity: 0.7;
+}
+.note-row__pin--on {
+  opacity: 1;
+}
+
+.note-row__content {
+  flex: 1;
+  min-width: 0;
+}
+.note-row__preview {
+  font-size: var(--fs-base);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.note-row__untitled {
+  color: var(--fg-muted);
+  font-style: italic;
+  font-weight: 400;
+}
+.note-row__sub {
+  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.note-row--active .note-row__sub {
+  color: var(--fg-on-accent);
+  opacity: 0.7;
+}
+.note-row__meta {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  margin-top: 3px;
+}
+.note-row--active .note-row__meta {
+  color: var(--fg-on-accent);
+  opacity: 0.6;
+}
+
+.note-row__delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.note-row:hover .note-row__delete {
+  opacity: 1;
+}
+.note-row__delete:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+
+/* ============ 便签编辑界面(主编辑区) ============ */
+.note-surface {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-editor);
+}
+.note-surface__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-base);
+  background: var(--bg-sidebar);
+  flex-shrink: 0;
+}
+.note-surface__icon {
+  display: flex;
+  align-items: center;
+  color: var(--git-modified);
+  flex-shrink: 0;
+}
+.note-surface__title {
+  flex: 1;
+  height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--fg-primary);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  font-family: var(--font-ui);
+  transition: border-color 0.1s;
+}
+.note-surface__title:hover {
+  border-color: var(--border-focus);
+}
+.note-surface__title:focus {
+  border-color: var(--border-focus);
+  background: var(--bg-app);
+  outline: none;
+}
+.note-surface__lang {
+  height: 28px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--fg-secondary);
+  font-size: var(--fs-sm);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.1s;
+}
+.note-surface__lang:hover {
+  border-color: var(--border-focus);
+  color: var(--fg-primary);
+}
+.note-surface__lang:focus {
+  border-color: var(--border-focus);
+  outline: none;
+}
+.note-surface__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--fg-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.1s, color 0.1s;
+}
+.note-surface__btn:hover {
+  border-color: var(--border-focus);
+  color: var(--fg-primary);
+}
+.note-surface__btn:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+.note-surface__hint {
+  font-size: var(--fs-xs);
+  color: var(--git-modified);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.note-surface__body {
+  flex: 1;
+  min-height: 0;
+}
+.note-surface__body .monaco-editor,
+.note-surface__body > div {
+  height: 100%;
+}

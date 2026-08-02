@@ -1,0 +1,212 @@
+import { useState } from "react";
+import { useLayoutStore } from "../stores/layoutStore";
+import { useSettingsStore } from "../stores/settingsStore";
+import { AppSelect } from "./AppSelect";
+import { ConfirmDialog } from "./ConfirmDialog";
+import "../styles/settings.css";
+
+export type SettingsCategory = "theme" | "editor" | "terminal" | "window";
+
+const CATEGORIES: { id: SettingsCategory; label: string; icon: string }[] = [
+  { id: "theme", label: "主题", icon: "🎨" },
+  { id: "editor", label: "编辑器", icon: "✏️" },
+  { id: "terminal", label: "终端", icon: "🖥" },
+  { id: "window", label: "窗口与文件", icon: "🗂" },
+];
+
+export function SettingsPanel() {
+  const settingsCategory = useLayoutStore((s) => s.settingsCategory);
+  const setSettingsCategory = useLayoutStore((s) => s.setSettingsCategory);
+  const [showReset, setShowReset] = useState(false);
+
+  return (
+    <div className="settings">
+      <div className="settings__header">
+        <span className="settings__title">设置</span>
+        <button
+          className="icon-btn"
+          onClick={() => setShowReset(true)}
+          title="重置"
+        >
+          ↺
+        </button>
+      </div>
+      <div className="settings__list">
+        {CATEGORIES.map((cat) => (
+          <div
+            key={cat.id}
+            className={`settings-cat ${settingsCategory === cat.id ? "settings-cat--active" : ""}`}
+            onClick={() => setSettingsCategory(cat.id)}
+          >
+            <span className="settings-cat__icon">{cat.icon}</span>
+            <span className="settings-cat__name">{cat.label}</span>
+          </div>
+        ))}
+      </div>
+      <ConfirmDialog
+        open={showReset}
+        title="重置设置"
+        message="确定要将所有设置恢复为默认值吗？"
+        confirmLabel="重置"
+        danger
+        onConfirm={() => {
+          useSettingsStore.getState().reset();
+          setShowReset(false);
+        }}
+        onCancel={() => setShowReset(false)}
+      />
+    </div>
+  );
+}
+
+export function SettingsContent() {
+  const settingsCategory = useLayoutStore((s) => s.settingsCategory);
+  const s = useSettingsStore();
+  const current = CATEGORIES.find((c) => c.id === settingsCategory);
+
+  return (
+    <div className="settings-content">
+      <div className="settings-content__header">
+        <span className="settings-content__title">
+          {current?.icon} {current?.label}
+        </span>
+      </div>
+      <div className="settings-content__body">
+        {settingsCategory === "theme" && <ThemeSettings s={s} />}
+        {settingsCategory === "editor" && <EditorSettings s={s} />}
+        {settingsCategory === "terminal" && <TerminalSettings s={s} />}
+        {settingsCategory === "window" && <WindowSettings s={s} />}
+      </div>
+    </div>
+  );
+}
+
+type S = ReturnType<typeof useSettingsStore.getState>;
+
+function ThemeSettings({ s }: { s: S }) {
+  return (
+    <Group title="外观">
+      <Row label="配色主题" desc="切换深色/浅色主题">
+        <AppSelect
+          value={s.theme}
+          options={[
+            { value: "dark", label: "深色 (Dark+)" },
+            { value: "light", label: "浅色 (Light+)" },
+          ]}
+          onChange={(v) => s.update("theme", v as S["theme"])}
+        />
+      </Row>
+    </Group>
+  );
+}
+
+function EditorSettings({ s }: { s: S }) {
+  return (
+    <>
+      <Group title="字体">
+        <Row label="字体族" desc="编辑器使用的等宽字体">
+          <input className="settings__input" value={s.fontFamily} onChange={(e) => s.update("fontFamily", e.target.value)} />
+        </Row>
+        <Row label="字号">
+          <input type="number" className="settings__input settings__input--num" value={s.fontSize} min={8} max={32} onChange={(e) => s.update("fontSize", Number(e.target.value))} />
+        </Row>
+        <Row label="行高">
+          <input type="number" className="settings__input settings__input--num" value={s.lineHeight} min={1} max={3} step={0.1} onChange={(e) => s.update("lineHeight", Number(e.target.value))} />
+        </Row>
+        <Row label="字体连字" desc="需字体支持(如 Fira Code)">
+          <Toggle value={s.fontLigatures} onChange={(v) => s.update("fontLigatures", v)} />
+        </Row>
+      </Group>
+      <Group title="编辑">
+        <Row label="Tab 宽度">
+          <input type="number" className="settings__input settings__input--num" value={s.tabSize} min={2} max={8} onChange={(e) => s.update("tabSize", Number(e.target.value))} />
+        </Row>
+        <Row label="自动换行" desc="长行是否折行显示">
+          <AppSelect
+            value={s.wordWrap}
+            options={[
+              { value: "off", label: "关闭" },
+              { value: "on", label: "开启" },
+            ]}
+            onChange={(v) => s.update("wordWrap", v as S["wordWrap"])}
+          />
+        </Row>
+        <Row label="小地图" desc="右侧缩略代码地图">
+          <Toggle value={s.minimap} onChange={(v) => s.update("minimap", v)} />
+        </Row>
+        <Row label="自动保存">
+          <AppSelect
+            value={s.autoSave}
+            options={[
+              { value: "off", label: "关闭" },
+              { value: "afterDelay", label: "延时保存" },
+              { value: "onFocusChange", label: "失焦保存" },
+            ]}
+            onChange={(v) => s.update("autoSave", v as S["autoSave"])}
+          />
+        </Row>
+      </Group>
+    </>
+  );
+}
+
+function TerminalSettings({ s }: { s: S }) {
+  return (
+    <Group title="终端">
+      <Row label="字体族">
+        <input className="settings__input" value={s.terminalFontFamily} onChange={(e) => s.update("terminalFontFamily", e.target.value)} />
+      </Row>
+      <Row label="字号">
+        <input type="number" className="settings__input settings__input--num" value={s.terminalFontSize} min={8} max={32} onChange={(e) => s.update("terminalFontSize", Number(e.target.value))} />
+      </Row>
+      <Row label="滚动缓冲" desc="保留的历史行数">
+        <input type="number" className="settings__input settings__input--num" value={s.terminalScrollback} min={1000} max={50000} step={1000} onChange={(e) => s.update("terminalScrollback", Number(e.target.value))} />
+      </Row>
+    </Group>
+  );
+}
+
+function WindowSettings({ s }: { s: S }) {
+  return (
+    <Group title="窗口与文件">
+      <Row label="启动恢复会话" desc="打开时恢复上次的项目和标签页">
+        <Toggle value={s.restoreOnStartup} onChange={(v) => s.update("restoreOnStartup", v)} />
+      </Row>
+      <Row label="显示隐藏文件" desc="以 . 开头的文件和目录">
+        <Toggle value={s.showHiddenFiles} onChange={(v) => s.update("showHiddenFiles", v)} />
+      </Row>
+      <Row label="排除文件/目录" desc="逗号分隔, 不在文件树显示">
+        <input className="settings__input" value={s.filesExclude} onChange={(e) => s.update("filesExclude", e.target.value)} placeholder="node_modules, dist" />
+      </Row>
+    </Group>
+  );
+}
+
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="settings-content__group">
+      <div className="settings-content__group-title">{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function Row({ label, desc, children }: { label: string; desc?: string; children: React.ReactNode }) {
+  return (
+    <div className="settings-content__row">
+      <div className="settings-content__row-info">
+        <span className="settings-content__row-label">{label}</span>
+        {desc && <span className="settings-content__row-desc">{desc}</span>}
+      </div>
+      <div className="settings-content__row-control">{children}</div>
+    </div>
+  );
+}
+
+function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button className={`settings__toggle ${value ? "settings__toggle--on" : ""}`} onClick={() => onChange(!value)} role="switch" aria-checked={value}>
+      <span className="settings__toggle-thumb" />
+    </button>
+  );
+}

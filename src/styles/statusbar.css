@@ -1,0 +1,110 @@
+/* ============ 状态栏 ============ */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 24px;
+  padding: 0 var(--space-3);
+  background: var(--bg-sidebar);
+  border-top: 1px solid var(--border-subtle);
+  color: var(--fg-secondary);
+  font-size: var(--fs-ui-sm);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.status-bar__left,
+.status-bar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  color: var(--fg-secondary);
+}
+
+.status-item--btn {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: inherit;
+}
+.status-item--btn:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+
+/* 编码选择器(Radix Select, 状态栏专用样式) */
+.status-bar__encoding-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 20px;
+  padding: 0 4px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  outline: none;
+}
+.status-bar__encoding-trigger:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+.status-bar__encoding-trigger[data-state="open"] {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+
+/* 弹出层(向上弹出, 深色主题) */
+.status-bar__encoding-content {
+  min-width: 140px;
+  padding: 4px;
+  background: var(--bg-menu);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  z-index: 10001;
+  animation: enc-fade 0.1s ease;
+}
+@keyframes enc-fade {
+  from { opacity: 0; transform: translateY(4px); }
+}
+/* 选项: 用 role 选择器(Radix 官方推荐, 稳定) */
+.status-bar__encoding-content [role="option"] {
+  display: flex !important;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-primary);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  outline: none;
+  gap: 8px;
+  white-space: nowrap;
+}
+.status-bar__encoding-content [role="option"][data-highlighted] {
+  background: var(--bg-menu-hover);
+  color: var(--fg-on-accent);
+}
+/* 勾选标记: 固定右侧, 强制不换行 */
+.status-bar__encoding-check {
+  color: var(--git-modified);
+  display: flex !important;
+  align-items: center;
+  flex-shrink: 0 !important;
+  margin-left: auto !important;
+}

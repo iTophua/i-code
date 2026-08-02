@@ -1,0 +1,142 @@
+/* ============ 应用主布局 ============ */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.app__body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.app__sidebar {
+  flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-subtle);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sidebar 内部容器(承接高度, 传递给各面板) */
+.sidebar {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.app__editor-area {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  background: var(--bg-editor);
+  display: flex;
+  flex-direction: column;
+}
+
+.app__panel {
+  height: var(--height-panel);
+  flex-shrink: 0;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border-base);
+  display: flex;
+  flex-direction: column;
+}
+
+.app__panel-placeholder {
+  padding: var(--space-5);
+  color: var(--fg-muted);
+  font-size: var(--fs-base);
+}
+
+/* ============ 拖拽分隔条 ============ */
+.resizer {
+  flex-shrink: 0;
+  z-index: 10;
+}
+.resizer--vertical {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.1s;
+}
+.resizer--vertical:hover {
+  background: var(--border-focus);
+}
+
+/* ============ 编辑器 ============ */
+.editor-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.editor-pane > .monaco-editor {
+  flex: 1;
+}
+/* 普通文件编辑器: 直接子 wrapper div 撑满 */
+.editor-pane > div:not(.md-pane__toolbar):not(.md-split) {
+  flex: 1;
+}
+
+.editor-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-editor);
+}
+.editor-empty__hint {
+  text-align: center;
+  color: var(--fg-muted);
+}
+.editor-empty__hint p:first-child {
+  font-size: var(--fs-2xl);
+  font-weight: 200;
+  color: var(--fg-secondary);
+  letter-spacing: 2px;
+  margin-bottom: var(--space-3);
+}
+.editor-empty__sub {
+  font-size: var(--fs-base);
+}
+
+.editor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--fg-muted);
+}
+
+/* ============ 占位视图 ============ */
+.placeholder-view {
+  padding: var(--space-5);
+  text-align: center;
+}
+.placeholder-view__title {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--fg-secondary);
+  margin-bottom: var(--space-2);
+}
+.placeholder-view__hint {
+  color: var(--fg-muted);
+  font-size: var(--fs-sm);
+}

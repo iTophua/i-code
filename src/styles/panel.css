@@ -1,0 +1,109 @@
+/* ============ 底部面板 ============ */
+.terminal-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-panel);
+}
+
+.panel__tabs {
+  display: flex;
+  align-items: center;
+  height: 35px;
+  padding: 0 var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-panel);
+  flex-shrink: 0;
+}
+
+.panel__tabs-list {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.panel-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  user-select: none;
+}
+.panel-tab:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-secondary);
+}
+.panel-tab--active {
+  background: var(--bg-list-inactive);
+  color: var(--fg-primary);
+}
+.panel-tab__name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.panel-tab__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+}
+.panel-tab:hover .panel-tab__close {
+  opacity: 1;
+}
+.panel-tab__close:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+
+.panel__new-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xl);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.panel__new-btn:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+
+.panel__body {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  background: #1e1e1e;
+}
+
+.panel__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--fg-muted);
+  font-size: var(--fs-base);
+}

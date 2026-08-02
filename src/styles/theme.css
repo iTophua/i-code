@@ -1,0 +1,263 @@
+/**
+ * i-code 主题系统 — 三层架构
+ * Layer 1 调色板(原始色) → Layer 2 语义Token(组件引用) → Layer 3 命名主题
+ *
+ * 色值来源: VS Code Dark+ 官方源码核对
+ * 文档: docs/主题规划.md
+ */
+
+/* ============ Layer 3: Dark 主题(默认) ============ */
+:root,
+:root[data-theme="dark"] {
+  /* --- Layer 1 → Layer 2 背景类 --- */
+  --bg-app: #1e1e1e;
+  --bg-editor: #1e1e1e;
+  --bg-titlebar: #3c3c3c;
+  --bg-activity-bar: #333333;
+  --bg-sidebar: #252526;
+  --bg-tab-active: #1e1e1e;
+  --bg-tab-inactive: #2d2d2d;
+  --bg-tab-hover: #34373b;
+  --bg-panel: #1e1e1e;
+  --bg-statusbar: #007acc;
+  --bg-list-hover: #2a2d2e;
+  --bg-list-active: #094771;
+  --bg-list-inactive: #37373d;
+  --bg-input: #3c3c3c;
+  --bg-button: #0e639c;
+  --bg-button-hover: #1177bb;
+  --bg-tooltip: #252526;
+  --bg-menu: #252526;
+  --bg-menu-hover: #094771;
+
+  /* --- 前景类 --- */
+  --fg-primary: #d4d4d4;
+  --fg-secondary: #cccccc;
+  --fg-muted: #858585;
+  --fg-disabled: #5a5a5a;
+  --fg-accent: #007acc;
+  --fg-accent-bright: #3794ff;
+  --fg-on-accent: #ffffff;
+  --fg-error: #f48771;
+  --fg-warning: #cca700;
+  --fg-success: #89d185;
+
+  /* --- 边框/分隔 --- */
+  --border-base: #3c3c3c;
+  --border-subtle: #2d2d2d;
+  --border-focus: #007acc;
+
+  /* --- Git 状态 --- */
+  --git-added: #73c991;
+  --git-modified: #e2c08d;
+  --git-deleted: #f48771;
+  --git-untracked: #73c991;
+  --git-conflict: #e4676c;
+  --git-ignored: #858585;
+
+  /* --- 滚动条 --- */
+  --scrollbar-thumb: rgba(121, 121, 121, 0.4);
+  --scrollbar-thumb-hover: rgba(100, 100, 100, 0.7);
+  --scrollbar-thumb-active: rgba(191, 191, 191, 0.4);
+
+  /* --- 编辑器(Monaco 外围) --- */
+  --editor-line-highlight: #2a2d2e;
+  --editor-selection: #264f78;
+
+  /* ============ 尺寸系统(4px 栅格,紧凑) ============ */
+  --space-0: 0;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 24px;
+
+  --height-titlebar: 35px;
+  --width-activitybar: 48px;
+  --height-tab: 35px;
+  --height-statusbar: 22px;
+  --width-sidebar: 240px;
+  --height-panel: 220px;
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+
+  /* ============ 字体 ============ */
+  --font-ui: -apple-system, "Segoe UI", system-ui, "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+  --font-mono: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+
+  /* ===== 字号规范(全局统一, 不要写死数字) =====
+   * --fs-2xs: 10px  角标/辅助标记(极少用)
+   * --fs-xs:  11px  次要信息(时间/计数/tooltip)
+   * --fs-sm:  12px  小号文字(列表行/标签/元数据)
+   * --fs-base:13px  正文(文件树/面板默认)
+   * --fs-md:  14px  强调正文(编辑器代码/输入框)
+   * --fs-lg:  16px  小标题
+   * --fs-xl:  18px  标题(设置面板大标题)
+   * --fs-2xl: 24px  空状态大字(logo)
+   */
+  --fs-2xs: 10px;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 18px;
+  --fs-2xl: 24px;
+  --fs-code: 14px;
+  /* 兼容旧名 */
+  --fs-ui-sm: var(--fs-xs);
+  --fs-ui-base: var(--fs-base);
+  --lh-ui: 1.4;
+  --lh-code: 1.5;
+}
+
+/* ============ Layer 3: Light 主题 ============ */
+:root[data-theme="light"] {
+  /* 背景类 */
+  --bg-app: #ffffff;
+  --bg-editor: #ffffff;
+  --bg-titlebar: #dddddd;
+  --bg-activity-bar: #2c2c2c;
+  --bg-sidebar: #f3f3f3;
+  --bg-tab-active: #ffffff;
+  --bg-tab-inactive: #ececec;
+  --bg-tab-hover: #e0e0e0;
+  --bg-panel: #ffffff;
+  --bg-statusbar: #007acc;
+  --bg-list-hover: #e8e8e8;
+  --bg-list-active: #cfe3fb;
+  --bg-list-inactive: #d6d6d6;
+  --bg-input: #ffffff;
+  --bg-button: #007acc;
+  --bg-button-hover: #1f8ad2;
+  --bg-tooltip: #f3f3f3;
+  --bg-menu: #ffffff;
+  --bg-menu-hover: #007acc;
+
+  /* 前景类 */
+  --fg-primary: #333333;
+  --fg-secondary: #3c3c3c;
+  --fg-muted: #8a8a8a;
+  --fg-disabled: #bbbbbb;
+  --fg-accent: #007acc;
+  --fg-accent-bright: #007acc;
+  --fg-on-accent: #ffffff;
+  --fg-error: #d12424;
+  --fg-warning: #b88500;
+  --fg-success: #2c8e2c;
+
+  /* 边框 */
+  --border-base: #d4d4d4;
+  --border-subtle: #e0e0e0;
+  --border-focus: #007acc;
+
+  /* Git */
+  --git-added: #2c8e2c;
+  --git-modified: #b88500;
+  --git-deleted: #d12424;
+  --git-untracked: #2c8e2c;
+  --git-conflict: #c4364e;
+  --git-ignored: #8a8a8a;
+
+  /* 滚动条 */
+  --scrollbar-thumb: rgba(100, 100, 100, 0.4);
+  --scrollbar-thumb-hover: rgba(100, 100, 100, 0.7);
+  --scrollbar-thumb-active: rgba(100, 100, 100, 0.4);
+
+  --editor-line-highlight: #f0f0f0;
+  --editor-selection: #add6ff;
+}
+
+/* ============ 全局重置 ============ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Monaco 编辑器: 默认深色背景, 避免主题注册前的白色闪烁 */
+.monaco-editor,
+.monaco-editor .margin,
+.monaco-editor-background {
+  background-color: #1e1e1e !important;
+}
+.monaco-editor .inputarea.ime-input {
+  background-color: transparent;
+}
+/* 行号栏: 稍深背景 + 右侧细分隔线, 与编辑区明确区分 */
+.monaco-editor .margin {
+  background-color: #191919 !important;
+  border-right: 1px solid #2a2a2a;
+}
+.monaco-editor .margin-view-overlays .cgutter {
+  background-color: #191919 !important;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: var(--fs-ui-base);
+  line-height: var(--lh-ui);
+  color: var(--fg-primary);
+  background: var(--bg-app);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+}
+
+/* 允许编辑器/输入框内选中文本 */
+input,
+textarea,
+[contenteditable],
+.monaco-editor {
+  user-select: text;
+}
+
+/* ============ lucide 图标全局统一 stroke-width ============ */
+svg.lucide {
+  stroke-width: 1.5 !important;
+}
+
+/* ============ 滚动条全局样式 ============ */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-sm);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+::-webkit-scrollbar-thumb:active {
+  background: var(--scrollbar-thumb-active);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 隐藏聚焦轮廓(自定义焦点态) */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: -1px;
+}

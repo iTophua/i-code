@@ -1,0 +1,29 @@
+[package]
+name = "i-code"
+version = "0.1.0"
+description = "轻量级代码编辑器"
+authors = ["you"]
+edition = "2021"
+
+[lib]
+name = "i_code_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+walkdir = "2"
+chardetng = "0.1"
+encoding_rs = "0.8"
+portable-pty = "0.8"
+log = "0.4"
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]

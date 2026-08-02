@@ -1,0 +1,33 @@
+/* ============ 通用按钮(Dialog/其他复用) ============ */
+.btn {
+  height: 28px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+.btn--primary {
+  background: var(--bg-button);
+  color: var(--fg-on-accent);
+}
+.btn--primary:hover {
+  background: var(--bg-button-hover);
+}
+.btn--secondary {
+  background: transparent;
+  color: var(--fg-primary);
+  border-color: var(--border-base);
+}
+.btn--secondary:hover {
+  background: var(--bg-list-hover);
+}
+.btn--danger {
+  background: var(--fg-error);
+  color: #fff;
+}
+.btn--danger:hover {
+  filter: brightness(1.1);
+}

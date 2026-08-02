@@ -1,0 +1,280 @@
+/* ============ Markdown 预览容器 ============ */
+.md-preview {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-editor);
+}
+.md-preview__toolbar {
+  display: flex;
+  align-items: center;
+  height: 35px;
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--fg-secondary);
+  background: var(--bg-tab-inactive);
+  flex-shrink: 0;
+}
+.md-preview__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-6);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  color: var(--fg-primary);
+}
+
+/* ============ Markdown 内容样式(GitHub 风格 深色) ============ */
+.markdown-body > *:first-child {
+  margin-top: 0;
+}
+.markdown-body > *:last-child {
+  margin-bottom: 0;
+}
+
+/* 标题 */
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.markdown-body h1 {
+  font-size: 2em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-base);
+}
+.markdown-body h2 {
+  font-size: 1.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-base);
+}
+.markdown-body h3 { font-size: 1.25em; }
+.markdown-body h4 { font-size: 1em; }
+.markdown-body h5 { font-size: 0.875em; }
+.markdown-body h6 { font-size: 0.85em; color: var(--fg-muted); }
+
+/* 段落/文本 */
+.markdown-body p {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+.markdown-body strong { font-weight: 600; }
+.markdown-body em { font-style: italic; }
+.markdown-body del { text-decoration: line-through; }
+.markdown-body a {
+  color: var(--fg-accent-bright);
+  text-decoration: none;
+}
+.markdown-body a:hover { text-decoration: underline; }
+
+/* 引用 */
+.markdown-body blockquote {
+  margin: 0 0 16px;
+  padding: 0 1em;
+  color: var(--fg-muted);
+  border-left: 0.25em solid var(--border-base);
+}
+.markdown-body blockquote > :first-child { margin-top: 0; }
+.markdown-body blockquote > :last-child { margin-bottom: 0; }
+
+/* 代码 */
+.markdown-body code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-family: var(--font-mono);
+  background: rgba(110, 118, 129, 0.4);
+  border-radius: var(--radius-sm);
+}
+.markdown-body pre {
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding: 16px;
+  overflow: auto;
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  background: #0d1117;
+  border-radius: var(--radius-md);
+}
+.markdown-body pre code {
+  padding: 0;
+  margin: 0;
+  font-size: 100%;
+  background: transparent;
+  border: 0;
+}
+
+/* 列表 */
+.markdown-body ul,
+.markdown-body ol {
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding-left: 2em;
+}
+.markdown-body ul ul,
+.markdown-body ul ol,
+.markdown-body ol ol,
+.markdown-body ol ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.markdown-body li { word-wrap: break-all; }
+.markdown-body li > input[type="checkbox"] {
+  margin-right: 0.5em;
+}
+
+/* 表格 */
+.markdown-body table {
+  margin-top: 0;
+  margin-bottom: 16px;
+  overflow-wrap: break-word;
+  border-collapse: collapse;
+  display: block;
+  width: 100%;
+  overflow: auto;
+}
+.markdown-body table th,
+.markdown-body table td {
+  padding: 6px 13px;
+  border: 1px solid var(--border-base);
+}
+.markdown-body table th {
+  font-weight: 600;
+  background: var(--bg-list-hover);
+}
+.markdown-body table tr {
+  background: var(--bg-editor);
+  border-top: 1px solid var(--border-base);
+}
+.markdown-body table tr:nth-child(2n) {
+  background: rgba(110, 118, 129, 0.1);
+}
+
+/* 水平线 */
+.markdown-body hr {
+  height: 0.25em;
+  padding: 0;
+  margin: 24px 0;
+  background: var(--border-base);
+  border: 0;
+}
+
+/* 图片 */
+.markdown-body img {
+  max-width: 100%;
+  box-sizing: content-box;
+  background: var(--bg-app);
+}
+
+/* 任务列表 */
+.markdown-body .contains-task-list {
+  list-style: none;
+  padding-left: 1.5em;
+}
+
+/* ============ 编辑器+预览 并排容器 ============ */
+.md-split {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+}
+.md-split__editor {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.md-split__editor .monaco-editor,
+.md-split__editor > div {
+  flex: 1;
+  height: 100%;
+}
+/* 预览区外层 wrap */
+.md-preview-wrap {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+}
+.md-preview-wrap .md-preview {
+  flex: 1;
+}
+
+/* —— 分屏模式: 源码 50% + 预览 50% —— */
+.md-split--split .md-split__editor {
+  flex: 1 1 0;
+  width: 50%;
+}
+.md-split--split .md-preview-wrap {
+  flex: 1 1 0;
+  width: 50%;
+  border-left: 1px solid var(--border-base);
+}
+
+/* —— 仅预览: 编辑器隐藏, 预览占满 —— */
+.md-split--preview .md-preview-wrap {
+  flex: 1 1 0;
+}
+
+/* —— 仅源码: 预览隐藏, 编辑器占满 —— */
+.md-split--source .md-split__editor {
+  flex: 1 1 0;
+}
+
+/* md-pane 容器(工具栏已移到 Tab 栏, 这里只有 split) */
+.md-pane {
+  display: flex;
+  flex-direction: column;
+}
+.md-pane > .md-split {
+  flex: 1 1 0 !important;
+  min-height: 0;
+}
+
+/* 彻底清理 Monaco 在 md 编辑器里的顶部间距 */
+.md-split__editor .monaco-editor,
+.md-split__editor .monaco-editor .overflow-guard,
+.md-split__editor .monaco-editor .monaco-scrollable-element {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+.md-split__editor .monaco-editor .view-lines {
+  padding-top: 0 !important;
+}
+.md-split__editor > div {
+  height: 100%;
+}
+.md-pane__toggle {
+  height: 22px;
+  padding: 0 10px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-secondary);
+  font-size: var(--fs-xs);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: border-color 0.1s, color 0.1s;
+}
+.md-pane__toggle:hover {
+  border-color: var(--border-focus);
+  color: var(--fg-primary);
+}
+.md-pane__toggle--on {
+  color: var(--git-modified);
+  border-color: var(--git-modified);
+}
+

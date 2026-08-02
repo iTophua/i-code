@@ -1,0 +1,25 @@
+/* ============ 终端视图 ============ */
+.terminal-view {
+  display: none;
+  height: 100%;
+  width: 100%;
+  background: #1e1e1e;
+}
+.terminal-view--active {
+  display: block;
+}
+.terminal-view .xterm {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+/* 强制 xterm 所有层背景一致, 避免边缘深黑 */
+.terminal-view .xterm-viewport,
+.terminal-view .xterm-screen,
+.terminal-view .xterm .xterm--helper-textarea {
+  background-color: #1e1e1e !important;
+}
+.terminal-view .xterm-viewport {
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+}
