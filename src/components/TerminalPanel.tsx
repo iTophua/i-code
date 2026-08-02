@@ -15,9 +15,11 @@ export function TerminalPanel() {
   // 用 ref 防止 StrictMode 双调用导致建两个终端
   // 等 workspaceRoot 恢复后再建(避免在 home 目录创建)
   useEffect(() => {
-    if (!initRef.current && tabs.length === 0 && workspaceRoot) {
+    // 直接从 store 读最新值(避免闭包旧值)
+    const root = useLayoutStore.getState().workspaceRoot;
+    if (!initRef.current && tabs.length === 0 && root) {
       initRef.current = true;
-      createTerminal(workspaceRoot);
+      createTerminal(root);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceRoot]);
@@ -50,7 +52,7 @@ export function TerminalPanel() {
         <button
           className="panel__new-btn"
           title="新建终端"
-          onClick={() => createTerminal(workspaceRoot)}
+          onClick={() => createTerminal(useLayoutStore.getState().workspaceRoot)}
         >
           +
         </button>
