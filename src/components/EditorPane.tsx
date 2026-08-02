@@ -5,6 +5,7 @@ import { useEditorStore } from "../stores/editorStore";
 import { useNotesStore, noteDisplayTitle } from "../stores/notesStore";
 import { useLayoutStore } from "../stores/layoutStore";
 import { useSettingsStore } from "../stores/settingsStore";
+import { useGitStore } from "../stores/gitStore";
 import { getEditorOptions, defineIThemes, ICODE_DARK_THEME } from "../monaco/theme";
 import { saveAsFile } from "../utils/exportNote";
 import { MarkdownPreview } from "./MarkdownPreview";
@@ -232,6 +233,56 @@ export function EditorPane() {
       contextMenuOrder: 2,
       run: () => { triggerEditorAction("editor.action.formatDocument"); },
     });
+
+    // ===== Git 菜单(仅文件 tab) =====
+    const currentPath = activeTab?.path;
+    const currentName = activeTab?.name;
+    if (currentPath && activeTab?.kind === "file") {
+      editorInstance.addAction({
+        id: "ctx-git-blame",
+        label: "Git: 查看 Blame",
+        contextMenuGroupId: "git",
+        contextMenuOrder: 1,
+        run: () => {
+          useEditorStore.getState().openBlame({ filePath: currentPath, fileName: currentName });
+        },
+      });
+      editorInstance.addAction({
+        id: "ctx-git-history",
+        label: "Git: 查看文件历史",
+        contextMenuGroupId: "git",
+        contextMenuOrder: 2,
+        run: () => {
+          useEditorStore.getState().openHistory({ filePath: currentPath, fileName: currentName });
+        },
+      });
+      editorInstance.addAction({
+        id: "ctx-git-stage",
+        label: "Git: 暂存此文件",
+        contextMenuGroupId: "git",
+        contextMenuOrder: 3,
+        run: async () => {
+          const { repoRoot } = useGitStore.getState();
+          if (repoRoot) {
+            const rel = currentPath.replace(repoRoot + "/", "");
+            await useGitStore.getState().stage([rel]);
+          }
+        },
+      });
+      editorInstance.addAction({
+        id: "ctx-git-unstage",
+        label: "Git: 取消暂存",
+        contextMenuGroupId: "git",
+        contextMenuOrder: 4,
+        run: async () => {
+          const { repoRoot } = useGitStore.getState();
+          if (repoRoot) {
+            const rel = currentPath.replace(repoRoot + "/", "");
+            await useGitStore.getState().unstage([rel]);
+          }
+        },
+      });
+    }
 
     // 记录光标位置(节流, 供重启恢复)
     let cursorTimer: number | null = null;
