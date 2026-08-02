@@ -86,12 +86,19 @@ pub fn list_directory(dir_path: String, show_hidden: Option<bool>, sort_by: Opti
     for entry in read.flatten() {
         let name = entry.file_name().to_string_lossy().to_string();
         let path = entry.path();
-        if is_ignored(&name, &path, &root, &patterns) {
+        // .git/node_modules 始终忽略(即使 show_hidden=true)
+        if name == ".git" || name == "node_modules" {
             continue;
         }
-        // 隐藏文件过滤
-        if !show_hidden && name.starts_with('.') && name != "." && name != ".." {
-            continue;
+        // show_hidden=false 时: 过滤 ignore patterns + 隐藏文件(.开头)
+        // show_hidden=true 时: 显示隐藏文件 + .gitignore 里的文件(仅 .git/node_modules 排除)
+        if !show_hidden {
+            if is_ignored(&name, &path, &root, &patterns) {
+                continue;
+            }
+            if name.starts_with('.') && name != "." && name != ".." {
+                continue;
+            }
         }
         let meta = entry.metadata().map_err(|e| e.to_string())?;
         entries.push(DirEntry {
