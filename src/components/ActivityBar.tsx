@@ -7,7 +7,7 @@ import {
   NotesIcon,
   ToolsIcon,
 } from "./Icons";
-import { TerminalSquare } from "lucide-react";
+import { TerminalSquare, AlertCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNotesStore } from "../stores/notesStore";
 import { useEditorStore } from "../stores/editorStore";
@@ -94,9 +94,16 @@ export function ActivityBar() {
 
       <div className="activity-bar__spacer" />
       <button
-        className={`activity-item ${useLayoutStore.getState().panelVisible ? "activity-item--active" : ""}`}
+        className={`activity-item ${useLayoutStore.getState().panelVisible && useLayoutStore.getState().panelView === "problems" ? "activity-item--active" : ""}`}
+        title="问题"
+        onClick={() => useLayoutStore.getState().setPanelView("problems")}
+      >
+        <AlertCircle size={20} strokeWidth={1.5} />
+      </button>
+      <button
+        className={`activity-item ${useLayoutStore.getState().panelVisible && useLayoutStore.getState().panelView === "terminal" ? "activity-item--active" : ""}`}
         title="终端 (Ctrl+`)"
-        onClick={() => useLayoutStore.getState().togglePanel()}
+        onClick={() => useLayoutStore.getState().setPanelView("terminal")}
       >
         <TerminalSquare size={20} strokeWidth={1.5} />
       </button>
