@@ -1,15 +1,22 @@
+import { useState } from "react";
 import { useEditorStore } from "../stores/editorStore";
 import { useLayoutStore } from "../stores/layoutStore";
 import { getFileIconType } from "../utils/language";
 import { FileIcon } from "./FileIcon";
 import { CloseIcon, NotesIcon, ToolsIcon, SplitViewIcon, PreviewOnlyIcon, CodeOnlyIcon } from "./Icons";
 import { AppContextMenu, type ContextMenuItem } from "./AppContextMenu";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { SplitSquareHorizontal } from "lucide-react";
 import "../styles/tabs.css";
 
 export function EditorTabs() {
   const { tabs, activeTabId, setActiveTab, closeTab } = useEditorStore();
   const { mdView, cycleMdView } = useLayoutStore();
+  // 批量关闭确认: 若涉及未保存修改, 先弹确认
+  const [batchConfirm, setBatchConfirm] = useState<{
+    count: number;
+    action: () => void;
+  } | null>(null);
 
   if (tabs.length === 0) return null;
 
@@ -26,6 +33,16 @@ export function EditorTabs() {
     }
   };
 
+  // 批量关闭守卫: 若待关闭列表含 dirty tab, 弹确认; 否则直接执行
+  const guardBatchClose = (toClose: { id: string; isDirty: boolean }[], action: () => void) => {
+    const dirtyCount = toClose.filter((t) => t.isDirty).length;
+    if (dirtyCount > 0) {
+      setBatchConfirm({ count: dirtyCount, action });
+    } else {
+      action();
+    }
+  };
+
   // 构造某个 Tab 的右键菜单
   const buildMenu = (tabId: string): ContextMenuItem[] => {
     const idx = tabs.findIndex((t) => t.id === tabId);
@@ -34,11 +51,22 @@ export function EditorTabs() {
         const t = tabs.find((x) => x.id === tabId);
         if (t) handleClose(t.id, t.name, t.isDirty);
       } },
-      { id: "close-others", label: "关闭其他", disabled: tabs.length <= 1, onSelect: () => useEditorStore.getState().closeOthers(tabId) },
-      { id: "close-left", label: "关闭左侧", disabled: idx <= 0, onSelect: () => useEditorStore.getState().closeTabsToLeft(tabId) },
-      { id: "close-right", label: "关闭右侧", disabled: idx >= tabs.length - 1, onSelect: () => useEditorStore.getState().closeTabsToRight(tabId) },
+      { id: "close-others", label: "关闭其他", disabled: tabs.length <= 1, onSelect: () => {
+        const others = tabs.filter((t) => t.id !== tabId);
+        guardBatchClose(others, () => useEditorStore.getState().closeOthers(tabId));
+      } },
+      { id: "close-left", label: "关闭左侧", disabled: idx <= 0, onSelect: () => {
+        const left = tabs.slice(0, idx);
+        guardBatchClose(left, () => useEditorStore.getState().closeTabsToLeft(tabId));
+      } },
+      { id: "close-right", label: "关闭右侧", disabled: idx >= tabs.length - 1, onSelect: () => {
+        const right = tabs.slice(idx + 1);
+        guardBatchClose(right, () => useEditorStore.getState().closeTabsToRight(tabId));
+      } },
       { id: "sep1", separator: true },
-      { id: "close-all", label: "关闭全部", danger: true, onSelect: () => useEditorStore.getState().closeAll() },
+      { id: "close-all", label: "关闭全部", danger: true, onSelect: () => {
+        guardBatchClose(tabs, () => useEditorStore.getState().closeAll());
+      } },
       { id: "sep2", separator: true },
       {
         id: "split",
@@ -117,6 +145,23 @@ export function EditorTabs() {
           )}
         </button>
       )}
+      {/* 批量关闭确认(涉及未保存修改) */}
+      <ConfirmDialog
+        open={batchConfirm !== null}
+        title="未保存的修改"
+        message={
+          batchConfirm
+            ? `将关闭 ${batchConfirm.count} 个有未保存修改的标签，修改将丢失。\n是否继续？`
+            : ""
+        }
+        confirmLabel="不保存并关闭"
+        danger
+        onConfirm={() => {
+          if (batchConfirm) batchConfirm.action();
+          setBatchConfirm(null);
+        }}
+        onCancel={() => setBatchConfirm(null)}
+      />
     </div>
   );
 }
