@@ -91,12 +91,14 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
     const { rootPath, expandedPaths, showHidden, sortBy } = get();
     if (!rootPath) return;
     try {
-      const entries = (await invoke("list_directory", { showHidden, sortBy, 
+      const entries = (await invoke("list_directory", { showHidden, sortBy,
         dirPath: rootPath,
       })) as TreeNode[];
       // 重新加载之前展开的目录
       const treeData = entries.map((e) => ({ ...e }));
       await reloadExpanded(treeData, expandedPaths);
+      // 预加载根级单子目录链(为包名压缩提供数据)
+      await preloadSingleChildChain(treeData, showHidden, sortBy);
       set({ treeData });
       get().recomputeVisible();
     } catch (e) {
@@ -117,11 +119,13 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
       const cached = findNode(treeData, node.path);
       if (cached && !cached.loaded) {
         try {
-          const children = (await invoke("list_directory", { showHidden, sortBy, 
+          const children = (await invoke("list_directory", { showHidden, sortBy,
             dirPath: node.path,
           })) as TreeNode[];
           cached.children = children;
           cached.loaded = true;
+          // 递归预加载单子目录链(为包名压缩提供数据)
+          await preloadSingleChildChain(children, showHidden, sortBy);
         } catch (e) {
           console.error("展开目录失败:", e);
         }
@@ -167,6 +171,44 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
           if (!nameMatch && node.isDir && !hasDescendantMatch(node, fl))
             continue;
         }
+
+        // 包名压缩(对标 IDEA Compact Empty Middle Packages):
+        // 目录只有一个子目录(无文件) → 递归合并为一行 com.example.project
+        // 关键:只有链顶目录"未展开"时才压缩;链顶展开后正常显示子节点。
+        // 中间目录的 expandedPaths 不影响压缩判断(它们不可能被单独展开)。
+        if (!fl && node.isDir && node.children && node.children.length === 1) {
+          const only = node.children[0];
+          // 链顶未展开 → 压缩整条链
+          if (only.isDir && !expandedPaths.has(node.path)) {
+            let cur = only;
+            const names = [node.name];
+            // 向下收集:只有一个子目录(无文件)的链
+            while (
+              cur.children &&
+              cur.children.length === 1 &&
+              cur.children[0].isDir
+            ) {
+              names.push(cur.name);
+              cur = cur.children[0];
+            }
+            // 最后一个节点:它要么有多个子项/文件,要么子项未加载
+            // 把最后能确定的目录名也加入
+            names.push(cur.name);
+            const leafExpanded = expandedPaths.has(cur.path);
+            result.push({
+              ...cur,
+              name: names.join("."),
+              depth,
+              expanded: leafExpanded,
+            });
+            // 链底已展开 → 显示其子节点
+            if (leafExpanded && cur.children) {
+              walk(cur.children, depth + 1);
+            }
+            continue;
+          }
+        }
+
         const expanded = expandedPaths.has(node.path);
         result.push({ ...node, depth, expanded });
         // 过滤模式下强制展开含匹配项的目录
@@ -216,9 +258,41 @@ async function reloadExpanded(nodes: TreeNode[], expanded: Set<string>) {
           dirPath: node.path,
         })) as TreeNode[];
         node.loaded = true;
+        // 预加载单子目录链(为包名压缩提供数据)
+        if (node.children) await preloadSingleChildChain(node.children, showHidden, sortBy);
         if (node.children) await reloadExpanded(node.children, expanded);
       } catch {
         /* 忽略单个目录失败 */
+      }
+    }
+  }
+}
+
+/**
+ * 递归预加载"单子目录"链(为包名压缩准备数据)
+ * 当一个目录只有一个子目录(无文件)时,递归加载该子目录的内容,
+ * 直到遇到多子项或文件。这样 recomputeVisible 能合并整条链。
+ * 限制最多 20 层,避免极端情况。
+ */
+async function preloadSingleChildChain(nodes: TreeNode[], showHidden: boolean, sortBy: string) {
+  for (const node of nodes) {
+    if (!node.isDir || node.loaded || node.children) continue;
+    let cur: TreeNode | null = node;
+    for (let i = 0; i < 20 && cur; i++) {
+      if (!cur.isDir || cur.loaded || cur.children) break;
+      try {
+        cur.children = (await invoke("list_directory", { showHidden, sortBy,
+          dirPath: cur.path,
+        })) as TreeNode[];
+        cur.loaded = true;
+        // 只有一个子目录 → 继续向下预加载
+        if (cur.children.length === 1 && cur.children[0].isDir) {
+          cur = cur.children[0];
+        } else {
+          break;
+        }
+      } catch {
+        break;
       }
     }
   }

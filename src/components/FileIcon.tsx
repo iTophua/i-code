@@ -46,41 +46,44 @@ const TYPE_BADGE: Partial<Record<FileIconType, { label: string; color: string }>
 };
 
 /**
- * 文件夹名称 → 颜色映射(降饱和度版, 参考 Material Icon Theme)
+ * 文件夹名称 → 颜色映射(提亮版, 参考 VS Code Material Icon Theme)
+ * 三色:top( tab/前片)、body( 主体)、light( 高光)
  */
 const FOLDER_COLORS: Record<string, { top: string; body: string; light: string }> = {
-  src: { top: "#519ABA", body: "#4A8FA8", light: "#6BB5D8" },
-  source: { top: "#519ABA", body: "#4A8FA8", light: "#6BB5D8" },
-  components: { top: "#E0B02E", body: "#C99520", light: "#F0C84A" },
-  public: { top: "#E8A33D", body: "#D08827", light: "#F5BC60" },
-  assets: { top: "#E8A33D", body: "#D08827", light: "#F5BC60" },
-  static: { top: "#E8A33D", body: "#D08827", light: "#F5BC60" },
-  node_modules: { top: "#5FA04E", body: "#4E8A40", light: "#7BC068" },
-  docs: { top: "#519ABA", body: "#4A8FA8", light: "#6BB5D8" },
-  doc: { top: "#519ABA", body: "#4A8FA8", light: "#6BB5D8" },
-  config: { top: "#90A4AE", body: "#78909C", light: "#B0BEC5" },
-  configs: { top: "#90A4AE", body: "#78909C", light: "#B0BEC5" },
-  test: { top: "#F06292", body: "#D84A7C", light: "#F88BB0" },
-  tests: { top: "#F06292", body: "#D84A7C", light: "#F88BB0" },
-  __tests__: { top: "#F06292", body: "#D84A7C", light: "#F88BB0" },
-  lib: { top: "#A074C4", body: "#8E5FAE", light: "#BB91D4" },
-  utils: { top: "#A074C4", body: "#8E5FAE", light: "#BB91D4" },
-  hooks: { top: "#EF5350", body: "#D84A47", light: "#F77A77" },
-  dist: { top: "#78909C", body: "#607D8B", light: "#9FAFB8" },
-  build: { top: "#78909C", body: "#607D8B", light: "#9FAFB8" },
-  styles: { top: "#EC407A", body: "#D32F6F", light: "#F068A0" },
-  css: { top: "#519ABA", body: "#4A8FA8", light: "#6BB5D8" },
-  images: { top: "#A074C4", body: "#8E5FAE", light: "#BB91D4" },
-  img: { top: "#A074C4", body: "#8E5FAE", light: "#BB91D4" },
-  locales: { top: "#26A69A", body: "#1E8C82", light: "#4DBCB2" },
-  i18n: { top: "#26A69A", body: "#1E8C82", light: "#4DBCB2" },
-  api: { top: "#66BB6A", body: "#52A85A", light: "#85CF88" },
-  server: { top: "#66BB6A", body: "#52A85A", light: "#85CF88" },
-  scripts: { top: "#FFA726", body: "#E8911A", light: "#FFBE5A" },
-  bin: { top: "#FFA726", body: "#E8911A", light: "#FFBE5A" },
+  src: { top: "#519ABA", body: "#427C97", light: "#7CC4DC" },
+  source: { top: "#519ABA", body: "#427C97", light: "#7CC4DC" },
+  components: { top: "#E0B02E", body: "#BD8C1C", light: "#F0CC52" },
+  public: { top: "#E8A33D", body: "#C57F22", light: "#F5BC60" },
+  assets: { top: "#E8A33D", body: "#C57F22", light: "#F5BC60" },
+  static: { top: "#E8A33D", body: "#C57F22", light: "#F5BC60" },
+  node_modules: { top: "#5FA04E", body: "#427A38", light: "#82C872" },
+  docs: { top: "#519ABA", body: "#427C97", light: "#7CC4DC" },
+  doc: { top: "#519ABA", body: "#427C97", light: "#7CC4DC" },
+  config: { top: "#90A4AE", body: "#637079", light: "#B8C6CE" },
+  configs: { top: "#90A4AE", body: "#637079", light: "#B8C6CE" },
+  test: { top: "#F06292", body: "#CC4070", light: "#F88BB0" },
+  tests: { top: "#F06292", body: "#CC4070", light: "#F88BB0" },
+  __tests__: { top: "#F06292", body: "#CC4070", light: "#F88BB0" },
+  lib: { top: "#A074C4", body: "#7E509E", light: "#BB91D4" },
+  utils: { top: "#A074C4", body: "#7E509E", light: "#BB91D4" },
+  hooks: { top: "#EF5350", body: "#CC3D3A", light: "#F77A77" },
+  dist: { top: "#78909C", body: "#546E7A", light: "#9FAFB8" },
+  build: { top: "#78909C", body: "#546E7A", light: "#9FAFB8" },
+  out: { top: "#78909C", body: "#546E7A", light: "#9FAFB8" },
+  target: { top: "#78909C", body: "#546E7A", light: "#9FAFB8" },
+  styles: { top: "#EC407A", body: "#C12E64", light: "#F068A0" },
+  css: { top: "#519ABA", body: "#427C97", light: "#7CC4DC" },
+  images: { top: "#A074C4", body: "#7E509E", light: "#BB91D4" },
+  img: { top: "#A074C4", body: "#7E509E", light: "#BB91D4" },
+  locales: { top: "#26A69A", body: "#1A7A72", light: "#4DBCB2" },
+  i18n: { top: "#26A69A", body: "#1A7A72", light: "#4DBCB2" },
+  api: { top: "#66BB6A", body: "#449650", light: "#85CF88" },
+  server: { top: "#66BB6A", body: "#449650", light: "#85CF88" },
+  scripts: { top: "#FFA726", body: "#D87E12", light: "#FFBE5A" },
+  bin: { top: "#FFA726", body: "#D87E12", light: "#FFBE5A" },
 };
 
-const DEFAULT_FOLDER = { top: "#DFB376", body: "#C19250", light: "#E8C280" };
+const DEFAULT_FOLDER = { top: "#E0A865", body: "#C08840", light: "#F0C280" };
 
 interface Props {
   type: FileIconType;
@@ -177,50 +180,57 @@ function FolderIcon({
   folderName?: string;
 }) {
   const c = colors;
-  const gid = folderName ? `f-${folderName.replace(/[^a-zA-Z0-9]/g, "")}` : "f-default";
+  // 唯一 gradient id(避免同名文件夹冲突)
+  const gid = folderName
+    ? `f-${folderName.replace(/[^a-zA-Z0-9]/g, "")}-${size}`
+    : `f-default-${size}`;
   if (isFolderOpen) {
+    // 展开态:前片( tab)+ 底片( 文档露出)
     return (
       <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden>
         <defs>
-          <linearGradient id={`${gid}-ot`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={c.light} />
-            <stop offset="100%" stopColor={c.body} />
-          </linearGradient>
           <linearGradient id={`${gid}-ob`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={c.top} />
             <stop offset="100%" stopColor={c.body} />
           </linearGradient>
         </defs>
-        <path d="M1.5 4a1 1 0 011-1H6l1.5 1.5h6a1 1 0 011 1v1H4.5L2 8.5V4z" fill={`url(#${gid}-ot)`} />
+        {/* 底片(后方文档) */}
         <path
-          d="M2 8.5L4.5 6h10.5a.6.6 0 01.6.8l-1.6 5.5a1 1 0 01-1 .7H2.8a1 1 0 01-1-1.2L2 8.5z"
+          d="M1.8 6.5h12.4a.5.5 0 01.5.6l-1.5 5.2a1 1 0 01-1 .7H2.8a1 1 0 01-1-1V7a.5.5 0 01.5-.5z"
+          fill={c.body}
+          opacity="0.7"
+        />
+        {/* 前片(tab) */}
+        <path
+          d="M1.5 3.5a1 1 0 011-1H6l1.5 1.5h5a1 1 0 011 1V6H1.5V3.5z"
           fill={`url(#${gid}-ob)`}
         />
-        <path d="M4.5 6h10.5l-.15.5H4.7L2.8 8.5H2.2L4.5 6z" fill={c.light} fillOpacity="0.4" />
+        {/* 高光 */}
+        <path d="M2.5 3.5h3L7 4.8H2.5V3.5z" fill={c.light} fillOpacity="0.5" />
       </svg>
     );
   }
+  // 收起态:经典文件夹( tab + 主体)
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden>
       <defs>
-        <linearGradient id={`${gid}-ct`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={c.light} />
-          <stop offset="100%" stopColor={c.body} />
-        </linearGradient>
         <linearGradient id={`${gid}-cb`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={c.top} />
           <stop offset="100%" stopColor={c.body} />
         </linearGradient>
       </defs>
+      {/* 主体 */}
       <path
-        d="M1.5 4.5a1 1 0 011-1H6l1.5 1.3h6a1 1 0 011 1V12a1 1 0 01-1 1H2.5a1 1 0 01-1-1V4.5z"
+        d="M1.5 5a1 1 0 011-1H6l1.5 1.3h5.5a1 1 0 011 1V12a1 1 0 01-1 1H2.5a1 1 0 01-1-1V5z"
         fill={`url(#${gid}-cb)`}
       />
+      {/* tab(顶部凸起) */}
       <path
-        d="M1.5 4.5a1 1 0 011-1H6l1.5 1.3h6a1 1 0 011 1v.4H1.5v-1.7z"
-        fill={`url(#${gid}-ct)`}
+        d="M1.5 5a1 1 0 011-1H6l1.5 1.3v.7H1.5V5z"
+        fill={c.top}
       />
-      <path d="M2.5 4H5.8l.8.7H2.5V4z" fill={c.light} fillOpacity="0.45" />
+      {/* 高光 */}
+      <path d="M2.5 4.3h3l.8.7H2.5v-.7z" fill={c.light} fillOpacity="0.45" />
     </svg>
   );
 }
