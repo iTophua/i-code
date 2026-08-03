@@ -49,6 +49,7 @@ export default function App() {
   const sidebarView = useLayoutStore((s) => s.sidebarView);
   const panelVisible = useLayoutStore((s) => s.panelVisible);
   const panelView = useLayoutStore((s) => s.panelView);
+  const panelHeight = useLayoutStore((s) => s.panelHeight);
   const zenMode = useLayoutStore((s) => s.zenMode);
   const setSidebarView = useLayoutStore((s) => s.setSidebarView);
   const setPanelView = useLayoutStore((s) => s.setPanelView);
@@ -601,7 +602,10 @@ export default function App() {
                   </>
                 )}
               </div>
-              <div className={`app__panel ${panelVisible ? "" : "app__panel--hidden"}`}>
+              <div
+                className={`app__panel ${panelVisible ? "" : "app__panel--hidden"}`}
+                style={panelVisible ? { height: panelHeight } : undefined}
+              >
                 <div className="app__panel-tabs">
                   <button
                     className={`app__panel-tab ${panelView === "terminal" ? "app__panel-tab--active" : ""}`}

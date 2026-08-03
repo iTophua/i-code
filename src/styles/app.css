@@ -71,7 +71,6 @@
 }
 
 .app__panel {
-  height: var(--height-panel);
   flex-shrink: 0;
   background: var(--bg-panel);
   border-top: 1px solid var(--border-base);

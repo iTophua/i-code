@@ -6,6 +6,27 @@
   background: var(--bg-panel);
 }
 
+/* 顶部拖拽调整高度的把手 */
+.panel__resizer {
+  height: 4px;
+  flex-shrink: 0;
+  cursor: row-resize;
+  background: transparent;
+  transition: background var(--dur-fast);
+  position: relative;
+}
+.panel__resizer::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -2px;
+  bottom: -2px;
+}
+.panel__resizer:hover {
+  background: var(--border-focus);
+}
+
 .panel__tabs {
   display: flex;
   align-items: center;
@@ -94,11 +115,32 @@
   color: var(--fg-primary);
 }
 
+/* 关闭面板按钮 */
+.panel__close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  margin-left: 2px;
+  transition: var(--t-color);
+}
+.panel__close-btn:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+
 .panel__body {
   flex: 1;
   position: relative;
   overflow: hidden;
-  padding: 0;
+  padding: 6px 10px 4px;
   background: var(--bg-panel);
 }
 

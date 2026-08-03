@@ -19,7 +19,37 @@
 .terminal-view .xterm .xterm--helper-textarea {
   background-color: var(--bg-panel) !important;
 }
+/* 终端滚动条:xterm v6 用自绘滚动条(VS Code 风格 .scrollbar),
+   不是原生 ::-webkit-scrollbar。需直接设 .scrollbar 及其 slider 子元素。 */
+.terminal-view .xterm .xterm-scrollable-element > .scrollbar {
+  width: 6px !important;
+}
+.terminal-view .xterm .xterm-scrollable-element > .scrollbar .slider {
+  background: rgba(133, 133, 133, 0.35) !important;
+  border-radius: 6px !important;
+  width: 6px !important;
+  left: 0 !important;
+}
+.terminal-view .xterm .xterm-scrollable-element > .scrollbar .slider:hover {
+  background: rgba(133, 133, 133, 0.6) !important;
+}
+.terminal-view .xterm .xterm-scrollable-element > .scrollbar .slider:active {
+  background: rgba(133, 133, 133, 0.8) !important;
+}
+.terminal-view .xterm .xterm-scrollable-element > .scrollbar .scra {
+  display: none !important;
+}
+/* 浅色主题终端滚动条 */
+[data-theme="light"] .terminal-view .xterm .xterm-scrollable-element > .scrollbar .slider {
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+[data-theme="light"] .terminal-view .xterm .xterm-scrollable-element > .scrollbar .slider:hover {
+  background: rgba(0, 0, 0, 0.35) !important;
+}
+[data-theme="light"] .terminal-view .xterm .xterm-scrollable-element > .scrollbar .slider:active {
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+/* viewport 仍保留原生滚动条 fallback(隐藏箭头等) */
 .terminal-view .xterm-viewport {
   overflow-y: auto !important;
-  scrollbar-width: thin;
 }
