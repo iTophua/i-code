@@ -1,5 +1,4 @@
 import { useEffect, useCallback } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { ActivityBar } from "./components/ActivityBar";
 import { SplashScreen } from "./components/SplashScreen";
@@ -36,7 +35,7 @@ import {
   type SavedTab,
 } from "./utils/session";
 import { getLanguage } from "./utils/language";
-import { addRecentProject } from "./utils/recentProjects";
+import { openFolderDialog, isProjectSwitching } from "./utils/project";
 import { toast } from "./stores/toastStore";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
@@ -67,24 +66,14 @@ export default function App() {
   const [savingTab, setSavingTab] = useState(false);
   const [restored, setRestored] = useState(false);
 
-  // 打开文件夹
+  // 打开文件夹(走统一的 switchProject 入口: 保存当前项目 tab + 加载新项目 + 刷新 git)
   const handleOpenFolder = useCallback(async () => {
     try {
-      const selected = await open({
-        directory: true,
-        multiple: false,
-        title: "选择项目文件夹",
-      });
-      if (typeof selected === "string") {
-        await setRootPath(selected);
-        setWorkspaceRoot(selected);
-        await setSession(SESSION_KEYS.workspaceRoot, selected);
-        await addRecentProject(selected);
-      }
+      await openFolderDialog();
     } catch (e) {
       console.error("打开文件夹失败:", e);
     }
-  }, [setRootPath, setWorkspaceRoot]);
+  }, []);
 
   // 打开外部文件(从访达"打开方式"或拖拽): 读取并打开为 Tab
   const openExternalFiles = useCallback(async (paths: string[]) => {
@@ -174,7 +163,7 @@ export default function App() {
         }
       }
 
-      // 恢复项目根
+      // 恢复项目根(启动时直接设 root, 不走 switchProject 避免重复保存空状态)
       const savedRoot = await getSession<string>(SESSION_KEYS.workspaceRoot);
       if (savedRoot) {
         const exists = await invoke<boolean>("path_exists", { path: savedRoot });
@@ -186,48 +175,59 @@ export default function App() {
         }
       }
 
-      // 恢复打开的 Tab(恢复原样: 文件从磁盘读, 便签从 DB 读, 草稿覆盖内容并标记 dirty)
+      // 恢复打开的 Tab
+      // 便签(notes): 全局保留, 从全局 openTabs key 读(便签不绑定项目)
+      // 文件(files): 从项目级 key 读(按项目隔离, 避免跨项目串味)
       const savedTabs = await getSession<SavedTab[]>(SESSION_KEYS.openTabs);
-      if (savedTabs && savedTabs.length > 0) {
-        // 先确保便签已从 DB 加载(便签 tab 恢复依赖 notes 列表)
-        if (savedTabs.some((t) => t.kind === "note")) {
-          await useNotesStore.getState().loadNotes(
-            useLayoutStore.getState().workspaceRoot
-          );
-        }
+      // 先恢复便签(若有)
+      const noteTabs = savedTabs?.filter((t) => t.kind === "note") ?? [];
+      if (noteTabs.length > 0) {
+        // 确保便签已从 DB 加载
+        await useNotesStore.getState().loadNotes(
+          useLayoutStore.getState().workspaceRoot
+        );
         const { restoreTab } = useEditorStore.getState();
-        for (const t of savedTabs) {
+        for (const t of noteTabs) {
+          if (!t.noteId) continue;
           try {
-            if (t.kind === "note" && t.noteId) {
-              // 便签: 从 SQLite 取最新内容作为基准
-              const note = useNotesStore.getState().notes.find((n) => n.id === t.noteId);
-              const baseContent = note?.content ?? "";
-              const baseTitle = note?.title ?? "";
-              const baseLang = note?.language ?? "plaintext";
-              restoreTab({
-                id: t.id,
-                kind: "note",
-                path: t.id,
-                // tab 名: 草稿内容优先算显示标题, 否则基准内容
-                name: noteDisplayTitle({ title: t.noteTitle ?? baseTitle, content: t.draft ?? baseContent }),
-                isPreview: false,
-                isDirty: t.draft != null,
-                content: t.draft ?? baseContent,
-                originalContent: baseContent,
-                language: t.language || baseLang,
-                noteId: t.noteId,
-                noteTitle: t.noteTitle ?? baseTitle,
-                cursor: t.cursor,
-                scrollTop: t.scrollTop,
-              });
-            } else if (t.kind === "file") {
+            const note = useNotesStore.getState().notes.find((n) => n.id === t.noteId);
+            const baseContent = note?.content ?? "";
+            const baseTitle = note?.title ?? "";
+            const baseLang = note?.language ?? "plaintext";
+            restoreTab({
+              id: t.id,
+              kind: "note",
+              path: t.id,
+              name: noteDisplayTitle({ title: t.noteTitle ?? baseTitle, content: t.draft ?? baseContent }),
+              isPreview: false,
+              isDirty: t.draft != null,
+              content: t.draft ?? baseContent,
+              originalContent: baseContent,
+              language: t.language || baseLang,
+              noteId: t.noteId,
+              noteTitle: t.noteTitle ?? baseTitle,
+              cursor: t.cursor,
+              scrollTop: t.scrollTop,
+            });
+          } catch {
+            /* 单个便签恢复失败不影响其它 */
+          }
+        }
+      }
+      // 恢复当前项目的文件 tab(从项目级 key 读)
+      if (savedRoot) {
+        const { loadProjectTabs } = await import("./utils/session");
+        const projState = await loadProjectTabs(savedRoot);
+        if (projState?.tabs && projState.tabs.length > 0) {
+          for (const t of projState.tabs) {
+            try {
               // 文件: 磁盘不存在则跳过
               const exists = await invoke<boolean>("path_exists", { path: t.path });
               if (!exists) continue;
               const [diskContent] = await invoke<[string, string]>("read_file", {
                 filePath: t.path,
               });
-              restoreTab({
+              useEditorStore.getState().restoreTab({
                 id: t.id,
                 kind: "file",
                 path: t.path,
@@ -240,26 +240,52 @@ export default function App() {
                 cursor: t.cursor,
                 scrollTop: t.scrollTop,
               });
+            } catch {
+              /* 单个 tab 恢复失败不影响其它 */
             }
-            // 图片: 恢复(只记路径, 不存内容)
-            else if (t.kind === "image") {
-              const exists = await invoke<boolean>("path_exists", { path: t.path });
-              if (!exists) continue;
-              useEditorStore.getState().openImage({ filePath: t.path, fileName: t.name });
-            }
-            // 其它类型(diff/history/blame/log/merge/tool)不持久化恢复, 跳过
-          } catch {
-            /* 单个 tab 恢复失败不影响其它 */
           }
-        }
-      }
-
-      // 恢复活跃 Tab
-      const savedActive = await getSession<string>(SESSION_KEYS.activeTabId);
-      if (savedActive) {
-        const { tabs } = useEditorStore.getState();
-        if (tabs.some((t) => t.id === savedActive)) {
-          useEditorStore.getState().setActiveTab(savedActive);
+          // 恢复激活 tab(若仍存在)
+          if (projState.activeTabId) {
+            const { tabs } = useEditorStore.getState();
+            if (tabs.some((t) => t.id === projState.activeTabId)) {
+              useEditorStore.getState().setActiveTab(projState.activeTabId);
+            }
+          }
+        } else if (projState === null) {
+          // 项目级 key 无存档(首次或被关闭清除过):尝试从旧的全局 key 迁移一次文件 tab
+          const oldFileTabs = savedTabs?.filter((t) => t.kind === "file" || t.kind === "image") ?? [];
+          if (oldFileTabs.length > 0) {
+            for (const t of oldFileTabs) {
+              try {
+                if (t.kind === "image") {
+                  const exists = await invoke<boolean>("path_exists", { path: t.path });
+                  if (!exists) continue;
+                  useEditorStore.getState().openImage({ filePath: t.path, fileName: t.name });
+                } else {
+                  const exists = await invoke<boolean>("path_exists", { path: t.path });
+                  if (!exists) continue;
+                  const [diskContent] = await invoke<[string, string]>("read_file", {
+                    filePath: t.path,
+                  });
+                  useEditorStore.getState().restoreTab({
+                    id: t.id,
+                    kind: "file",
+                    path: t.path,
+                    name: t.name,
+                    isPreview: false,
+                    isDirty: t.draft != null,
+                    content: t.draft ?? diskContent,
+                    originalContent: diskContent,
+                    language: t.language || getLanguage(t.name),
+                    cursor: t.cursor,
+                    scrollTop: t.scrollTop,
+                  });
+                }
+              } catch {
+                /* 迁移失败忽略 */
+              }
+            }
+          }
         }
       }
 
@@ -281,6 +307,7 @@ export default function App() {
   useEffect(() => {
     if (!restored || !workspaceRoot) return;
     let unlisten: UnlistenFn | null = null;
+    let mounted = true;
 
     // 启动 watcher
     invoke("start_file_watch", { root: workspaceRoot }).catch(console.error);
@@ -304,10 +331,13 @@ export default function App() {
         }
       }
     }).then((fn) => {
-      unlisten = fn;
+      // 卸载早于 resolve 时, 立即注销避免监听器泄漏
+      if (mounted) unlisten = fn;
+      else fn();
     });
 
     return () => {
+      mounted = false;
       unlisten?.();
       invoke("stop_file_watch").catch(console.error);
     };
@@ -337,35 +367,50 @@ export default function App() {
   }, [restored, sidebarWidth]);
 
   // 持久化打开的 Tab(变化时防抖保存) —— 含草稿/光标, 重启后恢复原样
+  // 便签 → 全局 key(不绑定项目); 文件类(file/image/...) → 项目级 key(按项目隔离)
+  // 切换项目期间抑制:避免 closeAllFiles 后空 tab 触发写入, 覆盖 switchProject 刚保存的状态
   useEffect(() => {
     if (!restored) return;
-    const t = setTimeout(() => {
-      const toSave: SavedTab[] = editorTabs
-        .filter((tab) => !tab.isPreview)
-        .map((tab) => ({
-          id: tab.id,
-          kind: tab.kind,
-          path: tab.path,
-          name: tab.name,
-          language: tab.language,
-          isPreview: false,
-          // 有未保存修改 → 存草稿内容; 否则不存(恢复时从源头重读)
-          draft: tab.isDirty ? tab.content : null,
-          noteTitle: tab.noteTitle,
-          noteId: tab.noteId,
-          cursor: tab.cursor,
-          scrollTop: tab.scrollTop,
-        }));
-      setSession(SESSION_KEYS.openTabs, toSave);
+    const t = setTimeout(async () => {
+      // 项目切换中 → 跳过(switchProject 自己负责保存/加载)
+      if (isProjectSwitching()) return;
+      const allTabs = useEditorStore.getState();
+      const mainTabs = allTabs.tabs;
+      const splitTabs = allTabs.splitTabs;
+      const nonPreview = [...mainTabs, ...splitTabs].filter((tab) => !tab.isPreview);
+      const toSaved = (tab: (typeof nonPreview)[number]): SavedTab => ({
+        id: tab.id,
+        kind: tab.kind,
+        path: tab.path,
+        name: tab.name,
+        language: tab.language,
+        isPreview: false,
+        // 有未保存修改 → 存草稿内容; 否则不存(恢复时从源头重读)
+        draft: tab.isDirty ? tab.content : null,
+        noteTitle: tab.noteTitle,
+        noteId: tab.noteId,
+        cursor: tab.cursor,
+        scrollTop: tab.scrollTop,
+      });
+      // 便签 → 全局 openTabs(便签全局, 不随项目走)
+      const noteTabs = nonPreview.filter((t) => t.kind === "note").map(toSaved);
+      await setSession(SESSION_KEYS.openTabs, noteTabs);
+      // 文件类(file/image/blame/history/log/merge/diff/tool) → 项目级 key(当前项目)
+      const cur = useLayoutStore.getState().workspaceRoot;
+      if (cur && !isProjectSwitching()) {
+        const fileTabs = nonPreview
+          .filter((t) => t.kind !== "note")
+          .map(toSaved);
+        // 活跃 tab 若是文件类, 记到项目级; 便签活跃不记
+        const activeTab = nonPreview.find((t) => t.id === editorActiveTabId);
+        const activeId =
+          activeTab && activeTab.kind !== "note" ? editorActiveTabId : null;
+        const { saveProjectTabs } = await import("./utils/session");
+        await saveProjectTabs(cur, fileTabs, activeId);
+      }
     }, 800);
     return () => clearTimeout(t);
-  }, [restored, editorTabs]);
-
-  // 持久化活跃 Tab
-  useEffect(() => {
-    if (!restored) return;
-    setSession(SESSION_KEYS.activeTabId, editorActiveTabId);
-  }, [restored, editorActiveTabId]);
+  }, [restored, editorTabs, editorActiveTabId]);
 
   // 持久化侧栏视图 + 可见性(启动记忆"上次在什么菜单")
   useEffect(() => {
@@ -453,6 +498,7 @@ export default function App() {
     if (!restored) return;
     let unlistenDrop: UnlistenFn | null = null;
     let unlistenOpen: UnlistenFn | null = null;
+    let mounted = true;
     // 拖拽文件到窗口(Tauri 2: getCurrentWebview().onDragDropEvent)
     getCurrentWebview()
       .onDragDropEvent((e) => {
@@ -460,20 +506,30 @@ export default function App() {
           openExternalFiles(e.payload.paths);
         }
       })
-      .then((fn) => (unlistenDrop = fn));
+      .then((fn) => {
+        if (mounted) unlistenDrop = fn;
+        else fn();
+      });
     // macOS: 访达"打开方式"传来的文件(应用已运行时, RunEvent::Opened → Rust emit)
     listen<string[]>("open-external-files", (e) => {
       if (e.payload && e.payload.length > 0) {
         openExternalFiles(e.payload);
       }
-    }).then((fn) => (unlistenOpen = fn));
+    }).then((fn) => {
+      if (mounted) unlistenOpen = fn;
+      else fn();
+    });
     // macOS: 首次启动时前端还没 ready, emit 会丢失 → 主动拉取 Rust 缓存的待打开文件
     invoke<string[]>("take_pending_files")
       .then((files) => {
         if (files.length > 0) openExternalFiles(files);
       })
       .catch(() => {});
-    return () => { unlistenDrop?.(); unlistenOpen?.(); };
+    return () => {
+      mounted = false;
+      unlistenDrop?.();
+      unlistenOpen?.();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restored, openExternalFiles]);
 
@@ -543,7 +599,7 @@ export default function App() {
                   <TerminalPanel />
                 </div>
                 <div className={panelView === "problems" ? "panel__view--active" : "panel__view--hidden"}>
-                  <ProblemsPanel />
+                  <ProblemsPanel visible={panelView === "problems"} />
                 </div>
               </div>
           </>

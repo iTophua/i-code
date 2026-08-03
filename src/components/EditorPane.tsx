@@ -23,7 +23,7 @@ import { NoteQuickTools } from "./NoteQuickTools";
 import { format as sqlFormat } from "sql-formatter";
 import { toast } from "../stores/toastStore";
 import { getExtByLanguage, getLanguage } from "../utils/language";
-import { setActiveEditor, triggerEditorAction } from "../monaco/activeEditor";
+import { setActiveEditor, getActiveEditor, triggerEditorAction } from "../monaco/activeEditor";
 import { setupColumnDrag } from "../monaco/columnSelect";
 import { tabInScope } from "../utils/tabScope";
 import { EditorContextMenu } from "./EditorContextMenu";
@@ -55,6 +55,11 @@ interface HistoryEntry {
 export function EditorPane() {
   const { tabs, activeTabId, updateContent, markSaved } = useEditorStore();
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  // 列选拖拽的清理函数(卸载时调用, 避免 DOM pointermove 监听泄漏)
+  const cleanupColumnDragRef = useRef<(() => void) | null>(null);
+  // 光标/滚动节流定时器(卸载时清理, 避免组件销毁后仍写 store)
+  const cursorTimerRef = useRef<number | null>(null);
+  const scrollTimerRef = useRef<number | null>(null);
   // 与分支比较: 选择目标分支
   const [compareTarget, setCompareTarget] = useState<{ filePath: string; fileName: string } | null>(null);
   // 文件历史弹窗(状态放在 layoutStore, 文件树右键也能触发)
@@ -159,7 +164,9 @@ export function EditorPane() {
     editorInstance.onDidFocusEditorText?.(() => setActiveEditor(editorInstance));
 
     // Option(Alt)+左键拖拽 → 矩形列选(standalone Monaco 不内置, 手动实现)
-    setupColumnDrag(editorInstance);
+    // 保存清理函数, 组件卸载时调用(否则 DOM pointermove 监听泄漏)
+    cleanupColumnDragRef.current?.();
+    cleanupColumnDragRef.current = setupColumnDrag(editorInstance);
 
     // 恢复光标/滚动位置(重启恢复 tab 原样)
     if (activeTab?.cursor) {
@@ -178,11 +185,10 @@ export function EditorPane() {
 
     // (右键菜单已禁用 Monaco 默认英文菜单, 改用 EditorContextMenu 自定义中文菜单)
 
-    // 记录光标位置(节流, 供重启恢复)
-    let cursorTimer: number | null = null;
+    // 记录光标位置(节流, 供重启恢复) —— 定时器用 ref 持有, 卸载时清理
     editorInstance.onDidChangeCursorPosition((e) => {
-      if (cursorTimer) clearTimeout(cursorTimer);
-      cursorTimer = window.setTimeout(() => {
+      if (cursorTimerRef.current) clearTimeout(cursorTimerRef.current);
+      cursorTimerRef.current = window.setTimeout(() => {
         if (activeTabId) {
           useEditorStore.getState().recordViewport(activeTabId, {
             cursor: { line: e.position.lineNumber, column: e.position.column },
@@ -191,11 +197,10 @@ export function EditorPane() {
       }, 400);
     });
     // 记录滚动位置(节流)
-    let scrollTimer: number | null = null;
     editorInstance.onDidScrollChange((e) => {
       if (!e.scrollTopChanged) return;
-      if (scrollTimer) clearTimeout(scrollTimer);
-      scrollTimer = window.setTimeout(() => {
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = window.setTimeout(() => {
         if (activeTabId) {
           useEditorStore.getState().recordViewport(activeTabId, {
             scrollTop: editorInstance.getScrollTop(),
@@ -204,6 +209,29 @@ export function EditorPane() {
       }, 400);
     });
   };
+
+  // 卸载时清理: 列选拖拽监听 / 节流定时器 / 释放活动编辑器引用
+  // (editorRef.current 本身由 @monaco-editor/react 在卸载时 dispose, 这里只清理它未管的)
+  useEffect(() => {
+    return () => {
+      cleanupColumnDragRef.current?.();
+      cleanupColumnDragRef.current = null;
+      if (cursorTimerRef.current) {
+        clearTimeout(cursorTimerRef.current);
+        cursorTimerRef.current = null;
+      }
+      if (scrollTimerRef.current) {
+        clearTimeout(scrollTimerRef.current);
+        scrollTimerRef.current = null;
+      }
+      // 若当前活动编辑器正是本组件的实例, 释放引用(避免持有已 dispose 的实例闭包)
+      if (editorRef.current && getActiveEditor() === editorRef.current) {
+        setActiveEditor(null);
+      }
+    };
+    // 仅组件卸载时执行(空依赖)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChange = (value: string | undefined) => {
     if (activeTabId && value !== undefined) {

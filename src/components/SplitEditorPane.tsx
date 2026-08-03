@@ -1,8 +1,10 @@
+import { useRef, useEffect } from "react";
 import Editor, { DiffEditor, type OnMount } from "@monaco-editor/react";
+import type { editor } from "monaco-editor";
 import { useEditorStore } from "../stores/editorStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getEditorOptions, defineIThemes, ICODE_DARK_THEME, ICODE_LIGHT_THEME } from "../monaco/theme";
-import { setActiveEditor } from "../monaco/activeEditor";
+import { setActiveEditor, getActiveEditor } from "../monaco/activeEditor";
 import { setupColumnDrag } from "../monaco/columnSelect";
 import "../monaco/setup";
 
@@ -13,8 +15,11 @@ export function SplitEditorPane() {
   const { splitTabs, splitActiveId, updateContent } = useEditorStore();
   const settings = useSettingsStore();
   const activeTab = splitTabs.find((t) => t.id === splitActiveId);
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const cleanupColumnDragRef = useRef<(() => void) | null>(null);
 
   const handleMount: OnMount = (ed, monaco) => {
+    editorRef.current = ed;
     defineIThemes(monaco);
     monaco.editor.setTheme(settings.theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME);
     // 多光标 modifier 用 ctrlCmd(Cmd+点击加光标), Option 让给列选(同主编辑器)
@@ -26,9 +31,22 @@ export function SplitEditorPane() {
     // 注册为活动编辑器, 使命令面板的多光标/列选命令作用于分栏编辑器
     setActiveEditor(ed);
     ed.onDidFocusEditorText?.(() => setActiveEditor(ed));
-    // Option+拖拽矩形列选(同主编辑器)
-    setupColumnDrag(ed);
+    // Option+拖拽矩形列选(同主编辑器) —— 保存清理函数, 卸载时调用
+    cleanupColumnDragRef.current?.();
+    cleanupColumnDragRef.current = setupColumnDrag(ed);
   };
+
+  // 卸载时清理列选拖拽监听 + 释放活动编辑器引用
+  useEffect(() => {
+    return () => {
+      cleanupColumnDragRef.current?.();
+      cleanupColumnDragRef.current = null;
+      if (editorRef.current && getActiveEditor() === editorRef.current) {
+        setActiveEditor(null);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!activeTab) {
     return (

@@ -77,3 +77,194 @@
 .titlebar__btn--active {
   color: var(--git-modified);
 }
+
+/* ============ 项目切换器(红绿灯正右侧) ============ */
+.titlebar__project-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.titlebar__project {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 8px 0 10px;
+  border: none;
+  background: transparent;
+  color: var(--fg-secondary);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: var(--t-color);
+  max-width: 200px;
+}
+.titlebar__project:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+.titlebar__project-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.titlebar__project-chev {
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+/* 项目下拉面板 */
+.project-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 280px;
+  max-width: 380px;
+  background: var(--bg-menu);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-menu);
+  z-index: var(--z-menu);
+  padding: 4px;
+  animation: dropdown-in 0.12s ease-out;
+}
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.project-dropdown__list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.project-dropdown__empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: var(--fs-sm);
+}
+
+.project-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  background: transparent;
+  color: var(--fg-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  transition: var(--t-color);
+}
+.project-dropdown__item:hover:not(:disabled) {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+.project-dropdown__item:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+.project-dropdown__item--current {
+  background: var(--bg-accent-soft);
+  color: var(--fg-accent);
+}
+
+.project-dropdown__icon {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.project-dropdown__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.project-dropdown__name {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.project-dropdown__path {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-dropdown__cur {
+  flex-shrink: 0;
+  font-size: var(--fs-2xs);
+  color: var(--fg-accent);
+  background: var(--bg-accent-soft);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+.project-dropdown__remove {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-xs);
+  color: var(--fg-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: var(--t-color);
+}
+.project-dropdown__item:hover .project-dropdown__remove {
+  opacity: 0.7;
+}
+.project-dropdown__remove:hover {
+  opacity: 1 !important;
+  background: var(--bg-list-active);
+  color: var(--danger);
+}
+
+.project-dropdown__sep {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 4px 0;
+}
+
+.project-dropdown__action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  background: transparent;
+  color: var(--fg-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  transition: var(--t-color);
+}
+.project-dropdown__action:hover:not(:disabled) {
+  background: var(--bg-list-hover);
+  color: var(--fg-primary);
+}
+.project-dropdown__action:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+.project-dropdown__action--danger:hover {
+  color: var(--danger);
+}
+.project-dropdown__shortcut {
+  margin-left: auto;
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  font-family: var(--font-ui-mono, monospace);
+}

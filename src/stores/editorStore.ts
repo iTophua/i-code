@@ -2,10 +2,15 @@ import { create } from "zustand";
 import { getLanguage } from "../utils/language";
 import { noteDisplayTitle } from "./notesStore";
 import { useFileTreeStore } from "./fileTreeStore";
+import { useLayoutStore } from "./layoutStore";
+import { disposeModelByPath, disposeModelsByPaths } from "../monaco/disposeModel";
 
 /**
  * 编辑器 Tab 状态管理
  * Tab 类型: 文件(file) 和 便签(note), 统一在主编辑区用 Tab 打开
+ *
+ * 内存优化: tab 关闭时主动 dispose Monaco model(否则 model + worker 镜像永久驻留)。
+ *           recentlyClosed 仅存轻量元数据, 不含文件内容, reopenClosed 时从源头重读。
  */
 
 export type TabKind = "file" | "note" | "diff" | "history" | "blame" | "log" | "merge" | "tool" | "image";
@@ -40,6 +45,21 @@ export interface EditorTab {
   /** diff 原始内容(仅 diff) */
   diffOriginal?: string;
   /** 工具 id(仅 tool) */
+  tool?: string;
+}
+
+/**
+ * 最近关闭栈的轻量元数据(不含 content/originalContent/diffOriginal,
+ * 避免 20 个关闭的文件正文常驻内存)。reopenClosed 时按 kind 重新加载内容。
+ */
+export interface ClosedTabMeta {
+  id: string;
+  kind: TabKind;
+  path: string;
+  name: string;
+  language: string;
+  noteTitle?: string;
+  noteId?: string;
   tool?: string;
 }
 
@@ -92,6 +112,12 @@ interface EditorStore {
   closeOthers: (id: string) => void;
   /** 关闭全部 Tab */
   closeAll: () => void;
+  /**
+   * 仅关闭"文件类" Tab(file/blame/history/log/image/merge/diff/tool),
+   * 便签(note)是全局的不绑定项目 → 保留。
+   * 用于项目切换/关闭:释放旧项目文件 Monaco model, 便签原样留在 tabs 数组。
+   */
+  closeAllFiles: () => void;
   /** 切换激活 Tab */
   setActiveTab: (id: string) => void;
   /** 更新 Tab 内容 */
@@ -104,10 +130,10 @@ interface EditorStore {
   recordViewport: (id: string, vp: { cursor?: { line: number; column: number }; scrollTop?: number }) => void;
   /** 恢复一个 Tab(会话恢复用, 直接构造完整状态) */
   restoreTab: (tab: EditorTab) => void;
-  /** 最近关闭的 Tab 栈(供 Cmd+Shift+T 恢复) */
-  recentlyClosed: EditorTab[];
-  /** 恢复最近关闭的 Tab */
-  reopenClosed: () => void;
+  /** 最近关闭的 Tab 栈(供 Cmd+Shift+T 恢复, 仅元数据) */
+  recentlyClosed: ClosedTabMeta[];
+  /** 恢复最近关闭的 Tab(按 kind 重新加载内容) */
+  reopenClosed: () => Promise<void>;
   /** 判断路径是否有未保存修改(给文件树标记用) */
   isDirty: (path: string) => boolean;
 
@@ -132,6 +158,32 @@ interface EditorStore {
   setSplitActive: (id: string) => void;
   /** 关闭第二组 Tab */
   closeSplitTab: (id: string) => void;
+}
+
+/** 从完整 Tab 提取轻量元数据(用于 recentlyClosed, 不含正文) */
+function toClosedMeta(tab: EditorTab): ClosedTabMeta {
+  return {
+    id: tab.id,
+    kind: tab.kind,
+    path: tab.path,
+    name: tab.name,
+    language: tab.language,
+    noteTitle: tab.noteTitle,
+    noteId: tab.noteId,
+    tool: tab.tool,
+  };
+}
+
+/**
+ * 批量构造最近关闭元数据:
+ *  - 排除预览 tab(不入栈)
+ *  - 排除 diff tab(内容是瞬时对比, 无法 reopenClosed 恢复 → 不入栈避免栈顶浪费)
+ */
+function toClosedMetas(tabs: EditorTab[]): ClosedTabMeta[] {
+  return tabs
+    .filter((t) => !t.isPreview && t.kind !== "diff")
+    .reverse()
+    .map(toClosedMeta);
 }
 
 export const useEditorStore = create<EditorStore>((set, get) => ({
@@ -248,8 +300,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       name: title,
       isPreview: false,
       isDirty: false,
+      // diff tab 只读, originalContent 永不参与 dirty 判断 → 用空串省一份正文拷贝
       content: modified,
-      originalContent: modified,
+      originalContent: "",
       diffOriginal: original,
       language: language || "plaintext",
     };
@@ -394,6 +447,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const idx = tabs.findIndex((t) => t.id === id);
     if (idx < 0) return;
     const closed = tabs[idx];
+    // 释放 Monaco model(避免正文 + worker 镜像常驻)
+    disposeModelByPath(closed.path);
     const newTabs = tabs.filter((t) => t.id !== id);
     let newActive = activeTabId;
     if (activeTabId === id) {
@@ -401,8 +456,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       const next = newTabs[idx] || newTabs[idx - 1] || null;
       newActive = next?.id ?? null;
     }
-    // 压入最近关闭栈(限 20 个)
-    const recentlyClosed = [closed, ...get().recentlyClosed].slice(0, 20);
+    // 压入最近关闭栈(限 20 个, 仅元数据不含正文; diff/预览不入栈)
+    const shouldPush = !closed.isPreview && closed.kind !== "diff";
+    const recentlyClosed = shouldPush
+      ? [toClosedMeta(closed), ...get().recentlyClosed].slice(0, 20)
+      : get().recentlyClosed;
     set({ tabs: newTabs, activeTabId: newActive, recentlyClosed });
   },
 
@@ -410,11 +468,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const { tabs, activeTabId } = get();
     const idx = tabs.findIndex((t) => t.id === id);
     if (idx < 0) return;
-    // 关闭的推入最近关闭栈, 预览 tab 不入栈
     const closing = tabs.slice(0, idx);
     const remaining = tabs.slice(idx);
+    // 批量释放被关闭的 model
+    disposeModelsByPaths(closing.map((t) => t.path));
     const recentlyClosed = [
-      ...closing.filter((t) => !t.isPreview).reverse(),
+      ...toClosedMetas(closing),
       ...get().recentlyClosed,
     ].slice(0, 20);
     const newActive = remaining.some((t) => t.id === activeTabId)
@@ -429,8 +488,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     if (idx < 0) return;
     const closing = tabs.slice(idx + 1);
     const remaining = tabs.slice(0, idx + 1);
+    disposeModelsByPaths(closing.map((t) => t.path));
     const recentlyClosed = [
-      ...closing.filter((t) => !t.isPreview).reverse(),
+      ...toClosedMetas(closing),
       ...get().recentlyClosed,
     ].slice(0, 20);
     const newActive = remaining.some((t) => t.id === activeTabId)
@@ -444,8 +504,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const keep = tabs.find((t) => t.id === id);
     if (!keep) return;
     const closing = tabs.filter((t) => t.id !== id);
+    disposeModelsByPaths(closing.map((t) => t.path));
     const recentlyClosed = [
-      ...closing.filter((t) => !t.isPreview).reverse(),
+      ...toClosedMetas(closing),
       ...get().recentlyClosed,
     ].slice(0, 20);
     set({ tabs: [keep], activeTabId: id, recentlyClosed });
@@ -453,11 +514,43 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   closeAll: () => {
     const { tabs } = get();
+    disposeModelsByPaths(tabs.map((t) => t.path));
     const recentlyClosed = [
-      ...tabs.filter((t) => !t.isPreview).reverse(),
+      ...toClosedMetas(tabs),
       ...get().recentlyClosed,
     ].slice(0, 20);
     set({ tabs: [], activeTabId: null, recentlyClosed });
+  },
+
+  closeAllFiles: () => {
+    const { tabs, splitTabs, activeTabId, splitActiveId } = get();
+    // 主组 + 分屏组的非 note tab 都要关(便签全局保留)
+    const closingMain = tabs.filter((t) => t.kind !== "note");
+    const closingSplit = splitTabs.filter((t) => t.kind !== "note");
+    const allClosing = [...closingMain, ...closingSplit];
+    if (allClosing.length === 0) return;
+    disposeModelsByPaths(allClosing.map((t) => t.path));
+    const recentlyClosed = [
+      ...toClosedMetas(allClosing),
+      ...get().recentlyClosed,
+    ].slice(0, 20);
+    // 保留 note tab(主组 + 分屏组各自的便签)
+    const remainingMain = tabs.filter((t) => t.kind === "note");
+    const remainingSplit = splitTabs.filter((t) => t.kind === "note");
+    // 激活的若是被关的文件 → 切到第一个便签(或 null)
+    const newActive = remainingMain.some((t) => t.id === activeTabId)
+      ? activeTabId
+      : remainingMain[0]?.id ?? null;
+    const newSplitActive = remainingSplit.some((t) => t.id === splitActiveId)
+      ? splitActiveId
+      : remainingSplit[0]?.id ?? null;
+    set({
+      tabs: remainingMain,
+      splitTabs: remainingSplit,
+      activeTabId: newActive,
+      splitActiveId: newSplitActive,
+      recentlyClosed,
+    });
   },
 
   setActiveTab: (id) => {
@@ -514,20 +607,91 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set({ tabs: [...tabs, tab] });
   },
 
-  reopenClosed: () => {
+  reopenClosed: async () => {
     const { recentlyClosed, tabs } = get();
     if (recentlyClosed.length === 0) return;
-    const [reopen, ...rest] = recentlyClosed;
-    // 若已存在, 不重复加
-    if (tabs.some((t) => t.path === reopen.path)) {
-      set({ recentlyClosed: rest, activeTabId: reopen.id });
+    const [meta, ...rest] = recentlyClosed;
+    // 若已存在, 不重复加, 只激活
+    if (tabs.some((t) => t.path === meta.path || t.id === meta.id)) {
+      set({ recentlyClosed: rest, activeTabId: meta.id });
       return;
     }
-    set({
-      recentlyClosed: rest,
-      tabs: [...tabs, { ...reopen, isPreview: false }],
-      activeTabId: reopen.id,
-    });
+    // 按 kind 重新加载内容(不依赖已释放的正文)
+    if (meta.kind === "file") {
+      try {
+        const { invoke } = await import("@tauri-apps/api/core");
+        const [content] = await invoke<[string, string]>("read_file", { filePath: meta.path });
+        set({
+          recentlyClosed: rest,
+          tabs: [
+            ...tabs,
+            {
+              id: meta.id,
+              kind: "file",
+              path: meta.path,
+              name: meta.name,
+              isPreview: false,
+              isDirty: false,
+              content,
+              originalContent: content,
+              language: meta.language,
+            },
+          ],
+          activeTabId: meta.id,
+        });
+      } catch (e) {
+        console.error("恢复关闭的文件失败:", e);
+        set({ recentlyClosed: rest });
+      }
+      return;
+    }
+    if (meta.kind === "note" && meta.noteId) {
+      // 便签: 从 SQLite 重新加载(确保 notes 已加载, 否则空内容)
+      const { useNotesStore } = await import("./notesStore");
+      const notesState = useNotesStore.getState();
+      if (notesState.notes.length === 0) {
+        // notes 未加载 → 触发加载再读(避免恢复出空便签)
+        await notesState.loadNotes(useLayoutStore.getState().workspaceRoot);
+      }
+      const note = useNotesStore.getState().notes.find((n) => n.id === meta.noteId);
+      if (!note) {
+        // 便签已被删除 → 弹出栈不恢复, 提示用户
+        set({ recentlyClosed: rest });
+        return;
+      }
+      const content = note.content;
+      set({
+        recentlyClosed: rest,
+        tabs: [
+          ...tabs,
+          {
+            id: meta.id,
+            kind: "note",
+            path: meta.id,
+            name: noteDisplayTitle({ title: meta.noteTitle ?? "", content }),
+            isPreview: false,
+            isDirty: false,
+            content,
+            originalContent: content,
+            language: meta.language,
+            noteId: meta.noteId,
+            noteTitle: meta.noteTitle,
+          },
+        ],
+        activeTabId: meta.id,
+      });
+      return;
+    }
+    // 无内容类型(history/blame/log/image/diff/tool): 用对应 open 方法重新打开
+    set({ recentlyClosed: rest });
+    const store = get();
+    const { fileName } = parseName(meta.name);
+    if (meta.kind === "image") store.openImage({ filePath: meta.path, fileName });
+    else if (meta.kind === "blame") store.openBlame({ filePath: meta.path, fileName });
+    else if (meta.kind === "log") store.openLog({ filePath: meta.path, fileName });
+    else if (meta.kind === "history") store.openHistory({ filePath: meta.path, fileName });
+    else if (meta.kind === "tool" && meta.tool) store.openTool({ tool: meta.tool, title: meta.name });
+    // diff 不持久化到 recentlyClosed(内容是瞬时的对比), 跳过
   },
 
   isDirty: (path) => {
@@ -594,14 +758,24 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   closeSplitTab: (id) => {
     const { splitTabs, splitActiveId } = get();
     const closed = splitTabs.find((t) => t.id === id);
+    if (closed) disposeModelByPath(closed.path);
     const newSplit = splitTabs.filter((t) => t.id !== id);
     let newActive = splitActiveId;
     if (splitActiveId === id) {
       newActive = newSplit[newSplit.length - 1]?.id ?? null;
     }
-    const recentlyClosed = closed
-      ? [closed, ...get().recentlyClosed].slice(0, 20)
+    // diff/预览不入栈
+    const shouldPush = closed && !closed.isPreview && closed.kind !== "diff";
+    const recentlyClosed = shouldPush
+      ? [toClosedMeta(closed), ...get().recentlyClosed].slice(0, 20)
       : get().recentlyClosed;
     set({ splitTabs: newSplit, splitActiveId: newActive, recentlyClosed });
   },
 }));
+
+/** 从带前缀的 tab 名(如 "历史: foo.ts")还原文件名 */
+function parseName(tabName: string): { fileName: string } {
+  // 历史:/Blame:/合并: 前缀去掉
+  const cleaned = tabName.replace(/^(历史: |Blame: |合并: )/, "");
+  return { fileName: cleaned };
+}

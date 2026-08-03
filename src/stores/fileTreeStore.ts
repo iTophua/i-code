@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
-import { setSession, getSession, SESSION_KEYS } from "../utils/session";
+import { setSession, getSession, SESSION_KEYS, projectKey } from "../utils/session";
 
 /**
  * 文件树状态管理
@@ -56,13 +56,17 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
   sortBy: "name",
 
   setRootPath: async (path) => {
-    // 恢复上次展开的目录(从 session 读)
+    // 恢复上次展开的目录(从 session 读, 按项目隔离避免跨项目串味)
     let restoredExpanded = new Set<string>();
     try {
-      const saved = await getSession<string[]>(SESSION_KEYS.treeExpanded);
+      const saved = await getSession<string[]>(
+        path ? projectKey(SESSION_KEYS.treeExpanded, path) : SESSION_KEYS.treeExpanded
+      );
       if (saved && saved.length > 0) restoredExpanded = new Set(saved);
     } catch { /* ignore */ }
-    const savedSelected = await getSession<string>(SESSION_KEYS.treeSelected);
+    const savedSelected = await getSession<string>(
+      path ? projectKey(SESSION_KEYS.treeSelected, path) : SESSION_KEYS.treeSelected
+    );
     set({
       rootPath: path,
       treeData: [],
@@ -125,8 +129,12 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
     }
     set({ expandedPaths: newExpanded, treeData: [...treeData] });
     get().recomputeVisible();
-    // 持久化展开状态(防抖由调用频率自然限流)
-    setSession(SESSION_KEYS.treeExpanded, [...newExpanded]).catch(() => {});
+    // 持久化展开状态(按项目隔离, 防抖由调用频率自然限流)
+    const { rootPath } = get();
+    setSession(
+      rootPath ? projectKey(SESSION_KEYS.treeExpanded, rootPath) : SESSION_KEYS.treeExpanded,
+      [...newExpanded]
+    ).catch(() => {});
   },
 
   setFilter: (f) => {
@@ -136,7 +144,13 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
 
   setSelected: (path) => {
     set({ selectedPath: path });
-    if (path) setSession(SESSION_KEYS.treeSelected, path).catch(() => {});
+    const { rootPath } = get();
+    if (path) {
+      setSession(
+        rootPath ? projectKey(SESSION_KEYS.treeSelected, rootPath) : SESSION_KEYS.treeSelected,
+        path
+      ).catch(() => {});
+    }
   },
 
   recomputeVisible: () => {

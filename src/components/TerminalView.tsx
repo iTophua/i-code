@@ -92,14 +92,17 @@ export function TerminalView({ termId, active }: Props) {
       invoke("terminal_write", { id: termId, data }).catch(console.error);
     });
 
-    // 监听后端输出
+    // 监听后端输出 —— mounted 标记防止: 卸载发生在 listen promise resolve 前,
+    // 此时 unlisten 仍为 null, cleanup 调用不到 → 监听器泄漏。resolve 后若已卸载则立即注销。
     let unlisten: UnlistenFn | null = null;
+    let mounted = true;
     listen<{ id: string; data: string }>("terminal-output", (e) => {
       if (e.payload.id === termId) {
         term.write(e.payload.data);
       }
     }).then((fn) => {
-      unlisten = fn;
+      if (mounted) unlisten = fn;
+      else fn(); // 已卸载, 立即注销
     });
 
     // 监听退出
@@ -109,7 +112,8 @@ export function TerminalView({ termId, active }: Props) {
         term.write("\r\n\x1b[90m[进程已退出]\x1b[0m\r\n");
       }
     }).then((fn) => {
-      unlistenExit = fn;
+      if (mounted) unlistenExit = fn;
+      else fn();
     });
 
     // resize → 通知后端
@@ -142,6 +146,7 @@ export function TerminalView({ termId, active }: Props) {
     ro.observe(containerRef.current);
 
     return () => {
+      mounted = false;
       onData.dispose();
       onResize.dispose();
       unlisten?.();

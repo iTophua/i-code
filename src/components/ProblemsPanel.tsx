@@ -12,15 +12,21 @@ const SEVERITY_ICON = {
   info: Info,
 };
 
-export function ProblemsPanel() {
+export function ProblemsPanel({ visible = true }: { visible?: boolean }) {
   const { problems, refresh } = useProblemsStore();
 
-  // 定时刷新(每 2 秒)
+  // 定时刷新(每 2 秒) —— 仅面板可见时轮询, 隐藏时停掉以减少 getModels 遍历开销
   useEffect(() => {
+    if (!visible) return;
     refresh();
     const timer = setInterval(refresh, 2000);
     return () => clearInterval(timer);
-  }, [refresh]);
+  }, [refresh, visible]);
+
+  // 切回可见时立即刷新一次(展示最新 markers, 而非等下一个 2s tick)
+  useEffect(() => {
+    if (visible) refresh();
+  }, [visible, refresh]);
 
   // 按文件分组
   const grouped = problems.reduce<Record<string, ProblemItem[]>>((acc, p) => {

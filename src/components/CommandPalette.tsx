@@ -3,6 +3,7 @@ import { useLayoutStore } from "../stores/layoutStore";
 import { useEditorStore } from "../stores/editorStore";
 import { triggerEditorAction } from "../monaco/activeEditor";
 import { toast } from "../stores/toastStore";
+import { closeProject } from "../utils/project";
 import { Search } from "lucide-react";
 import "../styles/command-palette.css";
 
@@ -51,6 +52,7 @@ export function CommandPalette() {
     const editor = useEditorStore.getState();
     return [
       { id: "open-folder", label: "打开文件夹", shortcut: "Cmd+O", action: () => window.dispatchEvent(new KeyboardEvent("keydown", { metaKey: true, key: "o" })) },
+      { id: "close-project", label: "关闭项目", action: async () => { await closeProject(); toast.info("已关闭项目"); } },
       { id: "toggle-sidebar", label: "切换侧栏", shortcut: "Cmd+B", action: layout.toggleSidebar },
       { id: "toggle-terminal", label: "切换终端", shortcut: "Ctrl+`", action: layout.togglePanel },
       { id: "toggle-zen", label: "切换 Zen 模式", shortcut: "Cmd+Shift+Z", action: layout.toggleZen },

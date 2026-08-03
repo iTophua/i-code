@@ -13,18 +13,33 @@ export function ImagePreview({ filePath, fileName }: { filePath: string; fileNam
   useEffect(() => {
     setMeta(null);
     setZoom(1);
+    let cancelled = false;
     // 读取文件大小
     invoke<number>("get_file_size", { filePath })
       .then((bytes) => {
-        setMeta((m) => ({ size: formatSize(bytes), dims: m?.dims ?? "" }));
+        if (!cancelled) {
+          setMeta((m) => ({ size: formatSize(bytes), dims: m?.dims ?? "" }));
+        }
       })
       .catch(() => {});
-    // 读取图片尺寸
+    // 读取图片尺寸 —— 卸载时取消(onerror 防止异常静默丢弃; src 置空释放解码缓冲)
     const img = new Image();
     img.onload = () => {
-      setMeta((m) => ({ size: m?.size ?? "", dims: `${img.naturalWidth} × ${img.naturalHeight}` }));
+      if (!cancelled) {
+        setMeta((m) => ({ size: m?.size ?? "", dims: `${img.naturalWidth} × ${img.naturalHeight}` }));
+      }
+    };
+    img.onerror = () => {
+      /* 尺寸探测失败静默处理(<img> 主元素会显示 onError) */
     };
     img.src = url;
+    return () => {
+      cancelled = true;
+      // 释放 Image 解码缓冲(浏览器会缓存已解码图片, 主动断开引用加速回收)
+      img.onload = null;
+      img.onerror = null;
+      img.src = "";
+    };
   }, [filePath, url]);
 
   return (

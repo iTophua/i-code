@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
 import { useLayoutStore } from "../stores/layoutStore";
-import { useFileTreeStore } from "../stores/fileTreeStore";
 import { getRecentProjects, removeRecentProject, type RecentProject } from "../utils/recentProjects";
-import { addRecentProject } from "../utils/recentProjects";
+import { switchProject, openFolderDialog } from "../utils/project";
 import { FolderOpen, Clock, FileText } from "lucide-react";
 import "../styles/welcome.css";
 
 export function WelcomePage() {
-  const setWorkspaceRoot = useLayoutStore((s) => s.setWorkspaceRoot);
   const setSidebarView = useLayoutStore((s) => s.setSidebarView);
-  const setRootPath = useFileTreeStore((s) => s.setRootPath);
   const [recent, setRecent] = useState<RecentProject[]>([]);
 
   useEffect(() => {
@@ -19,22 +15,15 @@ export function WelcomePage() {
 
   const openFolder = async () => {
     try {
-      const selected = await open({ directory: true, multiple: false, title: "选择项目文件夹" });
-      if (typeof selected === "string") {
-        await addRecentProject(selected);
-        await setRootPath(selected);
-        setWorkspaceRoot(selected);
-        getRecentProjects().then(setRecent);
-      }
+      const selected = await openFolderDialog();
+      if (selected) getRecentProjects().then(setRecent);
     } catch (e) {
       console.error(e);
     }
   };
 
   const openRecent = async (path: string) => {
-    await addRecentProject(path);
-    await setRootPath(path);
-    setWorkspaceRoot(path);
+    await switchProject(path);
   };
 
   const removeRecent = async (path: string, e: React.MouseEvent) => {
