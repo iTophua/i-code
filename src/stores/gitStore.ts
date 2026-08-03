@@ -82,11 +82,20 @@ interface GitStore {
 
   // 分支
   branches: GitBranch[];
+  /** 最近 checkout 过的分支名(从 reflog 解析) */
+  recentBranches: string[];
   log: GitLogEntry[];
   loadBranches: () => Promise<void>;
+  loadRecentBranches: () => Promise<void>;
   loadLog: () => Promise<void>;
   checkout: (branch: string) => Promise<void>;
   createBranch: (name: string, checkout?: boolean) => Promise<void>;
+  /** 从指定 source 分支创建新分支(对标 IDEA New Branch from) */
+  createBranchFrom: (name: string, source: string, checkout?: boolean) => Promise<void>;
+  /** 重命名本地分支 */
+  renameBranch: (oldName: string, newName: string) => Promise<void>;
+  /** 比较两个分支的差异 commit 列表 */
+  compareBranches: (base: string, target: string) => Promise<GitLogEntry[]>;
   deleteBranch: (name: string, force?: boolean) => Promise<void>;
   merge: (branch: string) => Promise<void>;
   rebase: (branch: string) => Promise<void>;
@@ -222,19 +231,31 @@ function parseBranches(output: string): GitBranch[] {
     .split("\n")
     .filter((l) => l.trim().length > 0)
     .map((line) => {
-      const parts = line.trim().split(/\s+/);
+      // format: %(HEAD)|%(refname)|%(refname:short)|%(objectname:short)|%(upstream:short)
+      // 用 | 分隔:HEAD 对非当前分支返回空字符串, 用空格会被 trim+split 吞掉
+      const parts = line.split("|");
       const current = parts[0] === "*";
-      const name = parts[1] || "";
-      const shortHash = parts[2] || "";
-      const upstream = parts[3] || "";
+      const fullRefname = parts[1] || "";   // refs/heads/main / refs/remotes/origin/main
+      const name = parts[2] || "";           // main / origin/main (short, 用于显示)
+      const shortHash = parts[3] || "";
+      const upstream = parts[4] || "";
       return {
         current,
         name,
         shortHash,
         upstream,
-        isRemote: name.startsWith("remotes/"),
+        // 用完整 refname 判断:refs/remotes/* 是远程分支
+        isRemote: fullRefname.startsWith("refs/remotes/"),
       };
-    });
+    })
+    // 过滤 detached HEAD 条目:
+    //  - name 形如 "(HEAD" / "(detached" / "(no" (括号开头,非合法分支名)
+    //  - name 是纯 commit hash(7+ 位十六进制,detached 时 refname:short 返回 hash)
+    .filter(
+      (b) =>
+        !b.name.startsWith("(") &&
+        !/^[0-9a-f]{7,40}$/.test(b.name)
+    );
 }
 
 export const useGitStore = create<GitStore>((set, get) => ({
@@ -245,6 +266,7 @@ export const useGitStore = create<GitStore>((set, get) => ({
   loading: false,
   error: null,
   branches: [],
+  recentBranches: [],
   log: [],
 
   refresh: async (workspaceRoot) => {
@@ -329,6 +351,17 @@ export const useGitStore = create<GitStore>((set, get) => ({
     set({ branches: parseBranches(out) });
   },
 
+  loadRecentBranches: async () => {
+    const { repoRoot } = get();
+    if (!repoRoot) return;
+    try {
+      const recent = await invoke<string[]>("git_recent_branches", { path: repoRoot });
+      set({ recentBranches: recent });
+    } catch {
+      set({ recentBranches: [] });
+    }
+  },
+
   loadLog: async () => {
     const { repoRoot } = get();
     if (!repoRoot) return;
@@ -352,6 +385,32 @@ export const useGitStore = create<GitStore>((set, get) => ({
       await invoke("git_create_branch", { path: repoRoot, name });
     }
     await get().refresh(repoRoot);
+  },
+
+  createBranchFrom: async (name, source, checkout) => {
+    const { repoRoot } = get();
+    if (!repoRoot) return;
+    await invoke("git_branch_from", { path: repoRoot, newName: name, source });
+    if (checkout) {
+      await invoke("git_checkout", { path: repoRoot, branch: name });
+    }
+    await get().refresh(repoRoot);
+  },
+
+  renameBranch: async (oldName, newName) => {
+    const { repoRoot } = get();
+    if (!repoRoot) return;
+    await invoke("git_branch_rename", { path: repoRoot, oldName, newName });
+    await get().refresh(repoRoot);
+  },
+
+  compareBranches: async (base, target) => {
+    const { repoRoot } = get();
+    if (!repoRoot) return [];
+    const out = await invoke<string>("git_compare_branches", {
+      path: repoRoot, base, target,
+    });
+    return parseLog(out);
   },
 
   deleteBranch: async (name, force) => {

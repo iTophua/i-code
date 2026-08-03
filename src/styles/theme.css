@@ -53,6 +53,13 @@
   --border-subtle: #262626;
   --border-focus: #007acc;
 
+  /* --- 焦点环(输入框聚焦光晕) --- */
+  --bg-focus-ring: rgba(0, 122, 204, 0.18);
+
+  /* --- 文件图标(Seti 风格轮廓) --- */
+  --bg-icon-file: rgba(150, 150, 150, 0.14);
+  --fg-icon-file: rgba(160, 160, 160, 0.5);
+
   /* --- Git 状态 --- */
   --git-added: #73c991;
   --git-modified: #e2c08d;
@@ -215,6 +222,13 @@
   --border-base: #dcdcdc;
   --border-subtle: #ececec;
   --border-focus: #007acc;
+
+  /* 焦点环(浅色主题略深) */
+  --bg-focus-ring: rgba(0, 122, 204, 0.15);
+
+  /* 文件图标(Seti 风格轮廓, 浅色主题稍深) */
+  --bg-icon-file: rgba(110, 110, 110, 0.12);
+  --fg-icon-file: rgba(110, 110, 110, 0.55);
 
   /* Git */
   --git-added: #2c8e2c;

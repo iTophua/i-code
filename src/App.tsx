@@ -27,6 +27,7 @@ import { CommandPalette } from "./components/CommandPalette";
 import { Breadcrumb } from "./components/Breadcrumb";
 import { SplitEditorTabs } from "./components/SplitEditorTabs";
 import { SplitEditorPane } from "./components/SplitEditorPane";
+import { DragSplitOverlay, useDragSplit } from "./components/DragSplitOverlay";
 import { useState } from "react";
 import {
   setSession,
@@ -65,6 +66,24 @@ export default function App() {
   const [closeConfirm, setCloseConfirm] = useState<{ id: string; name: string } | null>(null);
   const [savingTab, setSavingTab] = useState(false);
   const [restored, setRestored] = useState(false);
+
+  // 拖拽分屏:拖 tab 到编辑区四象限 → 按方向分屏并移动 tab
+  const { wrapRef: splitDropRef, overlay: dragOverlay, handlers: splitDropHandlers } = useDragSplit(
+    (tabId, fromSplit, zone) => {
+      const st = useEditorStore.getState();
+      // zone → orientation: left/right = horizontal(左右), top/bottom = vertical(上下)
+      const orientation = zone === "left" || zone === "right" ? "horizontal" : "vertical";
+      st.setSplitOrientation(orientation);
+      // 若已在分屏且 tab 来自另一组, 按目标组移动
+      if (fromSplit) {
+        // 来自分屏组 → 确保在分屏组(已在);若拖到主区意图则移回主组
+        // 简化:始终保持在分屏组(用户拖动是为了换方向)
+      } else {
+        // 来自主组 → 移到分屏组(moveToSplit 会自动开启分屏)
+        if (!st.splitTabs.some((t) => t.id === tabId)) st.moveToSplit(tabId);
+      }
+    }
+  );
 
   // 打开文件夹(走统一的 switchProject 入口: 保存当前项目 tab + 加载新项目 + 刷新 git)
   const handleOpenFolder = useCallback(async () => {
@@ -552,10 +571,13 @@ export default function App() {
             <EditorTabs />
             <Breadcrumb />
               <div
+                ref={splitDropRef}
                 className={`app__split-wrap ${splitEnabled ? "app__split-wrap--on" : ""} ${
                   splitEnabled ? `app__split-wrap--${splitOrientation}` : ""
                 }`}
+                {...splitDropHandlers}
               >
+                {dragOverlay && <DragSplitOverlay rect={dragOverlay.rect} zone={dragOverlay.zone} />}
                 <div className={`app__editor-area ${splitEnabled ? "app__editor-area--split" : ""}`}>
                   {zenMode && (
                     <button

@@ -4,10 +4,11 @@ import { useGitStore } from "../stores/gitStore";
 import { Settings, CircleHelp, Folder, ChevronDown, FolderOpen, X, Plus } from "lucide-react";
 import { getRecentProjects, removeRecentProject, type RecentProject } from "../utils/recentProjects";
 import { switchProject, closeProject, openFolderDialog } from "../utils/project";
+import { BranchSwitcher } from "./BranchSwitcher";
 import "../styles/titlebar.css";
 
 export function TitleBar() {
-  const { branch, changes } = useGitStore();
+  const changes = useGitStore((s) => s.changes);
   const workspaceRoot = useLayoutStore((s) => s.workspaceRoot);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const projectWrapRef = useRef<HTMLDivElement>(null);
@@ -15,16 +16,26 @@ export function TitleBar() {
   // 项目名(路径最后一段), 无项目时为空
   const projectName = workspaceRoot ? workspaceRoot.split("/").pop() || workspaceRoot : "";
 
-  // 点切换器外部关闭下拉(用 mousedown 避免与按钮 onClick 冲突)
+  // 点切换器外部关闭下拉
+  // 用 click 而非 mousedown:Tauri 的 data-tauri-drag-region 在原生层拦截 mousedown
+  // 启动窗口拖拽, 导致标题栏空白区的 mousedown 不派发到 JS → 下拉不收起。
+  // click 在 mouseup 后触发, drag-region 不拦截, 能正常收到。
+  // 下拉项用 onMouseDown 触发(stopPropagation), 避免先关闭再点击的竞态。
   useEffect(() => {
     if (!dropdownOpen) return;
-    const onDown = (e: MouseEvent) => {
+    const onClick = (e: MouseEvent) => {
       if (projectWrapRef.current && !projectWrapRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
       }
     };
-    window.addEventListener("mousedown", onDown);
-    return () => window.removeEventListener("mousedown", onDown);
+    // 延迟绑定:避免本次打开下拉的 click 冒泡到 document 立即关闭
+    const id = window.setTimeout(() => {
+      document.addEventListener("click", onClick);
+    }, 0);
+    return () => {
+      window.clearTimeout(id);
+      document.removeEventListener("click", onClick);
+    };
   }, [dropdownOpen]);
 
   // 项目被外部入口(命令面板/快捷键/欢迎页)切换 → 关闭下拉, 避免列表/当前标记陈旧
@@ -35,7 +46,7 @@ export function TitleBar() {
   return (
     <div className="titlebar" data-tauri-drag-region>
       <div className="titlebar__traffic" />
-      {/* 项目切换器(红绿灯正右侧, 左对齐) */}
+      {/* 项目切换器(红绿灯正右侧) + 分支徽章(紧跟项目右侧) */}
       <div className="titlebar__project-wrap" ref={projectWrapRef}>
         <button
           className="titlebar__project"
@@ -48,6 +59,14 @@ export function TitleBar() {
           </span>
           <ChevronDown size={12} strokeWidth={1.5} className="titlebar__project-chev" />
         </button>
+        {/* 分支切换器(项目切换器右侧, 可点开下拉切换/新建分支) */}
+        <BranchSwitcher />
+        {/* 改动数徽章(紧跟分支, >0 时显示) */}
+        {changes.length > 0 && (
+          <span className="titlebar__changes-count" title={`${changes.length} 个改动`}>
+            {changes.length}
+          </span>
+        )}
         {dropdownOpen && (
           <ProjectDropdown
             currentRoot={workspaceRoot}
@@ -55,18 +74,8 @@ export function TitleBar() {
           />
         )}
       </div>
-      <div className="titlebar__center" data-tauri-drag-region>
-        {branch && (
-          <span className="titlebar__branch" data-tauri-drag-region>
-            ⎇ {branch}
-            {changes.length > 0 && (
-              <span className="titlebar__branch-count" data-tauri-drag-region>
-                {changes.length}
-              </span>
-            )}
-          </span>
-        )}
-      </div>
+      {/* 弹性占位(把项目+分支推到左侧) */}
+      <div className="titlebar__center" data-tauri-drag-region />
       <div className="titlebar__actions">
         <button
           className="titlebar__btn"

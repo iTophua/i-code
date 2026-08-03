@@ -16,34 +16,28 @@
   flex-shrink: 0;
 }
 
-/* 中间区域(显示分支) */
+/* 中间弹性占位(把项目切换器+分支推到左侧) */
 .titlebar__center {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   height: 100%;
   min-width: 0;
 }
 
-.titlebar__branch {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--fs-sm);
-  color: var(--fg-secondary);
-  padding: 2px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-list-hover);
-}
-.titlebar__branch-count {
-  font-size: var(--fs-2xs);
+/* 改动数徽章(紧跟分支切换器, 点缀元素:最小最克制) */
+.titlebar__changes-count {
+  font-size: 10px;
+  font-weight: 600;
   color: var(--git-modified);
   background: var(--git-modified-soft);
   padding: 0 5px;
-  border-radius: 8px;
-  min-width: 16px;
-  text-align: center;
+  border-radius: var(--radius-full);
+  min-width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 /* 右侧操作按钮 */
@@ -78,10 +72,16 @@
   color: var(--git-modified);
 }
 
-/* ============ 项目切换器(红绿灯正右侧) ============ */
+/* ============ 项目切换器(红绿灯正右侧) + 分支徽章 ============ */
 .titlebar__project-wrap {
   position: relative;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  /* 离红绿灯远一点(traffic 占位 78px 之外再加间距) */
+  margin-left: 12px;
 }
 
 .titlebar__project {
@@ -89,28 +89,32 @@
   align-items: center;
   gap: 5px;
   height: 26px;
-  padding: 0 8px 0 10px;
+  padding: 0 10px;
   border: none;
-  background: transparent;
-  color: var(--fg-secondary);
-  font-size: var(--fs-sm);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: var(--t-color);
-  max-width: 200px;
-}
-.titlebar__project:hover {
+  /* 主元素:实底胶囊, 比分支更显眼 */
   background: var(--bg-list-hover);
   color: var(--fg-primary);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  transition: var(--t-color);
+  max-width: 260px;
+}
+.titlebar__project:hover {
+  background: var(--bg-list-active);
+}
+/* 文件夹图标用强调色(蓝), 强化"项目"语义 */
+.titlebar__project > svg:first-child {
+  color: var(--fg-accent);
 }
 .titlebar__project-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 500;
+  font-weight: 600;
 }
 .titlebar__project-chev {
-  opacity: 0.6;
+  opacity: 0.55;
   flex-shrink: 0;
 }
 

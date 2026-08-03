@@ -227,3 +227,45 @@
 .tab:hover .tab__dirty--show {
   opacity: 0;
 }
+
+/* ============ 拖拽态 ============ */
+.tab--dragging {
+  opacity: 0.4;
+  cursor: grabbing !important;
+}
+.tab[draggable] {
+  cursor: grab;
+}
+.tab[draggable]:active {
+  cursor: grabbing;
+}
+
+/* ============ 拖拽分屏覆盖层 ============ */
+.drop-overlay {
+  pointer-events: none;
+}
+.drop-zone__half {
+  position: absolute;
+  background: transparent;
+  transition: background var(--dur-fast);
+}
+.drop-zone__half--active {
+  background: var(--bg-list-active);
+  opacity: 0.35;
+  box-shadow: inset 0 0 0 2px var(--border-focus);
+}
+.drop-zone__hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: var(--fs-sm);
+  color: var(--fg-accent);
+  background: var(--bg-menu);
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-menu);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 1;
+}

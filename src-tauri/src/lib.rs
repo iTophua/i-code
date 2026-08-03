@@ -121,6 +121,10 @@ pub fn run() {
             git_ops::git_blame,
             git_ops::git_file_history,
             git_ops::git_show_file,
+            git_ops::git_recent_branches,
+            git_ops::git_branch_from,
+            git_ops::git_branch_rename,
+            git_ops::git_compare_branches,
             take_pending_files,
         ])
         .build(tauri::generate_context!())

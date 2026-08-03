@@ -34,6 +34,18 @@ export function SplitEditorTabs() {
               <div
                 key={tab.id}
                 className={`tab ${isActive ? "tab--active" : ""}`}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData(
+                    "application/x-tab-id",
+                    JSON.stringify({ tabId: tab.id, fromSplit: true })
+                  );
+                  e.dataTransfer.effectAllowed = "move";
+                  e.currentTarget.classList.add("tab--dragging");
+                }}
+                onDragEnd={(e) => {
+                  e.currentTarget.classList.remove("tab--dragging");
+                }}
                 onClick={() => setSplitActive(tab.id)}
                 onAuxClick={(e) => {
                   if (e.button === 1) {

@@ -111,6 +111,18 @@ export function EditorTabs() {
                 className={`tab ${isActive ? "tab--active" : ""} ${
                   tab.isPreview ? "tab--preview" : ""
                 }`}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData(
+                    "application/x-tab-id",
+                    JSON.stringify({ tabId: tab.id, fromSplit: false })
+                  );
+                  e.dataTransfer.effectAllowed = "move";
+                  e.currentTarget.classList.add("tab--dragging");
+                }}
+                onDragEnd={(e) => {
+                  e.currentTarget.classList.remove("tab--dragging");
+                }}
                 onClick={() => setActiveTab(tab.id)}
                 onAuxClick={(e) => {
                   if (e.button === 1) {

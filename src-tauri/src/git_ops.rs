@@ -56,15 +56,22 @@ pub fn git_repo_root(path: String) -> Result<String, String> {
     }
 }
 
-/// 当前分支名
+/// 当前分支名(detached HEAD 时返回短 hash 前缀, 避免前端显示 "HEAD")
 #[tauri::command]
 pub fn git_current_branch(path: String) -> Result<String, String> {
     let r = git(&path, &["rev-parse", "--abbrev-ref", "HEAD"]);
-    if r.success {
-        Ok(r.stdout.trim().to_string())
-    } else {
-        Err(r.stderr)
+    if !r.success {
+        return Err(r.stderr);
     }
+    let name = r.stdout.trim();
+    // detached HEAD 时 --abbrev-ref 返回 "HEAD", 改用短 hash 更有意义
+    if name == "HEAD" {
+        let h = git(&path, &["rev-parse", "--short", "HEAD"]);
+        if h.success {
+            return Ok(format!("({})", h.stdout.trim()));
+        }
+    }
+    Ok(name.to_string())
 }
 
 /// git status (porcelain v2, 机器可读格式)
@@ -199,11 +206,13 @@ pub fn git_log(path: String, limit: Option<u32>) -> Result<String, String> {
 }
 
 /// 分支列表
+/// format 字段(用 | 分隔, 避免 HEAD 空字段被 split 吃掉):
+/// HEAD标记 | 完整refname(判断本地vs远程) | short refname(显示) | short hash | upstream
 #[tauri::command]
 pub fn git_branches(path: String) -> Result<String, String> {
     let r = git(
         &path,
-        &["branch", "--list", "--all", "--format=%(HEAD) %(refname:short) %(objectname:short) %(upstream:short)"],
+        &["branch", "--list", "--all", "--format=%(HEAD)|%(refname)|%(refname:short)|%(objectname:short)|%(upstream:short)"],
     );
     if r.success {
         Ok(r.stdout)
@@ -425,6 +434,82 @@ pub fn git_file_history(path: String, file: String) -> Result<String, String> {
 pub fn git_show_file(path: String, ref_name: String, file: String) -> Result<String, String> {
     let target = format!("{}:{}", ref_name, file);
     let r = git(&path, &["show", &target]);
+    if r.success {
+        Ok(r.stdout)
+    } else {
+        Err(r.stderr)
+    }
+}
+
+/// 最近 checkout 过的分支(从 reflog 解析, 去重, 最多 5 条)
+/// 用于分支面板的"最近分支"分组(对标 IDEA Recent Branches)
+#[tauri::command]
+pub fn git_recent_branches(path: String) -> Result<Vec<String>, String> {
+    // reflog 的 %gs 是简短描述, checkout 操作形如 "checkout: moving from X to Y"
+    let r = git(&path, &["reflog", "--format=%gs", "-100"]);
+    if !r.success {
+        return Ok(Vec::new());
+    }
+    let mut seen = std::collections::HashSet::new();
+    let mut result: Vec<String> = Vec::new();
+    for line in r.stdout.lines() {
+        // 匹配 "checkout: moving from X to Y"
+        if let Some(rest) = line.strip_prefix("checkout: moving from ") {
+            // rest = "X to Y"
+            if let Some((from, to)) = rest.split_once(" to ") {
+                // 同时收集 from(离开的)和 to(切入的), from 通常是上一个分支
+                for name in [from, to] {
+                    let name = name.trim();
+                    // 排除 hash(detached HEAD 切换)、排除 HEAD 字面量
+                    if name.is_empty()
+                        || name == "HEAD"
+                        || name.starts_with('(')
+                    {
+                        continue;
+                    }
+                    if seen.insert(name.to_string()) {
+                        result.push(name.to_string());
+                    }
+                }
+            }
+        }
+    }
+    // 最多 5 条
+    result.truncate(5);
+    Ok(result)
+}
+
+/// 从指定 source 分支创建新分支(对标 IDEA "New Branch from xxx")
+#[tauri::command]
+pub fn git_branch_from(path: String, new_name: String, source: String) -> Result<(), String> {
+    let r = git(&path, &["branch", &new_name, &source]);
+    if r.success {
+        Ok(())
+    } else {
+        Err(r.stderr)
+    }
+}
+
+/// 重命名分支(git branch -m old new)
+#[tauri::command]
+pub fn git_branch_rename(path: String, old_name: String, new_name: String) -> Result<(), String> {
+    let r = git(&path, &["branch", "-m", &old_name, &new_name]);
+    if r.success {
+        Ok(())
+    } else {
+        Err(r.stderr)
+    }
+}
+
+/// 比较两个分支的差异 commit 列表(git log base..target)
+/// 返回格式与 git_log 一致(7 字段 | 分隔), 复用前端 parseLog
+#[tauri::command]
+pub fn git_compare_branches(path: String, base: String, target: String) -> Result<String, String> {
+    let range = format!("{}..{}", base, target);
+    let r = git(
+        &path,
+        &["log", "--format=%H|%h|%an|%ae|%at|%s|%D", &range],
+    );
     if r.success {
         Ok(r.stdout)
     } else {

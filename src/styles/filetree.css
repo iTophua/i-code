@@ -67,21 +67,21 @@
 .branch-switcher {
   position: relative;
   flex-shrink: 0;
-  margin-left: auto;
 }
 .branch-switcher__trigger {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  max-width: 140px;
-  height: 20px;
-  padding: 0 6px;
-  border: none;
-  border-radius: var(--radius-sm);
+  max-width: 220px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-full);
+  /* 辅元素:幽灵按钮(透明底+细边框), 弱于项目的实底胶囊 */
   background: transparent;
-  color: var(--fg-muted);
+  color: var(--fg-secondary);
   font-family: var(--font-ui);
-  font-size: var(--fs-2xs);
+  font-size: var(--fs-sm);
   font-weight: 500;
   text-transform: none;
   cursor: pointer;
@@ -89,7 +89,16 @@
 }
 .branch-switcher__trigger:hover {
   background: var(--bg-list-hover);
+  border-color: var(--border-focus);
   color: var(--fg-primary);
+}
+/* git 分支图标:默认次要色, hover 时亮起 */
+.branch-switcher__trigger > svg:first-child {
+  color: var(--fg-muted);
+  transition: var(--t-color);
+}
+.branch-switcher__trigger:hover > svg:first-child {
+  color: var(--git-added);
 }
 .branch-switcher__trigger .branch-switcher__name {
   overflow: hidden;
@@ -101,17 +110,26 @@
   opacity: 0.6;
 }
 
-/* 弹出层 */
-.branch-switcher__popover {
+/* ============ 分支面板(对标 IDEA) ============ */
+
+/* backdrop:全屏透明, 点击关闭 popover(z-index 低于 popover) */
+.bs-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+}
+
+/* 弹出面板 */
+.bs-popover {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  min-width: 200px;
-  max-width: 280px;
-  max-height: 320px;
+  min-width: 360px;
+  max-width: 420px;
+  max-height: 460px;
   display: flex;
   flex-direction: column;
-  padding: 4px;
+  padding: 8px;
   border: 1px solid var(--border-base);
   border-radius: var(--radius-md);
   background: var(--bg-menu);
@@ -119,131 +137,204 @@
   z-index: 100;
   animation: panel-fade var(--dur-fast) var(--ease-out);
 }
-.branch-switcher__list {
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-}
-.branch-switcher__group {
-  padding: 6px 8px 2px;
-  font-size: var(--fs-2xs);
-  font-weight: 600;
-  color: var(--fg-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.branch-switcher__item {
+
+/* 搜索框(顶部) */
+.bs-search {
   display: flex;
   align-items: center;
-  gap: 6px;
-  width: 100%;
-  height: 26px;
-  padding: 0 8px;
-  border: none;
+  gap: 7px;
+  margin-bottom: 8px;
+  padding: 0 10px;
+  height: 32px;
+  border: 1px solid var(--border-base);
   border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  transition: border-color var(--dur-fast) ease;
+  flex-shrink: 0;
+}
+.bs-search:focus-within {
+  border-color: var(--border-focus);
+}
+.bs-search > svg { color: var(--fg-muted); flex-shrink: 0; }
+.bs-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
   background: transparent;
   color: var(--fg-primary);
   font-family: var(--font-ui);
   font-size: var(--fs-sm);
-  text-align: left;
+  outline: none;
+}
+.bs-search input::placeholder { color: var(--fg-muted); }
+
+/* 分支列表区(可滚动) */
+.bs-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  margin: 0 -2px;
+  padding: 0 2px;
+}
+
+/* 当前分支(置顶, 不在分组内) */
+.bs-current {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 8px;
+  margin-bottom: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-accent-soft, rgba(0, 122, 204, 0.1));
+}
+
+/* 分组(可折叠) */
+.bs-section {
+  margin-top: 2px;
+}
+.bs-section__header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-muted);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
   cursor: pointer;
+  user-select: none;
   transition: var(--t-color);
 }
-.branch-switcher__item:hover:not(:disabled) {
-  background: var(--bg-menu-hover);
-  color: var(--fg-on-accent);
+.bs-section__header:hover {
+  background: var(--bg-list-hover);
+  color: var(--fg-secondary);
 }
-.branch-switcher__item:disabled {
-  cursor: default;
-  color: var(--fg-accent);
+.bs-section__header > svg {
+  transition: transform var(--dur-fast) ease;
+  flex-shrink: 0;
 }
-.branch-switcher__item--current {
-  font-weight: 600;
+.bs-section__title {
+  flex: 1;
 }
-.branch-switcher__check {
+.bs-section__count {
+  font-weight: 400;
+  color: var(--fg-muted);
+  opacity: 0.7;
+}
+.bs-section__list {
+  padding: 1px 0 2px;
+}
+
+/* 分支行(整行是 DropdownMenu 触发器) */
+.bs-branch__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 8px;
+  margin-bottom: 1px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  outline: none;
+  transition: var(--t-color);
+}
+.bs-branch__row:hover,
+.bs-branch__row[data-state="open"] {
+  background: var(--bg-list-hover);
+}
+/* 当前分支行:浅蓝底 */
+.bs-branch__row--current {
+  background: var(--bg-accent-soft, rgba(0, 122, 204, 0.1));
+}
+.bs-branch__row--current:hover,
+.bs-branch__row--current[data-state="open"] {
+  background: var(--bg-accent-soft, rgba(0, 122, 204, 0.18));
+}
+.bs-branch__check {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 14px;
   flex-shrink: 0;
-  color: var(--fg-accent);
+  color: var(--git-added);
 }
-.branch-switcher__item .branch-switcher__name {
+.bs-branch__name {
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.branch-switcher__sep {
-  height: 1px;
-  margin: 4px 2px;
-  background: var(--border-subtle);
-}
-
-/* 新建分支 */
-.branch-switcher__new-toggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  height: 26px;
-  padding: 0 8px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--fg-muted);
-  font-family: var(--font-ui);
   font-size: var(--fs-sm);
-  text-align: left;
-  cursor: pointer;
-  transition: var(--t-color);
-}
-.branch-switcher__new-toggle:hover {
-  background: var(--bg-list-hover);
   color: var(--fg-primary);
 }
-.branch-switcher__new {
+/* 当前分支:加粗 + 绿色 */
+.bs-branch__name--current {
+  font-weight: 600;
+  color: var(--git-added);
+}
+/* 远程分支:黄色 */
+.bs-branch__name--remote {
+  color: var(--git-modified);
+}
+.bs-branch__hash {
+  font-size: var(--fs-2xs);
+  color: var(--fg-muted);
+  font-family: var(--font-ui-mono, monospace);
+  flex-shrink: 0;
+}
+
+/* 空状态 */
+.bs-empty {
+  padding: 20px 8px;
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: var(--fs-sm);
+}
+
+/* 底部操作栏 */
+.bs-toolbar {
   display: flex;
   gap: 4px;
-  padding: 4px 6px;
+  padding-top: 6px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
 }
-.branch-switcher__input {
+.bs-toolbar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   flex: 1;
-  min-width: 0;
+  justify-content: center;
   height: 26px;
-  padding: 0 8px;
   border: 1px solid var(--border-base);
   border-radius: var(--radius-sm);
-  background: var(--bg-input);
-  color: var(--fg-primary);
+  background: transparent;
+  color: var(--fg-secondary);
   font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  outline: none;
-  transition: border-color var(--dur-fast) ease;
-}
-.branch-switcher__input:focus {
-  border-color: var(--border-focus);
-}
-.branch-switcher__new-btn {
-  flex-shrink: 0;
-  height: 26px;
-  padding: 0 10px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: var(--bg-button);
-  color: var(--fg-on-accent);
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-2xs);
   cursor: pointer;
   transition: var(--t-color);
 }
-.branch-switcher__new-btn:hover:not(:disabled) {
-  background: var(--bg-button-hover);
+.bs-toolbar__btn:hover:not(:disabled) {
+  background: var(--bg-list-hover);
+  border-color: var(--border-focus);
+  color: var(--fg-primary);
 }
-.branch-switcher__new-btn:disabled {
+.bs-toolbar__btn:disabled {
   opacity: 0.5;
-  cursor: default;
+  cursor: progress;
 }
+
+/* fetch 旋转动画 */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 0.8s linear infinite;
 }
 
 .filetree__filter {

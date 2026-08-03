@@ -19,7 +19,7 @@ import { ConfirmDialog } from "./ConfirmDialog";
 import { createFile, createDir, deletePath, renamePath, copyPath, movePath } from "../utils/fileOps";
 import { toast } from "../stores/toastStore";
 import { useClipStore } from "../stores/clipStore";
-import { BranchSwitcher } from "./BranchSwitcher";
+// BranchSwitcher 已移至 TitleBar(项目切换器右侧)
 import "../styles/filetree.css";
 
 const ITEM_HEIGHT = 22;
@@ -337,11 +337,10 @@ export function FileTree() {
         </div>
       </div>
 
-      {/* 项目根 + 分支指示器(右侧) */}
+      {/* 项目根(分支切换器已移至标题栏) */}
       {rootPath && (
         <div className="filetree__root">
           <span className="filetree__root-name">{rootPath.split("/").pop() || rootPath}</span>
-          <BranchSwitcher />
         </div>
       )}
 
