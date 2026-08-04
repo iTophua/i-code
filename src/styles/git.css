@@ -465,7 +465,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--bg-editor);
+  background: var(--bg-sidebar-content);
 }
 .file-history-view__header {
   display: flex;
@@ -473,7 +473,7 @@
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--border-subtle);
-  background: var(--bg-sidebar);
+  background: transparent;
   flex-shrink: 0;
 }
 .file-history-view__title {
@@ -688,14 +688,14 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--bg-editor);
+  background: var(--bg-sidebar-content);
 }
 .blame-view__header {
   display: flex;
   align-items: center;
   padding: var(--space-3) var(--space-5);
   border-bottom: 1px solid var(--border-subtle);
-  background: var(--bg-sidebar);
+  background: var(--bg-sidebar-content);
   flex-shrink: 0;
 }
 .blame-view__title {
@@ -721,21 +721,23 @@
   padding-left: 16px;
   white-space: nowrap;
 }
-/* ===== 代码追溯叠加面板 ===== */
+/* ===== 代码追溯叠加面板(卡片内部内嵌) ===== */
 /* 追溯面板在编辑器左侧, 推开编辑器不遮挡 */
 .editor-pane--blame {
-  padding-left: 148px;
+  /* 多留缝: 左 4px(卡片缝) + 追溯卡片 148px + 右 4px(与代码区间隙) */
+  padding-left: 156px;
 }
 .blame-overlay {
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  left: 4px;
+  top: 4px;
+  bottom: 4px;
   width: 148px;
   z-index: 5;
   overflow: hidden;
+  /* 内嵌卡片: 圆角 + 缝隙透出编辑器大卡片背景 */
   background: var(--bg-blame-col);
-  border-right: 1px solid var(--border-base);
+  border-radius: var(--radius-layout);
 }
 .blame-overlay__row {
   position: absolute;
@@ -849,7 +851,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--bg-editor);
+  background: var(--bg-sidebar-content);
 }
 .image-preview__toolbar {
   display: flex;
@@ -857,7 +859,7 @@
   gap: var(--space-3);
   padding: var(--space-2) var(--space-4);
   border-bottom: 1px solid var(--border-subtle);
-  background: var(--bg-sidebar);
+  background: transparent;
   flex-shrink: 0;
   font-size: var(--fs-sm);
 }

@@ -33,7 +33,7 @@
   --bg-tooltip: #2a2a2a;
   --bg-menu: #2a2a2a;
   --bg-menu-hover: #094771;
-  --bg-blame-col: #151515;
+  --bg-blame-col: #252526;
 
   /* --- 前景类 --- */
   --fg-primary: #d4d4d4;
@@ -214,7 +214,7 @@
   --bg-tooltip: #ffffff;
   --bg-menu: #ffffff;
   --bg-menu-hover: #e8f1fb;
-  --bg-blame-col: #f5f5f5;
+  --bg-blame-col: #f5f5f7;
 
   /* 前景类 */
   --fg-primary: #2b2b2b;

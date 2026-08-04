@@ -239,7 +239,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-editor);
+  background: transparent;
 }
 .editor-empty__hint {
   text-align: center;
