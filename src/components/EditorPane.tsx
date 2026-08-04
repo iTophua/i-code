@@ -7,6 +7,7 @@ import { useLayoutStore } from "../stores/layoutStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { useGitStore } from "../stores/gitStore";
 import { getEditorOptions, defineIThemes, ICODE_DARK_THEME, ICODE_LIGHT_THEME } from "../monaco/theme";
+import { useResolvedTheme, getResolvedTheme } from "../utils/theme";
 import { saveAsFile } from "../utils/exportNote";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { FileHistoryView } from "./FileHistoryView";
@@ -81,7 +82,7 @@ export function EditorPane() {
   const minimap = useSettingsStore((s) => s.minimap);
   const fontLigatures = useSettingsStore((s) => s.fontLigatures);
   const showWhitespace = useSettingsStore((s) => s.showWhitespace);
-  const theme = useSettingsStore((s) => s.theme);
+  const theme = useResolvedTheme();
   // 按当前侧栏菜单域过滤: activeTab 不在域内时, 取域内第一个(或显示空白页)
   const sidebarView = useLayoutStore((s) => s.sidebarView);
   const scopedTabs = tabs.filter((t) => tabInScope(t.kind, sidebarView));
@@ -150,7 +151,7 @@ export function EditorPane() {
     // 双保险: 每次挂载都确保主题已注册并应用(消除首次白色)
     defineIThemes(monacoInstance);
     // 主题跟随设置(不硬编码)
-    const currentTheme = useSettingsStore.getState().theme;
+    const currentTheme = getResolvedTheme();
     monacoInstance.editor.setTheme(currentTheme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME);
     // 多光标 modifier 用 ctrlCmd: Cmd+点击加光标, 把 Option 键让给列选(见 setupColumnDrag),
     // 避免两者在 Alt+mousedown 上冲突(Monaco 默认 alt 会抢先加光标)

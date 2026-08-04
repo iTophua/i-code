@@ -175,7 +175,7 @@
 .note-surface__icon {
   display: flex;
   align-items: center;
-  color: var(--git-modified);
+  color: var(--fg-accent);
   flex-shrink: 0;
 }
 .note-surface__title {
@@ -244,7 +244,7 @@
 }
 .note-surface__hint {
   font-size: var(--fs-xs);
-  color: var(--git-modified);
+  color: var(--fg-accent);
   white-space: nowrap;
   flex-shrink: 0;
 }

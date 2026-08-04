@@ -24,7 +24,6 @@ import { HelpDialog } from "./components/HelpDialog";
 import { ProblemsPanel } from "./components/ProblemsPanel";
 import { ToastContainer } from "./components/Toast";
 import { CommandPalette } from "./components/CommandPalette";
-import { Breadcrumb } from "./components/Breadcrumb";
 import { SplitEditorTabs } from "./components/SplitEditorTabs";
 import { SplitEditorPane } from "./components/SplitEditorPane";
 import { DragSplitOverlay, useDragSplit } from "./components/DragSplitOverlay";
@@ -36,6 +35,7 @@ import {
   type SavedTab,
 } from "./utils/session";
 import { getLanguage } from "./utils/language";
+import { useResolvedTheme } from "./utils/theme";
 import { openFolderDialog, isProjectSwitching } from "./utils/project";
 import { toast } from "./stores/toastStore";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
@@ -85,6 +85,26 @@ export default function App() {
       }
     }
   );
+
+  // 面板高度拖拽调整(终端/问题面板上方的那根线)
+  const onPanelResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = useLayoutStore.getState().panelHeight;
+    const onMove = (ev: MouseEvent) => {
+      const dy = ev.clientY - startY;
+      const h = Math.min(700, Math.max(120, startH - dy));
+      useLayoutStore.getState().setPanelHeight(h);
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = "";
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    document.body.style.cursor = "row-resize";
+  }, []);
 
   // 打开文件夹(走统一的 switchProject 入口: 保存当前项目 tab + 加载新项目 + 刷新 git)
   const handleOpenFolder = useCallback(async () => {
@@ -364,12 +384,12 @@ export default function App() {
   }, [restored, workspaceRoot]);
 
   // ===== 状态变化时持久化 =====
-  // 主题联动: settings.theme → <html data-theme> + Monaco setTheme
-  const theme = useSettingsStore((s) => s.theme);
+  // 主题联动: settings.theme("auto" 跟随系统) → <html data-theme> + Monaco setTheme
+  const resolvedTheme = useResolvedTheme();
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    monaco.editor.setTheme(theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME);
-  }, [theme]);
+    document.documentElement.setAttribute("data-theme", resolvedTheme);
+    monaco.editor.setTheme(resolvedTheme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME);
+  }, [resolvedTheme]);
 
   // 持久化项目根(打开/切换项目时)
   useEffect(() => {
@@ -559,18 +579,20 @@ export default function App() {
       {!zenMode && <TitleBar />}
       <div className="app__body">
         {!zenMode && <ActivityBar />}
-        {sidebarVisible && (
+        {!zenMode && (
           <>
-            <aside className="app__sidebar" style={{ width: sidebarWidth }}>
+            <aside
+              className={`app__sidebar ${sidebarVisible ? "" : "app__sidebar--hidden"}`}
+              style={{ width: sidebarWidth }}
+            >
               <Sidebar />
             </aside>
             <VerticalResizer />
           </>
         )}
         <main className="app__main">
-          <>
+          <div className="app__main-content">
             <EditorTabs />
-            <Breadcrumb />
               <div
                 ref={splitDropRef}
                 className={`app__split-wrap ${splitEnabled ? "app__split-wrap--on" : ""} ${
@@ -606,6 +628,8 @@ export default function App() {
                 className={`app__panel ${panelVisible ? "" : "app__panel--hidden"}`}
                 style={panelVisible ? { height: panelHeight } : undefined}
               >
+                {/* 拖拽调整面板高度(终端/问题 tab 上方的线) */}
+                <div className="app__panel-resizer" onMouseDown={onPanelResizeStart} title="拖动调整高度" />
                 <div className="app__panel-tabs">
                   <button
                     className={`app__panel-tab ${panelView === "terminal" ? "app__panel-tab--active" : ""}`}
@@ -628,7 +652,7 @@ export default function App() {
                   <ProblemsPanel visible={panelView === "problems"} />
                 </div>
               </div>
-          </>
+          </div>
         </main>
       </div>
       {!zenMode && <StatusBar />}

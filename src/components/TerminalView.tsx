@@ -5,7 +5,7 @@ import { WebLinksAddon } from "@xterm/addon-web-links";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { useSettingsStore } from "../stores/settingsStore";
-import { useSettingsStore as useSettings } from "../stores/settingsStore";
+import { useResolvedTheme } from "../utils/theme";
 import "@xterm/xterm/css/xterm.css";
 import "../styles/terminal.css";
 
@@ -47,7 +47,7 @@ export function TerminalView({ termId, active }: Props) {
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
   const settings = useSettingsStore();
-  const theme = useSettings((s) => s.theme);
+  const theme = useResolvedTheme();
 
   // 主题切换时更新终端配色
   useEffect(() => {
@@ -67,7 +67,7 @@ export function TerminalView({ termId, active }: Props) {
       cursorBlink: true,
       cursorStyle: "bar",
       scrollback: settings.terminalScrollback,
-      theme: settings.theme === "light" ? LIGHT_TERM : DARK_TERM,
+      theme: theme === "light" ? LIGHT_TERM : DARK_TERM,
       allowProposedApi: true,
     });
 

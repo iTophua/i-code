@@ -1,10 +1,17 @@
-/* ============ 应用主布局 ============ */
+/* ============ 应用主布局(卡片化) ============ */
+/* 窗口四边贴边: 标题栏/状态栏贴顶底, 让 macOS 红绿灯归位、状态栏贴底。
+   仅区域之间留缝(gap / margin), 形成卡片圆角缝隙, 透出窗框色。 */
 .app {
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100vw;
+  /* 不用 gap: 标题栏/状态栏是边框区, 应与侧栏无缝连成一体;
+     仅工作区(.app__body)靠自身 margin 与边框区产生分隔。 */
+  padding: 0;
   overflow: hidden;
+  /* 背景与四周边框同色, 让卡片浮起的缝隙也呈边框色 */
+  background: var(--bg-sidebar);
 }
 
 .app__body {
@@ -12,17 +19,27 @@
   flex: 1;
   overflow: hidden;
   min-height: 0;
+  /* 左侧栏(活动栏+侧栏)贴窗口左边、上下与标题栏/状态栏无缝相连,
+     形成完整的左侧边框区。仅主区(编辑器卡片)靠 margin-right 产生右侧缝隙。 */
+  padding: 0;
 }
 
 .app__sidebar {
   flex-shrink: 0;
   background: var(--bg-sidebar);
-  border-right: 1px solid var(--border-subtle);
+  /* 与活动栏/标题栏/状态栏同色连成左侧边框区, 不圆角 */
+  border-radius: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  /* 宽度过渡: 拖动 resizer 时平滑, 但拖动中禁用(由 JS 控制 class) */
-  transition: width var(--dur-slow) var(--ease-out);
+  /* 宽度过渡: 显示/隐藏 + 拖动 resizer 时平滑 */
+  transition: width var(--dur-normal) var(--ease-out), opacity var(--dur-normal) var(--ease-out);
+}
+/* 隐藏态: 宽度归零 + 内容淡出 */
+.app__sidebar--hidden {
+  width: 0 !important;
+  opacity: 0;
+  border-left: none;
 }
 
 /* Sidebar 内部容器(承接高度, 传递给各面板) */
@@ -32,6 +49,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* 内容卡片四周留缝(透出外框色), 让文件树圆角浮起 */
+  padding: 4px;
 }
 /* 面板切换进场动画(key 变化触发) */
 .sidebar__panel {
@@ -40,6 +59,10 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* 内容区比边框区略深, 形成层次凹陷 */
+  background: var(--bg-sidebar-content);
+  /* 卡片化: 圆角浮起于外框内 */
+  border-radius: var(--radius-layout);
   animation: panel-fade var(--dur-normal) var(--ease-out);
 }
 @keyframes panel-fade {
@@ -52,6 +75,11 @@
     transform: translateX(0);
   }
 }
+/* 面板内视图切换淡入 */
+@keyframes view-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 .app__main {
   display: flex;
@@ -59,24 +87,67 @@
   flex: 1;
   min-width: 0;
   overflow: hidden;
+  /* 外框容器(同标题栏/侧栏/状态栏色), 内部编辑区卡片浮起 */
+  background: var(--bg-sidebar);
+  border-radius: var(--radius-layout);
+  /* 四周留缝: 上下与标题栏/状态栏分隔, 左与侧栏分隔(收紧) */
+  margin: 3px;
+  /* 让内部内容卡片圆角处正确裁剪, 不漏色 */
+  padding: 0;
+}
+/* 编辑区内容卡片(tabs + breadcrumb + editor + panel 统一一个卡片) */
+.app__main-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* 内容区背景(与文件树同色) */
+  background: var(--bg-sidebar-content);
+  /* 卡片化: 圆角浮起于外框内 */
+  border-radius: var(--radius-layout);
 }
 
 .app__editor-area {
   flex: 1;
   min-height: 0;
   position: relative;
-  background: var(--bg-editor);
   display: flex;
   flex-direction: column;
+  /* 背景交给内容卡片(.app__main-content), 此处透明 */
+  min-width: 0;
 }
 
 .app__panel {
   flex-shrink: 0;
-  background: var(--bg-panel);
+  /* 背景交给内容卡片(.app__main-content), 此处透明 */
+  background: transparent;
   border-top: 1px solid var(--border-base);
   display: flex;
   flex-direction: column;
-  animation: panel-slide-up var(--dur-normal) var(--ease-out);
+  /* 收缩/展开过渡 */
+  transition: height var(--dur-normal) var(--ease-out),
+    opacity var(--dur-normal) var(--ease-out);
+}
+/* 面板顶部拖拽把手(终端/问题 tab 上方) */
+.app__panel-resizer {
+  height: 4px;
+  flex-shrink: 0;
+  cursor: row-resize;
+  background: transparent;
+  transition: background var(--dur-fast);
+  position: relative;
+}
+.app__panel-resizer::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -3px;
+  bottom: -3px;
+}
+.app__panel-resizer:hover {
+  background: var(--border-focus);
 }
 @keyframes panel-slide-up {
   from {
@@ -94,35 +165,47 @@
   color: var(--fg-muted);
   font-size: var(--fs-base);
 }
-/* 面板隐藏(不卸载, 保持终端实例) */
+/* 面板隐藏(不卸载, 保持终端实例): 高度归零 + 淡出 */
 .app__panel--hidden {
-  display: none;
+  height: 0 !important;
+  opacity: 0;
+  overflow: hidden;
+  border-top: none;
+  pointer-events: none;
 }
-/* 面板内视图切换(常驻 display) */
+/* 面板内视图切换(常驻 display): 激活时淡入 */
 .panel__view--hidden {
   display: none;
 }
 .panel__view--active {
   display: flex;
   flex-direction: column;
+  animation: view-fade var(--dur-fast) var(--ease-out);
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
-/* ============ 拖拽分隔条 ============ */
+/* ============ 拖拽分隔条(卡片缝隙中, 隐形) ============ */
 .resizer {
   flex-shrink: 0;
   z-index: 10;
   position: relative;
 }
 .resizer--vertical {
-  width: 1px;
+  /* 卡片化后侧栏与主区间已有 6px 缝隙(gap), 这里占 0 宽度只承载热区 */
+  width: 0;
   cursor: col-resize;
-  background: var(--border-base);
-  transition: background var(--dur-fast), width var(--dur-fast);
+  background: transparent;
+  /* sidebar 隐藏时 resizer 也隐藏(不再可拖) */
+  transition: opacity var(--dur-normal) var(--ease-out);
 }
-/* 透明热区扩大(视觉 1px, 拖拽命中 7px), 用伪元素承载 */
+/* sidebar 隐藏态下的相邻 resizer: 淡出且不可交互 */
+.app__sidebar--hidden + .resizer--vertical {
+  opacity: 0;
+  pointer-events: none;
+}
+/* 热区: 覆盖缝隙两侧, 保证可拖拽 */
 .resizer--vertical::before {
   content: "";
   position: absolute;
@@ -133,7 +216,7 @@
   cursor: col-resize;
 }
 .resizer--vertical:hover {
-  background: var(--border-focus);
+  background: transparent;
 }
 
 /* ============ 编辑器 ============ */

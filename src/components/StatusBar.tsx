@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useEditorStore } from "../stores/editorStore";
+import { useLayoutStore } from "../stores/layoutStore";
 import { readFile } from "@tauri-apps/plugin-fs";
 import * as Select from "@radix-ui/react-select";
 import { ChevronDown, Check } from "./Icons";
@@ -20,10 +21,18 @@ export function StatusBar() {
   const activeTab = useEditorStore((s) =>
     s.tabs.find((t) => t.id === s.activeTabId)
   );
+  const workspaceRoot = useLayoutStore((s) => s.workspaceRoot);
   const updateContent = useEditorStore((s) => s.updateContent);
   const markSaved = useEditorStore((s) => s.markSaved);
   const [encoding, setEncoding] = useState("utf-8");
   const [lineEnding, setLineEnding] = useState("LF");
+
+  // 计算相对路径(包名/目录/文件名)
+  const relPath = (() => {
+    if (!activeTab || activeTab.kind !== "file" || !workspaceRoot) return "";
+    const p = activeTab.path;
+    return p.startsWith(workspaceRoot) ? p.slice(workspaceRoot.length + 1) : p;
+  })();
 
   useEffect(() => {
     setEncoding("utf-8");
@@ -44,14 +53,16 @@ export function StatusBar() {
     }
   };
 
-  if (!activeTab) return null;
+  if (!activeTab) {
+    return <div className="status-bar" />;
+  }
 
   return (
     <div className="status-bar">
       <div className="status-bar__left">
         <span className="status-item">
           {activeTab.isDirty ? "● " : ""}
-          {activeTab.name}
+          {relPath || activeTab.name}
         </span>
       </div>
       <div className="status-bar__right">

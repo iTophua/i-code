@@ -6,27 +6,6 @@
   background: var(--bg-panel);
 }
 
-/* 顶部拖拽调整高度的把手 */
-.panel__resizer {
-  height: 4px;
-  flex-shrink: 0;
-  cursor: row-resize;
-  background: transparent;
-  transition: background var(--dur-fast);
-  position: relative;
-}
-.panel__resizer::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: -2px;
-  bottom: -2px;
-}
-.panel__resizer:hover {
-  background: var(--border-focus);
-}
-
 .panel__tabs {
   display: flex;
   align-items: center;

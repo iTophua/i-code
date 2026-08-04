@@ -74,10 +74,10 @@
   gap: 4px;
   max-width: 220px;
   height: 26px;
-  padding: 0 10px;
-  border: 1px solid var(--border-base);
-  border-radius: var(--radius-full);
-  /* 辅元素:幽灵按钮(透明底+细边框), 弱于项目的实底胶囊 */
+  padding: 0 6px;
+  border: none;
+  /* 纯文字按钮, 无胶囊边框(与状态栏风格统一) */
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--fg-secondary);
   font-family: var(--font-ui);
@@ -89,7 +89,6 @@
 }
 .branch-switcher__trigger:hover {
   background: var(--bg-list-hover);
-  border-color: var(--border-focus);
   color: var(--fg-primary);
 }
 /* git 分支图标:默认次要色, hover 时亮起 */

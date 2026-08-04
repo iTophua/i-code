@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { useTerminalStore } from "../stores/terminalStore";
 import { useLayoutStore } from "../stores/layoutStore";
 import { TerminalView } from "./TerminalView";
@@ -9,72 +9,50 @@ import "../styles/panel.css";
 export function TerminalPanel() {
   const { tabs, activeId, createTerminal, closeTerminal, setActive } =
     useTerminalStore();
-  const workspaceRoot = useLayoutStore((s) => s.workspaceRoot);
   const panelVisible = useLayoutStore((s) => s.panelVisible);
   const panelView = useLayoutStore((s) => s.panelView);
   const togglePanel = useLayoutStore((s) => s.togglePanel);
-  const initRef = useRef(false);
+  // 防并发创建终端(StrictMode 双调用 / 多 effect 同时触发)
+  const creatingRef = useRef(false);
+  // 记录面板上一次的可见状态:仅"隐藏→显示"时才自动建终端,
+  // 避免"关闭最后一个 tab → tabs=0"误触发创建(与收起面板冲突)
+  const wasVisibleRef = useRef(false);
 
-  // 面板切到终端视图 + 首次显示且无终端时自动建一个
-  // 用 ref 防止 StrictMode 双调用导致建两个终端
+  // 面板从隐藏→显示 且 无终端 → 自动建一个
   useEffect(() => {
-    const root = useLayoutStore.getState().workspaceRoot;
-    if (!initRef.current && tabs.length === 0 && root && panelVisible && panelView === "terminal") {
-      initRef.current = true;
-      createTerminal(root);
+    // 只在面板"刚打开"的瞬间触发,不在 tabs 变化时触发
+    if (!panelVisible || panelView !== "terminal") {
+      wasVisibleRef.current = false;
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceRoot, panelVisible, panelView]);
-
-  // 关闭最后一个终端 tab → 自动收起面板
-  useEffect(() => {
-    if (tabs.length === 0 && panelVisible && panelView === "terminal") {
-      // 延迟收起,避免和 closeTerminal 的 setState 批处理冲突
-      const id = setTimeout(() => {
-        if (useTerminalStore.getState().tabs.length === 0) {
-          useLayoutStore.getState().togglePanel();
+    if (!wasVisibleRef.current) {
+      wasVisibleRef.current = true;
+      // 面板刚打开:如果没有终端则创建一个
+      if (tabs.length === 0 && !creatingRef.current) {
+        const root = useLayoutStore.getState().workspaceRoot;
+        if (root) {
+          creatingRef.current = true;
+          createTerminal(root).finally(() => {
+            creatingRef.current = false;
+          });
         }
-      }, 0);
-      return () => clearTimeout(id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabs.length]);
-
-  // 下次打开面板时如果没有终端 → 自动建一个
-  useEffect(() => {
-    if (panelVisible && panelView === "terminal" && tabs.length === 0) {
-      const root = useLayoutStore.getState().workspaceRoot;
-      if (root) createTerminal(root);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [panelVisible, panelView]);
 
-  // 面板顶部拖拽调整高度
-  const onResizeStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const startY = e.clientY;
-    const startH = useLayoutStore.getState().panelHeight;
-    const onMove = (ev: MouseEvent) => {
-      // 往上拖(dy<0)→ 增高;往下拖(dy>0)→ 降低
-      const dy = ev.clientY - startY;
-      const h = Math.min(700, Math.max(120, startH - dy));
-      useLayoutStore.getState().setPanelHeight(h);
-    };
-    const onUp = () => {
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
-      document.body.style.cursor = "";
-    };
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
-    document.body.style.cursor = "row-resize";
-  }, []);
+  // 关闭最后一个终端 tab → 自动收起面板
+  useEffect(() => {
+    if (tabs.length === 0 && panelVisible && panelView === "terminal") {
+      // 此时 panelVisible 还是 true(尚未收起),且 tabs=0
+      // 不会触发上面的创建 effect(上面只在 panelVisible 变化时跑)
+      useLayoutStore.getState().togglePanel();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabs.length]);
 
   return (
     <div className="terminal-panel">
-      {/* 拖拽调整高度的把手 */}
-      <div className="panel__resizer" onMouseDown={onResizeStart} title="拖动调整高度" />
-
       {/* 标签栏 */}
       <div className="panel__tabs">
         <div className="panel__tabs-list">

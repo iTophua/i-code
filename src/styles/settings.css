@@ -179,7 +179,7 @@
   top: 4px;
   bottom: 4px;
   width: 2px;
-  background: var(--git-modified);
+  background: var(--fg-accent);
   border-radius: 1px;
 }
 .settings-cat__icon {
@@ -358,7 +358,7 @@
   color: var(--fg-on-accent);
 }
 .settings-select__check {
-  color: var(--git-modified);
+  color: var(--fg-accent);
   margin-left: 8px;
   display: flex;
   align-items: center;

@@ -11,10 +11,14 @@
 :root[data-theme="dark"] {
   /* --- Layer 1 → Layer 2 背景类(色阶从深到浅, 每级差约 6-8) --- */
   --bg-app: #181818;
+  /* 窗框色(卡片化布局的缝隙底色, 比 app 稍深一档) */
+  --bg-window: #101010;
   --bg-editor: #1e1e1e;
   --bg-titlebar: #1e1e1e;
   --bg-activity-bar: #1e1e1e;
   --bg-sidebar: #232323;
+  /* 侧栏内容区(文件树/搜索/Git 面板): 与编辑器同色, 内容区统一 */
+  --bg-sidebar-content: #1e1e1e;
   --bg-tab-active: #1e1e1e;
   --bg-tab-inactive: #181818;
   --bg-tab-hover: #2a2a2a;
@@ -52,6 +56,11 @@
   --border-base: #333333;
   --border-subtle: #262626;
   --border-focus: #007acc;
+
+  /* --- Tab 激活态(融入主题的低调高亮, 非强调蓝) --- */
+  --bg-tab-active-bg: #2a2d2e;        /* 比内容区 #1e1e1e 亮一档 */
+  --bg-tab-active-border: #3c3c3c;    /* 比 border-base 略亮, 有存在感 */
+  --bg-tab-focus-bg: #094771;          /* 焦点态: 微蓝调 */
 
   /* --- 焦点环(输入框聚焦光晕) --- */
   --bg-focus-ring: rgba(0, 122, 204, 0.18);
@@ -100,6 +109,8 @@
   --radius-md: 7px;
   --radius-lg: 10px;
   --radius-full: 9999px;
+  /* 布局区域圆角(卡片化): 外层区域统一用此值 */
+  --radius-layout: 8px;
 
   /* ============ 字体 ============ */
   --font-ui: -apple-system, "Segoe UI", system-ui, "PingFang SC",
@@ -181,10 +192,14 @@
 :root[data-theme="light"] {
   /* 背景类(色阶从亮到暗) */
   --bg-app: #f5f5f5;
+  /* 窗框色(浅色主题缝隙底色, 比 app 稍灰一档) */
+  --bg-window: #e4e4e4;
   --bg-editor: #ffffff;
   --bg-titlebar: #ffffff;
   --bg-activity-bar: #f3f3f3;
   --bg-sidebar: #f8f8f8;
+  /* 侧栏内容区: 与编辑器同色, 内容区统一 */
+  --bg-sidebar-content: #ffffff;
   --bg-tab-active: #ffffff;
   --bg-tab-inactive: #f0f0f0;
   --bg-tab-hover: #e8e8e8;
@@ -222,6 +237,11 @@
   --border-base: #dcdcdc;
   --border-subtle: #ececec;
   --border-focus: #007acc;
+
+  /* Tab 激活态(浅色主题: 比白色内容区略灰) */
+  --bg-tab-active-bg: #f0f0f0;
+  --bg-tab-active-border: #d0d0d0;
+  --bg-tab-focus-bg: #cfe3fb;
 
   /* 焦点环(浅色主题略深) */
   --bg-focus-ring: rgba(0, 122, 204, 0.15);
@@ -298,7 +318,8 @@ body {
   font-size: var(--fs-ui-base);
   line-height: var(--lh-ui);
   color: var(--fg-primary);
-  background: var(--bg-app);
+  /* 窗框色: 卡片化布局的缝隙底色, 由 --bg-window 提供 */
+  background: var(--bg-window);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   user-select: none;

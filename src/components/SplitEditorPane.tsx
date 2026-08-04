@@ -4,6 +4,7 @@ import type { editor } from "monaco-editor";
 import { useEditorStore } from "../stores/editorStore";
 import { useSettingsStore } from "../stores/settingsStore";
 import { getEditorOptions, defineIThemes, ICODE_DARK_THEME, ICODE_LIGHT_THEME } from "../monaco/theme";
+import { useResolvedTheme } from "../utils/theme";
 import { setActiveEditor, getActiveEditor } from "../monaco/activeEditor";
 import { setupColumnDrag } from "../monaco/columnSelect";
 import "../monaco/setup";
@@ -14,6 +15,7 @@ import "../monaco/setup";
 export function SplitEditorPane() {
   const { splitTabs, splitActiveId, updateContent } = useEditorStore();
   const settings = useSettingsStore();
+  const theme = useResolvedTheme();
   const activeTab = splitTabs.find((t) => t.id === splitActiveId);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const cleanupColumnDragRef = useRef<(() => void) | null>(null);
@@ -21,7 +23,7 @@ export function SplitEditorPane() {
   const handleMount: OnMount = (ed, monaco) => {
     editorRef.current = ed;
     defineIThemes(monaco);
-    monaco.editor.setTheme(settings.theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME);
+    monaco.editor.setTheme(theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME);
     // 多光标 modifier 用 ctrlCmd(Cmd+点击加光标), Option 让给列选(同主编辑器)
     ed.updateOptions({
       multiCursorModifier: "alt",
@@ -83,8 +85,8 @@ export function SplitEditorPane() {
           original={activeTab.diffOriginal ?? ""}
           modified={activeTab.content}
           language={activeTab.language}
-          theme={settings.theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME}
-          onMount={(_e, m) => { defineIThemes(m); m.editor.setTheme(settings.theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME); }}
+          theme={theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME}
+          onMount={(_e, m) => { defineIThemes(m); m.editor.setTheme(theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME); }}
           options={{
             ...getEditorOptions({ readOnly: true, fontSize: 14, minimap: { enabled: false } }),
             renderSideBySide: true,
@@ -102,7 +104,7 @@ export function SplitEditorPane() {
         path={activeTab.path}
         language={activeTab.language}
         value={activeTab.content}
-        theme={settings.theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME}
+        theme={theme === "light" ? ICODE_LIGHT_THEME : ICODE_DARK_THEME}
         onMount={handleMount}
         onChange={(v) => {
           if (splitActiveId && v !== undefined) {

@@ -119,10 +119,11 @@ type S = ReturnType<typeof useSettingsStore.getState>;
 function ThemeSettings({ s }: { s: S }) {
   return (
     <Group title="外观">
-      <Row label="配色主题" desc="切换深色/浅色主题">
+      <Row label="配色主题" desc="切换深色/浅色/跟随系统">
         <AppSelect inline
           value={s.theme}
           options={[
+            { value: "auto", label: "跟随系统" },
             { value: "dark", label: "深色 (Dark+)" },
             { value: "light", label: "浅色 (Light+)" },
           ]}

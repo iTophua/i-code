@@ -275,7 +275,7 @@
   color: var(--fg-primary);
 }
 .md-pane__toggle--on {
-  color: var(--git-modified);
-  border-color: var(--git-modified);
+  color: var(--fg-accent);
+  border-color: var(--fg-accent);
 }
 

@@ -5,7 +5,8 @@
   height: 26px;
   padding: 0 var(--space-3);
   border-bottom: 1px solid var(--border-subtle);
-  background: var(--bg-editor);
+  /* 透明: 背景由内容卡片(.app__main-content)统一提供 */
+  background: transparent;
   font-size: var(--fs-xs);
   overflow-x: auto;
   overflow-y: hidden;

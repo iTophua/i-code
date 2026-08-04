@@ -2,7 +2,8 @@
 .tabs-wrap {
   display: flex;
   align-items: stretch;
-  background: var(--bg-tab-inactive);
+  /* 透明: 背景由内容卡片(.app__main-content)统一提供 */
+  background: transparent;
   border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
 }
@@ -67,62 +68,46 @@
   white-space: nowrap;
 }
 
-/* ===== 单个 Tab ===== */
+/* ===== 单个 Tab(胶囊式) ===== */
 .tab {
   display: flex;
   align-items: center;
   gap: 7px;
   min-width: 100px;
   max-width: 200px;
-  height: 100%;
-  padding: 0 4px 0 12px;
+  /* 胶囊高度: 不撑满 tab 栏, 四周留间距 */
+  height: calc(var(--height-tab) - 10px);
+  padding: 0 10px;
   background: transparent;
   cursor: pointer;
   user-select: none;
   position: relative;
   flex-shrink: 0;
-  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+  margin: 5px 2px;
+  border: 1px solid transparent;
+  /* 圆角: 小圆角(非全圆胶囊) */
+  border-radius: var(--radius-md);
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease;
 }
 
 /* hover 态: 柔和提亮 */
 .tab:not(.tab--active):hover {
   background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border-subtle);
 }
 
-/* ===== 活跃态 ===== */
+/* ===== 活跃态(胶囊: 四周边框 + 内容背景色, 融入主题) ===== */
 .tab--active {
-  background: var(--bg-editor);
+  background: var(--bg-tab-active-bg);
+  border-color: var(--bg-tab-active-border);
 }
-/* 活跃态: 左侧高亮条(比顶部条更现代, 不和边界混淆) */
 .tab--active::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--fg-accent);
-  border-radius: 0 1px 1px 0;
-  transition: opacity var(--dur-normal) var(--ease-out);
+  display: none;
 }
 
-/* tab 间分隔线: 仅在两个非活跃 tab 之间, 用极淡的右线 */
-.tab:not(.tab--active):not(:last-child)::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 30%;
-  bottom: 30%;
-  width: 1px;
-  background: rgba(255, 255, 255, 0.06);
-}
-/* hover 时不显示分隔线(避免和 hover 背景冲突) */
-.tab:not(.tab--active):hover::after,
-.tab--active + .tab:not(.tab--active)::after {
-  opacity: 0;
-}
-/* 活跃 tab 右侧不画分隔线(它有自己的背景边界) */
-.tab--active::after {
+/* tab 间分隔线已移除: 胶囊自带边界 */
+.tab::after {
   display: none;
 }
 
@@ -141,9 +126,8 @@
   border-color: var(--border-subtle);
 }
 .tabs--wrap .tab--active {
-  background: var(--bg-editor);
-  border-color: var(--border-base);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  background: var(--bg-tab-active-bg);
+  border-color: var(--bg-tab-active-border);
 }
 .tabs--wrap .tab--active::before {
   top: 0; left: 0; bottom: 0;

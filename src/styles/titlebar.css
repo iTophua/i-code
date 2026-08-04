@@ -3,8 +3,9 @@
   display: flex;
   align-items: center;
   height: 36px;
-  background: var(--bg-titlebar);
-  border-bottom: 1px solid var(--border-subtle);
+  /* 与侧栏/活动栏/状态栏同色, 四周边框区连成一体 */
+  background: var(--bg-sidebar);
+  /* 贴窗口顶边: 不圆角, 让 macOS 红绿灯落在标准位置 */
   flex-shrink: 0;
   user-select: none;
 }
@@ -69,7 +70,7 @@
   color: var(--fg-primary);
 }
 .titlebar__btn--active {
-  color: var(--git-modified);
+  color: var(--fg-accent);
 }
 
 /* ============ 项目切换器(红绿灯正右侧) + 分支徽章 ============ */
@@ -89,19 +90,19 @@
   align-items: center;
   gap: 5px;
   height: 26px;
-  padding: 0 10px;
+  padding: 0 6px;
   border: none;
-  /* 主元素:实底胶囊, 比分支更显眼 */
-  background: var(--bg-list-hover);
+  /* 纯文字按钮, 无胶囊底色(与状态栏风格统一) */
+  background: transparent;
   color: var(--fg-primary);
   font-size: var(--fs-sm);
   cursor: pointer;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   transition: var(--t-color);
   max-width: 260px;
 }
 .titlebar__project:hover {
-  background: var(--bg-list-active);
+  background: var(--bg-list-hover);
 }
 /* 文件夹图标用强调色(蓝), 强化"项目"语义 */
 .titlebar__project > svg:first-child {

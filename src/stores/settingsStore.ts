@@ -19,7 +19,7 @@ export interface Settings {
   autoSave: "off" | "onFocusChange" | "afterDelay";
 
   // —— 主题 ——
-  theme: "dark" | "light";
+  theme: "dark" | "light" | "auto";
 
   // —— 终端 ——
   terminalFontFamily: string;
@@ -51,7 +51,7 @@ const DEFAULTS: Settings = {
   showWhitespace: false,
   autoSave: "off",
 
-  theme: "dark",
+  theme: "auto",
 
   terminalFontFamily: "SF Mono, Menlo, Monaco, Consolas, monospace",
   terminalFontSize: 13,
