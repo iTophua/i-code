@@ -89,7 +89,11 @@ export const useFileTreeStore = create<FileTreeStore>((set, get) => ({
 
   refreshTree: async () => {
     const { rootPath, expandedPaths, showHidden, sortBy } = get();
-    if (!rootPath) return;
+    if (!rootPath) {
+      // 关闭项目时清空可见列表(否则旧节点残留在视图层)
+      set({ treeData: [], visibleNodes: [] });
+      return;
+    }
     try {
       const entries = (await invoke("list_directory", { showHidden, sortBy,
         dirPath: rootPath,

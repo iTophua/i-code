@@ -752,6 +752,7 @@ function MarkdownFileEditor({
         >
           <MarkdownPreview
             content={tab.content}
+            filePath={tab.path}
             scrollRatio={scrollRatio}
             onScroll={handlePreviewScroll}
           />
