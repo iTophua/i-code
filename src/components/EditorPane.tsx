@@ -98,6 +98,9 @@ export function EditorPane() {
   };
   const currentLang = activeTab?.language || "";
   const langOverride = langOverrides[currentLang] || {};
+  // 缩进: 优先用文件检测值, 回退全局 tabSize
+  const effectiveTabSize = activeTab?.indentSize ?? tabSize;
+  const effectiveInsertSpaces = activeTab?.insertSpaces ?? true;
   // 缓存编辑器选项(只在依赖项变化时重建, 避免每次渲染新建对象触发 Monaco 更新)
   const editorOpts = useMemo(
     () =>
@@ -105,14 +108,15 @@ export function EditorPane() {
         fontFamily,
         fontSize,
         lineHeight: Math.round(fontSize * lineHeight),
-        tabSize,
+        tabSize: effectiveTabSize,
+        insertSpaces: effectiveInsertSpaces,
         wordWrap: langOverride.wordWrap || wordWrap,
         minimap: { enabled: minimap },
         fontLigatures,
         renderWhitespace: showWhitespace ? "all" : "selection",
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fontFamily, fontSize, lineHeight, tabSize, wordWrap, minimap, fontLigatures, showWhitespace, currentLang]
+    [fontFamily, fontSize, lineHeight, effectiveTabSize, effectiveInsertSpaces, wordWrap, minimap, fontLigatures, showWhitespace, currentLang]
   );
 
   // 切换到 md 文件时, 默认重置为仅预览模式
@@ -122,6 +126,19 @@ export function EditorPane() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTabId]);
+
+  // 切换 tab 时更新 model 的缩进(tabSize/insertSpaces 是 TextModel 级别属性,
+  // @monaco-editor/react 复用 editor 实例, 仅改 options prop 不会自动同步到 model)
+  useEffect(() => {
+    const model = editorRef.current?.getModel();
+    if (model && activeTab?.kind === "file") {
+      model.updateOptions({
+        tabSize: activeTab.indentSize ?? tabSize,
+        insertSpaces: activeTab.insertSpaces ?? true,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTabId, activeTab?.indentSize, activeTab?.insertSpaces, tabSize]);
 
   // 主题变化时更新当前编辑器(不只是 prop, 也要 setTheme 确保已挂载实例切换)
   useEffect(() => {

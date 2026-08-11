@@ -16,6 +16,7 @@ export interface Settings {
   minimap: boolean;
   fontLigatures: boolean;
   showWhitespace: boolean;
+  detectIndentation: boolean;
   autoSave: "off" | "onFocusChange" | "afterDelay";
   autoSaveDelay: number; // afterDelay 模式下的延时(毫秒)
 
@@ -50,6 +51,7 @@ const DEFAULTS: Settings = {
   minimap: true,
   fontLigatures: false,
   showWhitespace: false,
+  detectIndentation: true,
   autoSave: "off",
   autoSaveDelay: 1000,
 

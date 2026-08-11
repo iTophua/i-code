@@ -4,6 +4,8 @@ import { noteDisplayTitle } from "./notesStore";
 import { useFileTreeStore } from "./fileTreeStore";
 import { useLayoutStore } from "./layoutStore";
 import { disposeModelByPath, disposeModelsByPaths } from "../monaco/disposeModel";
+import { detectIndent } from "../utils/detectIndent";
+import { useSettingsStore } from "./settingsStore";
 
 /**
  * 编辑器 Tab 状态管理
@@ -46,6 +48,10 @@ export interface EditorTab {
   diffOriginal?: string;
   /** 工具 id(仅 tool) */
   tool?: string;
+  /** 检测到的缩进宽度(仅 file, 打开时自动检测) */
+  indentSize?: number;
+  /** 检测到的缩进类型: true=空格 false=Tab(仅 file) */
+  insertSpaces?: boolean;
 }
 
 /**
@@ -211,6 +217,11 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
     // 预览态:替换当前预览 Tab(若有)
     const tabId = path;
+    // 缩进自动检测(受设置开关控制)
+    const detectIndentation = useSettingsStore.getState().detectIndentation;
+    const indent = detectIndentation
+      ? detectIndent(content, useSettingsStore.getState().tabSize)
+      : undefined;
     let newTabs: EditorTab[];
     if (preview) {
       const previewIdx = tabs.findIndex((t) => t.isPreview);
@@ -224,6 +235,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         content,
         originalContent: content,
         language,
+        indentSize: indent?.tabSize,
+        insertSpaces: indent?.insertSpaces,
       };
       if (previewIdx >= 0) {
         newTabs = [...tabs];
@@ -244,6 +257,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           content,
           originalContent: content,
           language,
+          indentSize: indent?.tabSize,
+          insertSpaces: indent?.insertSpaces,
         },
       ];
     }

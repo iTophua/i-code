@@ -45,9 +45,29 @@ export function SplitEditorPane() {
         syncDocument(activeTab.language, wsRoot, activeTab.path, activeTab.content);
       }).catch(() => {});
     }
+    // 应用文件检测的缩进到 model
+    const model = ed.getModel();
+    if (model && activeTab?.kind === "file") {
+      model.updateOptions({
+        tabSize: activeTab.indentSize ?? settings.tabSize,
+        insertSpaces: activeTab.insertSpaces ?? true,
+      });
+    }
   };
 
   const lspChangeTimerRef = useRef<number | null>(null);
+
+  // 切换 tab 时更新 model 的缩进
+  useEffect(() => {
+    const model = editorRef.current?.getModel();
+    if (model && activeTab?.kind === "file") {
+      model.updateOptions({
+        tabSize: activeTab.indentSize ?? settings.tabSize,
+        insertSpaces: activeTab.insertSpaces ?? true,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [splitActiveId]);
 
   // 卸载时清理列选拖拽监听 + 释放活动编辑器引用
   useEffect(() => {
@@ -81,7 +101,8 @@ export function SplitEditorPane() {
     fontFamily: settings.fontFamily,
     fontSize: settings.fontSize,
     lineHeight: Math.round(settings.fontSize * settings.lineHeight),
-    tabSize: settings.tabSize,
+    tabSize: activeTab?.indentSize ?? settings.tabSize,
+    insertSpaces: activeTab?.insertSpaces ?? true,
     wordWrap: langOverride.wordWrap || settings.wordWrap,
     minimap: { enabled: false },
     fontLigatures: settings.fontLigatures,

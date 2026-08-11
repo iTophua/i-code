@@ -125,8 +125,11 @@ function EditorSettings({ s }: { s: S }) {
         </Row>
       </Group>
       <Group title="编辑">
-        <Row label="Tab 宽度">
+        <Row label="Tab 宽度" desc="检测关闭时使用此值">
           <input type="number" className="settings__input settings__input--num" value={s.tabSize} min={2} max={8} onChange={(e) => s.update("tabSize", Number(e.target.value))} />
+        </Row>
+        <Row label="自动检测缩进" desc="打开文件时按内容自动判断 Tab/空格及宽度">
+          <Toggle value={s.detectIndentation} onChange={(v) => s.update("detectIndentation", v)} />
         </Row>
         <Row label="自动换行" desc="长行是否折行显示">
           <AppSelect
