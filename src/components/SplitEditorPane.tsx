@@ -7,6 +7,8 @@ import { getEditorOptions, defineIThemes, ICODE_DARK_THEME, ICODE_LIGHT_THEME } 
 import { useResolvedTheme } from "../utils/theme";
 import { setActiveEditor, getActiveEditor } from "../monaco/activeEditor";
 import { setupColumnDrag } from "../monaco/columnSelect";
+import { ensureLsp, syncDocument } from "../monaco/lsp-bridge";
+import { useLayoutStore } from "../stores/layoutStore";
 import "../monaco/setup";
 
 /**
@@ -36,7 +38,16 @@ export function SplitEditorPane() {
     // Option+拖拽矩形列选(同主编辑器) —— 保存清理函数, 卸载时调用
     cleanupColumnDragRef.current?.();
     cleanupColumnDragRef.current = setupColumnDrag(ed);
+    // LSP: 文件类 tab 且语言受支持时启动 LSP + 同步文档
+    const wsRoot = useLayoutStore.getState().workspaceRoot;
+    if (wsRoot && activeTab?.kind === "file") {
+      ensureLsp(activeTab.language, wsRoot).then(() => {
+        syncDocument(activeTab.language, wsRoot, activeTab.path, activeTab.content);
+      }).catch(() => {});
+    }
   };
+
+  const lspChangeTimerRef = useRef<number | null>(null);
 
   // 卸载时清理列选拖拽监听 + 释放活动编辑器引用
   useEffect(() => {
@@ -109,6 +120,16 @@ export function SplitEditorPane() {
         onChange={(v) => {
           if (splitActiveId && v !== undefined) {
             updateContent(splitActiveId, v);
+            // LSP didChange 同步(防抖 300ms)
+            if (activeTab && activeTab.kind === "file") {
+              const wsRoot = useLayoutStore.getState().workspaceRoot;
+              if (wsRoot) {
+                if (lspChangeTimerRef.current) clearTimeout(lspChangeTimerRef.current);
+                lspChangeTimerRef.current = window.setTimeout(() => {
+                  syncDocument(activeTab.language, wsRoot, activeTab.path, v);
+                }, 300);
+              }
+            }
           }
         }}
         options={opts}

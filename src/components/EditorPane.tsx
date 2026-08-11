@@ -26,6 +26,7 @@ import { toast } from "../stores/toastStore";
 import { getExtByLanguage, getLanguage } from "../utils/language";
 import { setActiveEditor, getActiveEditor, triggerEditorAction } from "../monaco/activeEditor";
 import { setupColumnDrag } from "../monaco/columnSelect";
+import { ensureLsp, syncDocument } from "../monaco/lsp-bridge";
 import { tabInScope } from "../utils/tabScope";
 import { EditorContextMenu } from "./EditorContextMenu";
 import { BlameOverlay } from "./BlameOverlay";
@@ -209,6 +210,13 @@ export function EditorPane() {
         }
       }, 400);
     });
+    // LSP: 文件类 tab 且语言受支持时启动 LSP + 同步文档
+    const wsRoot = useLayoutStore.getState().workspaceRoot;
+    if (wsRoot && activeTab?.kind === "file") {
+      ensureLsp(activeTab.language, wsRoot).then(() => {
+        syncDocument(activeTab.language, wsRoot, activeTab.path, activeTab.content);
+      }).catch(() => {});
+    }
   };
 
   // 卸载时清理: 列选拖拽监听 / 节流定时器 / 释放活动编辑器引用
@@ -234,6 +242,7 @@ export function EditorPane() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const lspChangeTimerRef = useRef<number | null>(null);
   const handleChange = (value: string | undefined) => {
     if (activeTabId && value !== undefined) {
       updateContent(activeTabId, value);
@@ -241,6 +250,16 @@ export function EditorPane() {
       const tab = useEditorStore.getState().tabs.find((t) => t.id === activeTabId);
       if (tab?.isPreview) {
         useEditorStore.getState().promotePreview(activeTabId);
+      }
+      // LSP didChange 同步(防抖 300ms)
+      if (tab && tab.kind === "file") {
+        const wsRoot = useLayoutStore.getState().workspaceRoot;
+        if (wsRoot) {
+          if (lspChangeTimerRef.current) clearTimeout(lspChangeTimerRef.current);
+          lspChangeTimerRef.current = window.setTimeout(() => {
+            syncDocument(tab.language, wsRoot, tab.path, value);
+          }, 300);
+        }
       }
     }
   };
