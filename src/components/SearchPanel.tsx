@@ -6,6 +6,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { getLanguage } from "../utils/language";
 import { getFileIconType } from "../utils/language";
 import { FileIcon } from "./FileIcon";
+import { toast } from "../stores/toastStore";
 import "../styles/search.css";
 
 export function SearchPanel() {
@@ -17,13 +18,20 @@ export function SearchPanel() {
     searching,
     done,
     total,
+    replaceText,
+    replacing,
     setQuery,
     toggleCase,
     toggleRegex,
     runSearch,
+    setReplace,
+    runReplaceAll,
+    replaceOne,
   } = useSearchStore();
   const workspaceRoot = useLayoutStore((s) => s.workspaceRoot);
   const openFile = useEditorStore((s) => s.openFile);
+
+  const [showReplace, setShowReplace] = useState(false);
 
   // 按文件分组
   const grouped = useMemo(() => {
@@ -72,6 +80,26 @@ export function SearchPanel() {
     }
   };
 
+  const handleReplaceAll = async () => {
+    if (!workspaceRoot) return;
+    try {
+      const n = await runReplaceAll(workspaceRoot);
+      toast.success(`已替换 ${n} 处`);
+    } catch {
+      toast.error("替换失败");
+    }
+  };
+
+  const handleReplaceOne = async (e: React.MouseEvent, hit: SearchHit) => {
+    e.stopPropagation();
+    if (!workspaceRoot) return;
+    try {
+      await replaceOne(hit, workspaceRoot);
+    } catch {
+      toast.error("替换失败");
+    }
+  };
+
   return (
     <div className="search-panel">
       <div className="search-panel__header">
@@ -79,7 +107,16 @@ export function SearchPanel() {
       </div>
 
       <form className="search-panel__form" onSubmit={onSubmit}>
+        {/* 搜索行 */}
         <div className="search-panel__input-wrap">
+          <button
+            type="button"
+            className={`search-panel__expand ${showReplace ? "search-panel__expand--on" : ""}`}
+            onClick={() => setShowReplace((v) => !v)}
+            title="切换替换"
+          >
+            ▾
+          </button>
           <input
             type="text"
             className="search-panel__input"
@@ -107,6 +144,30 @@ export function SearchPanel() {
             </button>
           </div>
         </div>
+
+        {/* 替换行(可折叠) */}
+        {showReplace && (
+          <div className="search-panel__input-wrap search-panel__replace-wrap">
+            <input
+              type="text"
+              className="search-panel__input search-panel__replace-input"
+              placeholder="替换为..."
+              value={replaceText}
+              onChange={(e) => setReplace(e.target.value)}
+            />
+            <div className="search-panel__toggles">
+              <button
+                type="button"
+                className="search-panel__replace-all"
+                onClick={handleReplaceAll}
+                disabled={replacing || !query.trim() || !workspaceRoot}
+                title="全部替换"
+              >
+                {replacing ? "..." : "全部替换"}
+              </button>
+            </div>
+          </div>
+        )}
       </form>
 
       {!workspaceRoot ? (
@@ -156,8 +217,17 @@ export function SearchPanel() {
                         >
                           <span className="search-hit__line">{hit.line}</span>
                           <span className="search-hit__content">
-                            {hit.lineContent.slice(0, 200)}
+                            <HitContent hit={hit} />
                           </span>
+                          {showReplace && (
+                            <button
+                              className="search-hit__replace-btn"
+                              title="替换此条"
+                              onClick={(e) => handleReplaceOne(e, hit)}
+                            >
+                              →
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -169,6 +239,21 @@ export function SearchPanel() {
         </div>
       )}
     </div>
+  );
+}
+
+/** 用 matchStart/matchLen 高亮匹配区间 */
+function HitContent({ hit }: { hit: SearchHit }) {
+  const content = hit.lineContent.slice(0, 200);
+  const before = content.slice(0, hit.matchStart);
+  const match = content.slice(hit.matchStart, hit.matchStart + hit.matchLen);
+  const after = content.slice(hit.matchStart + hit.matchLen);
+  return (
+    <>
+      <span>{before}</span>
+      <mark className="search-hit__match">{match}</mark>
+      <span>{after}</span>
+    </>
   );
 }
 

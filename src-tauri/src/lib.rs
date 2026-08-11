@@ -75,6 +75,7 @@ pub fn run() {
             terminal::terminal_kill,
             // 搜索
             search::search_in_files,
+            search::replace_in_files,
             // 大文件查看器
             log_viewer::build_line_index,
             log_viewer::read_lines,

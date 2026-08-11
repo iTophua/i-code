@@ -213,3 +213,106 @@ pub fn search_in_files(
 
     Ok(())
 }
+
+/// 单文件替换结果
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReplaceResult {
+    pub path: String,
+    pub replaced: usize,
+}
+
+/// 全局替换(纯子串, 不支持正则 — 与 search_in_files 行为一致)
+/// 逐文件读取(UTF-8)→ 替换所有匹配 → 写回
+#[tauri::command]
+pub fn replace_in_files(
+    root: String,
+    query: String,
+    replacement: String,
+    case_sensitive: Option<bool>,
+) -> Result<Vec<ReplaceResult>, String> {
+    if query.trim().is_empty() {
+        return Err("搜索词为空".into());
+    }
+
+    let case_sensitive = case_sensitive.unwrap_or(false);
+    let root_path = PathBuf::from(&root);
+    let patterns = default_ignore_patterns();
+    let needle = if case_sensitive {
+        query.clone()
+    } else {
+        query.to_lowercase()
+    };
+    let mut results = Vec::new();
+
+    let walk = walkdir::WalkDir::new(&root_path)
+        .into_iter()
+        .filter_entry(|e| !is_ignored(e.path(), &patterns));
+
+    for entry in walk.flatten() {
+        if !entry.file_type().is_file() {
+            continue;
+        }
+        if let Some(ext) = entry.path().extension() {
+            if SKIP_EXTS.contains(&ext.to_string_lossy().as_ref()) {
+                continue;
+            }
+        }
+        if let Ok(meta) = entry.metadata() {
+            if meta.len() > MAX_FILE_SIZE {
+                continue;
+            }
+        }
+
+        let path = entry.path();
+        // read_to_string 只能读 UTF-8, 非 UTF-8 自动跳过(不破坏编码)
+        let content = match fs::read_to_string(path) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+
+        let replaced = if case_sensitive {
+            content.matches(&needle).count()
+        } else {
+            content.to_lowercase().matches(&needle).count()
+        };
+        if replaced == 0 {
+            continue;
+        }
+
+        // 逐处替换: 大小写不敏感时手动匹配 lower 对应的原串
+        let new_content = if case_sensitive {
+            content.replace(&needle, &replacement)
+        } else {
+            replace_ci(&content, &needle, &replacement)
+        };
+
+        match fs::write(path, &new_content) {
+            Ok(_) => results.push(ReplaceResult {
+                path: path.to_string_lossy().to_string(),
+                replaced,
+            }),
+            Err(e) => eprintln!("写入失败 {}: {}", path.display(), e),
+        }
+    }
+
+    Ok(results)
+}
+
+/// 大小写不敏感替换: 保留原串中匹配到的片段大小写信息进行替换
+fn replace_ci(content: &str, needle_lower: &str, replacement: &str) -> String {
+    let content_lower = content.to_lowercase();
+    let mut result = String::with_capacity(content.len());
+    let mut last_end = 0;
+    let mut from = 0;
+    while let Some(idx) = content_lower[from..].find(needle_lower) {
+        let abs = from + idx;
+        // 推进原始切片
+        result.push_str(&content[last_end..abs]);
+        result.push_str(replacement);
+        last_end = abs + needle_lower.len();
+        from = last_end;
+    }
+    result.push_str(&content[last_end..]);
+    result
+}
