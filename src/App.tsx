@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { ActivityBar } from "./components/ActivityBar";
 import { SplashScreen } from "./components/SplashScreen";
@@ -37,6 +37,7 @@ import {
 import { getLanguage } from "./utils/language";
 import { useResolvedTheme } from "./utils/theme";
 import { openFolderDialog, isProjectSwitching } from "./utils/project";
+import { saveTab, saveTabById } from "./utils/saveTab";
 import { toast } from "./stores/toastStore";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
@@ -64,6 +65,8 @@ export default function App() {
   // 响应式订阅 tabs/activeTabId: 否则编辑后持久化 effect 的 deps 是死值, 草稿不会存
   const editorTabs = useEditorStore((s) => s.tabs);
   const editorActiveTabId = useEditorStore((s) => s.activeTabId);
+  const autoSave = useSettingsStore((s) => s.autoSave);
+  const autoSaveDelay = useSettingsStore((s) => s.autoSaveDelay);
   const [closeConfirm, setCloseConfirm] = useState<{ id: string; name: string } | null>(null);
   const [savingTab, setSavingTab] = useState(false);
   const [restored, setRestored] = useState(false);
@@ -458,6 +461,44 @@ export default function App() {
     setSession(SESSION_KEYS.sidebarView, sidebarView);
     setSession(SESSION_KEYS.sidebarVisible, sidebarVisible);
   }, [restored, sidebarView, sidebarVisible]);
+
+  // ===== 自动保存 =====
+  // afterDelay: 停止输入后延时保存所有 dirty 的 file/note tab(主组 + 分栏组)
+  useEffect(() => {
+    if (!restored || autoSave !== "afterDelay") return;
+    const t = setTimeout(() => {
+      if (isProjectSwitching()) return;
+      const all = [...useEditorStore.getState().tabs, ...useEditorStore.getState().splitTabs];
+      for (const tab of all) {
+        if (tab.isDirty && (tab.kind === "file" || tab.kind === "note")) {
+          saveTab(tab).catch(console.error);
+        }
+      }
+    }, autoSaveDelay);
+    return () => clearTimeout(t);
+  }, [restored, autoSave, autoSaveDelay, editorTabs]);
+
+  // onFocusChange: 切走 tab 时保存前一个 dirty tab
+  const prevTabIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!restored || autoSave !== "onFocusChange") return;
+    const prevId = prevTabIdRef.current;
+    if (prevId && prevId !== editorActiveTabId) {
+      saveTabById(prevId).catch(console.error);
+    }
+    prevTabIdRef.current = editorActiveTabId;
+  }, [restored, autoSave, editorActiveTabId]);
+
+  // onFocusChange: 窗口失焦时保存当前 dirty tab
+  useEffect(() => {
+    if (!restored || autoSave !== "onFocusChange") return;
+    const onBlur = () => {
+      const id = useEditorStore.getState().activeTabId;
+      if (id) saveTabById(id).catch(console.error);
+    };
+    window.addEventListener("blur", onBlur);
+    return () => window.removeEventListener("blur", onBlur);
+  }, [restored, autoSave]);
 
   // ===== 全局快捷键 =====
   useEffect(() => {

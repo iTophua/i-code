@@ -17,6 +17,7 @@ export interface Settings {
   fontLigatures: boolean;
   showWhitespace: boolean;
   autoSave: "off" | "onFocusChange" | "afterDelay";
+  autoSaveDelay: number; // afterDelay 模式下的延时(毫秒)
 
   // —— 主题 ——
   theme: "dark" | "light" | "auto";
@@ -50,6 +51,7 @@ const DEFAULTS: Settings = {
   fontLigatures: false,
   showWhitespace: false,
   autoSave: "off",
+  autoSaveDelay: 1000,
 
   theme: "auto",
 

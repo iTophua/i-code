@@ -152,6 +152,11 @@ function EditorSettings({ s }: { s: S }) {
             onChange={(v) => s.update("autoSave", v as S["autoSave"])}
           />
         </Row>
+        {s.autoSave === "afterDelay" && (
+          <Row label="自动保存延时" desc="停止输入后多少毫秒自动保存">
+            <input type="number" className="settings__input settings__input--num" value={s.autoSaveDelay} min={300} step={100} onChange={(e) => s.update("autoSaveDelay", Number(e.target.value))} />
+          </Row>
+        )}
       </Group>
       <Group title="标签栏">
         <Row label="标签换行" desc="开启后标签多了自动换行; 关闭则左右滑动(默认)">
