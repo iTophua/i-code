@@ -128,6 +128,8 @@ interface EditorStore {
   setActiveTab: (id: string) => void;
   /** 更新 Tab 内容 */
   updateContent: (id: string, content: string) => void;
+  /** 更新 Tab 缩进设置(不影响 dirty 状态) */
+  updateIndent: (id: string, indent: { indentSize: number; insertSpaces: boolean }) => void;
   /** 保存(标记为已保存) */
   markSaved: (id: string) => void;
   /** 预览转正式 */
@@ -584,6 +586,13 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         t.id === id
           ? { ...t, content, isDirty: content !== t.originalContent }
           : t
+      ),
+    })),
+
+  updateIndent: (id, indent) =>
+    set((state) => ({
+      tabs: state.tabs.map((t) =>
+        t.id === id ? { ...t, indentSize: indent.indentSize, insertSpaces: indent.insertSpaces } : t
       ),
     })),
 

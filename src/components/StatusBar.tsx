@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useEditorStore } from "../stores/editorStore";
 import { useLayoutStore } from "../stores/layoutStore";
+import { useSettingsStore } from "../stores/settingsStore";
 import { readFile } from "@tauri-apps/plugin-fs";
 import * as Select from "@radix-ui/react-select";
 import { ChevronDown, Check } from "./Icons";
@@ -17,6 +18,16 @@ const ENCODINGS = [
   { value: "windows-1252", label: "Windows-1252" },
 ];
 
+/** 缩进选项: 空格 2/4/8 + Tab */
+const INDENT_OPTIONS = [
+  { value: "spaces:2", label: "空格: 2" },
+  { value: "spaces:4", label: "空格: 4" },
+  { value: "spaces:8", label: "空格: 8" },
+  { value: "tabs:2", label: "Tab: 2" },
+  { value: "tabs:4", label: "Tab: 4" },
+  { value: "tabs:8", label: "Tab: 8" },
+];
+
 export function StatusBar() {
   const activeTab = useEditorStore((s) =>
     s.tabs.find((t) => t.id === s.activeTabId)
@@ -24,6 +35,8 @@ export function StatusBar() {
   const workspaceRoot = useLayoutStore((s) => s.workspaceRoot);
   const updateContent = useEditorStore((s) => s.updateContent);
   const markSaved = useEditorStore((s) => s.markSaved);
+  const updateIndent = useEditorStore((s) => s.updateIndent);
+  const globalTabSize = useSettingsStore((s) => s.tabSize);
   const [encoding, setEncoding] = useState("utf-8");
   const [lineEnding, setLineEnding] = useState("LF");
 
@@ -53,6 +66,23 @@ export function StatusBar() {
     }
   };
 
+  // 当前缩进值(file kind 才有意义)
+  const indentSize = activeTab?.indentSize ?? globalTabSize;
+  const insertSpaces = activeTab?.insertSpaces ?? true;
+  // 用于 Select 的 value: "spaces:2" / "tabs:4"
+  const indentValue = `${insertSpaces ? "spaces" : "tabs"}:${indentSize}`;
+  // 显示文字
+  const indentLabel = insertSpaces ? `空格: ${indentSize}` : `Tab: ${indentSize}`;
+
+  const handleIndentChange = (val: string) => {
+    if (!activeTab) return;
+    const [type, sizeStr] = val.split(":");
+    updateIndent(activeTab.id, {
+      indentSize: Number(sizeStr),
+      insertSpaces: type === "spaces",
+    });
+  };
+
   if (!activeTab) {
     return <div className="status-bar" />;
   }
@@ -80,6 +110,30 @@ export function StatusBar() {
                   {ENCODINGS.map((enc) => (
                     <Select.Item key={enc.value} value={enc.value}>
                       <Select.ItemText>{enc.label}</Select.ItemText>
+                      <Select.ItemIndicator className="status-bar__encoding-check">
+                        <Check size={11} />
+                      </Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        )}
+        {activeTab.kind === "file" && (
+          <Select.Root value={indentValue} onValueChange={handleIndentChange}>
+            <Select.Trigger className="status-bar__encoding-trigger" title="缩进方式">
+              <Select.Value>{indentLabel}</Select.Value>
+              <Select.Icon>
+                <ChevronDown size={10} />
+              </Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content className="status-bar__encoding-content">
+                <Select.Viewport>
+                  {INDENT_OPTIONS.map((opt) => (
+                    <Select.Item key={opt.value} value={opt.value}>
+                      <Select.ItemText>{opt.label}</Select.ItemText>
                       <Select.ItemIndicator className="status-bar__encoding-check">
                         <Check size={11} />
                       </Select.ItemIndicator>
